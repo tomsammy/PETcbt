@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 
 from fastapi import FastAPI, HTTPException, Request, Response, Depends, Header, Query
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Scope, Receive, Send
 from pydantic import BaseModel
@@ -28,32 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Middleware to fix Vercel serverless path rewrites
-class VercelPathFixMiddleware:
-    def __init__(self, app: ASGIApp):
-        self.app = app
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        if scope["type"] == "http":
-            headers = dict(scope.get("headers", []))
-            forwarded_uri = headers.get(b"x-forwarded-uri", b"").decode("latin1")
-            matched_path = headers.get(b"x-matched-path", b"").decode("latin1")
-            orig_path = scope.get("path", "")
-
-            if forwarded_uri:
-                scope["path"] = forwarded_uri.split("?")[0]
-            elif matched_path and not matched_path.startswith("/api/index"):
-                scope["path"] = matched_path.split("?")[0]
-            elif orig_path in ["/api/index.py", "/api/index", "/api/index/"]:
-                scope["path"] = "/"
-            elif orig_path.startswith("/api/index.py/"):
-                scope["path"] = orig_path[len("/api/index.py"):]
-            elif orig_path.startswith("/api/index/"):
-                scope["path"] = orig_path[len("/api/index"):]
-        await self.app(scope, receive, send)
-
-app.add_middleware(VercelPathFixMiddleware)
 
 # Locate static folder across local or Vercel deployments
 STATIC_DIR = None
@@ -134,9 +108,13 @@ def render_main_html():
                 return f.read()
     return "<h1>Kwara State Staff Development College CBT Portal</h1><p>Welcome. Application loaded.</p>"
 
-@app.get("/", response_class=HTMLResponse)
-def read_index():
-    return render_main_html()
+@app.get("/api/debug")
+async def debug_route(request: Request):
+    return {
+        "url": str(request.url),
+        "path": request.url.path,
+        "headers": dict(request.headers)
+    }
 
 @app.post("/api/admin/login")
 def admin_login(creds: AdminLoginRequest):
@@ -561,3 +539,8 @@ def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)
     if deleted == 0:
         raise HTTPException(status_code=404, detail="Submission not found.")
     return {"success": True, "message": "Candidate record reset successfully."}
+
+# Catch-all route to serve the SPA index.html
+@app.get("/{full_path:path}", response_class=HTMLResponse)
+def catch_all(full_path: str):
+    return render_main_html()
