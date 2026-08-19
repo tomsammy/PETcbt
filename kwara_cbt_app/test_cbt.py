@@ -2,11 +2,13 @@ import sys
 import os
 import unittest
 import json
+import time
 
 app_dir = os.path.dirname(os.path.abspath(__file__))
 if app_dir not in sys.path:
     sys.path.insert(0, app_dir)
 
+from fastapi import HTTPException
 from app import (
     app, get_exam_info, start_exam, submit_exam,
     admin_login, get_admin_submissions, export_results_excel, export_results_csv,
@@ -21,6 +23,12 @@ class TestKwaraCBTDirect(unittest.TestCase):
         print("\n--- Initializing database and seeding questions ---")
         init_db()
         seed_database()
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute("DELETE FROM submissions")
+        c.execute("DELETE FROM candidates")
+        conn.commit()
+        conn.close()
 
     def test_01_info_endpoint(self):
         data = get_exam_info()
@@ -35,7 +43,7 @@ class TestKwaraCBTDirect(unittest.TestCase):
         for grade in ["GL 06-07", "GL 08", "GL 09"]:
             req = StartExamRequest(
                 name=f"Officer Test ({grade})",
-                psn="849201",
+                psn=f"84920{grade[-1]}",
                 email=f"test_{grade.replace(' ', '_')}@kwarastate.gov.ng",
                 grade_level=grade,
                 mda="Staff Development College"
@@ -44,7 +52,6 @@ class TestKwaraCBTDirect(unittest.TestCase):
             self.assertTrue(data["success"])
             self.assertEqual(data["total_questions"], 50)
             self.assertEqual(len(data["questions"]), 50)
-            self.assertEqual(data["candidate"]["psn"], "849201")
             
             for q in data["questions"]:
                 self.assertTrue(1 <= q["number"] <= 50)
@@ -56,10 +63,11 @@ class TestKwaraCBTDirect(unittest.TestCase):
                 self.assertNotIn("correct_answer", q)
             print(f"[PASS] /api/start-exam for {grade} verified")
 
-    def test_03_submit_exam_and_scoring(self):
+    def test_03_submit_exam_and_single_attempt_enforcement(self):
+        psn_test = "771829"
         req = StartExamRequest(
             name="Aishat Mohammed",
-            psn="771829",
+            psn=psn_test,
             email="aishat.m@kwarastate.gov.ng",
             grade_level="GL 08",
             mda="Ministry of Finance"
@@ -84,7 +92,7 @@ class TestKwaraCBTDirect(unittest.TestCase):
         sub_req = SubmitExamRequest(
             candidate_id=cand_id,
             name="Aishat Mohammed",
-            psn="771829",
+            psn=psn_test,
             email="aishat.m@kwarastate.gov.ng",
             grade_level="GL 08",
             mda="Ministry of Finance",
@@ -94,31 +102,34 @@ class TestKwaraCBTDirect(unittest.TestCase):
 
         sub_data = submit_exam(sub_req)
         self.assertTrue(sub_data["success"])
-        self.assertEqual(sub_data["candidate"]["psn"], "771829")
+        self.assertEqual(sub_data["candidate"]["psn"], psn_test)
         self.assertEqual(sub_data["score"]["correct_count"], 42)
         self.assertEqual(sub_data["score"]["score_percentage"], 84.0)
         self.assertEqual(sub_data["score"]["grade_remark"], "Distinction (Excellent)")
         print(f"[PASS] /api/submit-exam verified (42/50 = 84% Distinction)")
 
+        # Verify duplicate attempt is strictly BLOCKED
+        with self.assertRaises(HTTPException) as ctx:
+            start_exam(req)
+        self.assertEqual(ctx.exception.status_code, 400)
+        self.assertIn("already completed this evaluation", ctx.exception.detail)
+        print("[PASS] Single attempt enforcement verified: duplicate attempt blocked with 400 error")
+
     def test_04_admin_auth_and_exports(self):
-        # Test admin login with valid credentials
         login_res = admin_login(AdminLoginRequest(username="admin", password="admin123"))
         self.assertTrue(login_res["success"])
         self.assertTrue(bool(login_res["token"]))
         print("[PASS] /api/admin/login verified with valid credentials")
 
-        # Test admin submissions with auth
         admin_data = get_admin_submissions(auth=True)
         self.assertGreaterEqual(admin_data["summary"]["total_submissions"], 1)
         print(f"[PASS] /api/admin/submissions verified: {admin_data['summary']['total_submissions']} submission(s)")
 
-        # Excel export with auth
         excel_res = export_results_excel(auth=True)
         excel_bytes = excel_res.body
         self.assertGreater(len(excel_bytes), 1000)
         print(f"[PASS] /api/results/excel export verified ({len(excel_bytes)} bytes)")
 
-        # CSV export with auth
         csv_res = export_results_csv(auth=True)
         csv_text = csv_res.body.decode("utf-8")
         self.assertIn("PSN", csv_text)

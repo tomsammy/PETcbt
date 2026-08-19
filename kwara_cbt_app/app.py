@@ -32,7 +32,6 @@ STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# Admin Credentials & Active Tokens
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 ACTIVE_ADMIN_TOKENS = set()
@@ -147,12 +146,24 @@ def start_exam(data: StartExamRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
     
+    # Check if this PSN has already completed an exam
+    cursor.execute("SELECT id, submitted_at, score_percentage FROM submissions WHERE psn = ?", (psn,))
+    existing_sub = cursor.fetchone()
+    if existing_sub:
+        conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Officer with PSN {psn} has already completed this evaluation test on {existing_sub['submitted_at']} (Score: {existing_sub['score_percentage']}%). Each officer is allowed only one attempt."
+        )
+    
+    # Register / record candidate
     cursor.execute("""
         INSERT INTO candidates (name, psn, email, grade_level, mda)
         VALUES (?, ?, ?, ?, ?)
     """, (name, psn, email, grade_level, mda))
     candidate_id = cursor.lastrowid
     
+    # Retrieve questions for this grade level
     cursor.execute("""
         SELECT id, question_number, question_text, option_a, option_b, option_c, option_d
         FROM questions

@@ -78,11 +78,11 @@
             <div class="info-banner">
               <div style="font-size: 1.5rem;">📋</div>
               <div>
-                <strong>Examination Summary:</strong>
+                <strong>Important Examination Notice:</strong>
                 <ul>
                   <li>Total: <strong>50 Multiple-Choice Questions</strong> (2 marks each = 100 marks)</li>
                   <li>Duration: <strong>45 Minutes</strong> with automatic live submission</li>
-                  <li>Results & Performance Slip available <strong>immediately</strong> upon submission</li>
+                  <li><strong>Single Attempt Only</strong>: Each officer can take the evaluation only once.</li>
                 </ul>
               </div>
             </div>
@@ -275,6 +275,11 @@
               </div>
             </div>
 
+            <!-- Single Attempt Notice Banner -->
+            <div style="background: #f1f5f9; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.85rem; color: #475569; text-align: center; border: 1px solid #e2e8f0;">
+              ℹ️ <strong>Evaluation Completed</strong>: This is your final result. Retakes or additional attempts are not permitted. Please print or save a copy of this result slip for your records.
+            </div>
+
             <!-- Footer & Signature -->
             <div class="slip-footer">
               <div>
@@ -289,11 +294,8 @@
         </div>
 
         <div class="result-actions">
-          <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 24px;">
+          <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 32px; font-size: 1rem;">
             <span>🖨️ Print / Save Result Slip (PDF)</span>
-          </button>
-          <button type="button" class="btn-ctrl" id="btn-new-test" style="padding: 12px 24px;">
-            <span>🔄 Take Another Test</span>
           </button>
         </div>
       </div>

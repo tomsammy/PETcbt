@@ -111,7 +111,7 @@ if (entryForm) {
       startTimer();
       showView('exam');
     } catch (err) {
-      alert('Error: ' + err.message);
+      alert(err.message);
     } finally {
       btn.disabled = false;
       btn.innerHTML = originalText;
@@ -547,10 +547,10 @@ document.getElementById('nav-admin-btn').addEventListener('click', () => {
 });
 
 document.getElementById('nav-exam-btn').addEventListener('click', () => {
-  if (state.candidate && !state.isSubmitted) {
-    showView('exam');
-  } else if (state.isSubmitted) {
+  if (state.isSubmitted) {
     showView('result');
+  } else if (state.candidate) {
+    showView('exam');
   } else {
     showView('entry');
   }
@@ -581,13 +581,4 @@ document.getElementById('admin-grade-filter').addEventListener('change', renderA
 // Result Actions
 document.getElementById('btn-print-slip').addEventListener('click', () => {
   window.print();
-});
-
-document.getElementById('btn-new-test').addEventListener('click', () => {
-  if (confirm('Start a new test session?')) {
-    state.candidate = null;
-    state.isSubmitted = false;
-    document.getElementById('form-entry').reset();
-    showView('entry');
-  }
 });
