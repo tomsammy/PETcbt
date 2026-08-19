@@ -13,7 +13,7 @@ if root_dir not in sys.path:
 
 from database import init_db, get_db_connection
 from parser import seed_database
-from app import app
+from app import app as fastapi_app
 from starlette.types import Scope, Receive, Send
 
 # Initialize database on cold start
@@ -48,6 +48,6 @@ async def handler(scope: Scope, receive: Receive, send: Send):
         if real_path:
             scope["path"] = real_path.split("?")[0]
             
-    await app(scope, receive, send)
+    await fastapi_app(scope, receive, send)
 
 app = handler
