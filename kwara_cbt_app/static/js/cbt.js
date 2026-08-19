@@ -26,6 +26,50 @@ const views = {
   admin: document.getElementById('view-admin')
 };
 
+// Custom Alert Modal System
+function showAlertModal(title, message, type = 'warning') {
+  const modal = document.getElementById('custom-alert-modal');
+  const titleEl = document.getElementById('alert-modal-title');
+  const msgEl = document.getElementById('alert-modal-msg');
+  const iconEl = document.getElementById('alert-modal-icon');
+  const okBtn = document.getElementById('alert-modal-ok-btn');
+
+  if (!modal) return;
+
+  titleEl.textContent = title;
+  msgEl.textContent = message;
+
+  if (type === 'error') {
+    iconEl.textContent = '⛔';
+    iconEl.style.background = '#fee2e2';
+    iconEl.style.color = '#dc2626';
+  } else if (type === 'timer') {
+    iconEl.textContent = '⏰';
+    iconEl.style.background = '#fffbeb';
+    iconEl.style.color = '#d97706';
+  } else if (type === 'info') {
+    iconEl.textContent = 'ℹ️';
+    iconEl.style.background = '#e0f2fe';
+    iconEl.style.color = '#0284c7';
+  } else if (type === 'success') {
+    iconEl.textContent = '✅';
+    iconEl.style.background = '#d1fae5';
+    iconEl.style.color = '#059669';
+  } else {
+    iconEl.textContent = '⚠️';
+    iconEl.style.background = '#fef3c7';
+    iconEl.style.color = '#b45309';
+  }
+
+  modal.classList.add('active');
+  if (okBtn) okBtn.focus();
+}
+
+function closeAlertModal() {
+  const modal = document.getElementById('custom-alert-modal');
+  if (modal) modal.classList.remove('active');
+}
+
 // Switch Views
 function showView(viewName) {
   Object.keys(views).forEach(v => {
@@ -70,7 +114,11 @@ if (entryForm) {
     const mda = document.getElementById('input-mda').value.trim() || 'Kwara State Civil Service';
 
     if (!name || !psn || !email) {
-      alert('Please fill in your Full Name, PSN, and Email Address.');
+      showAlertModal(
+        'Required Information Missing',
+        'Please enter your Full Name, PSN (Public Service Number), and Email Address to commence.',
+        'warning'
+      );
       return;
     }
 
@@ -111,7 +159,11 @@ if (entryForm) {
       startTimer();
       showView('exam');
     } catch (err) {
-      alert(err.message);
+      showAlertModal(
+        'Single Attempt Notice',
+        err.message,
+        'error'
+      );
     } finally {
       btn.disabled = false;
       btn.innerHTML = originalText;
@@ -146,7 +198,11 @@ function startTimer() {
     state.secondsRemaining--;
     if (state.secondsRemaining <= 0) {
       clearInterval(state.timerInterval);
-      alert('⏰ Time has expired! Your examination is being submitted automatically.');
+      showAlertModal(
+        'Time Expired',
+        'Your 45-minute allotted time has concluded. Your test is being automatically submitted and graded now.',
+        'timer'
+      );
       submitExam(true);
     } else {
       updateDisplay();
@@ -336,7 +392,11 @@ async function submitExam(isAuto = false) {
     renderResultSlip(result);
     showView('result');
   } catch (err) {
-    alert('Submission error: ' + err.message);
+    showAlertModal(
+      'Submission Error',
+      'An error occurred during submission: ' + err.message,
+      'error'
+    );
   }
 }
 
@@ -522,6 +582,13 @@ function renderAdminTable() {
 // Event Listeners
 // -------------------------------------------------------------
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAlertModal();
+    closeSubmitModal();
+    closeAdminLoginModal();
+    return;
+  }
+
   if (!views.exam.classList.contains('active')) return;
 
   const key = e.key.toUpperCase();
