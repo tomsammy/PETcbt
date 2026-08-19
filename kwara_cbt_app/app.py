@@ -36,13 +36,21 @@ class VercelPathFixMiddleware:
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] == "http":
-            path = scope.get("path", "")
-            if path in ["/api/index.py", "/api/index", "/api/index/"]:
+            headers = dict(scope.get("headers", []))
+            forwarded_uri = headers.get(b"x-forwarded-uri", b"").decode("latin1")
+            matched_path = headers.get(b"x-matched-path", b"").decode("latin1")
+            orig_path = scope.get("path", "")
+
+            if forwarded_uri:
+                scope["path"] = forwarded_uri.split("?")[0]
+            elif matched_path and not matched_path.startswith("/api/index"):
+                scope["path"] = matched_path.split("?")[0]
+            elif orig_path in ["/api/index.py", "/api/index", "/api/index/"]:
                 scope["path"] = "/"
-            elif path.startswith("/api/index.py/"):
-                scope["path"] = path[len("/api/index.py"):]
-            elif path.startswith("/api/index/"):
-                scope["path"] = path[len("/api/index"):]
+            elif orig_path.startswith("/api/index.py/"):
+                scope["path"] = orig_path[len("/api/index.py"):]
+            elif orig_path.startswith("/api/index/"):
+                scope["path"] = orig_path[len("/api/index"):]
         await self.app(scope, receive, send)
 
 app.add_middleware(VercelPathFixMiddleware)
@@ -127,8 +135,6 @@ def render_main_html():
     return "<h1>Kwara State Staff Development College CBT Portal</h1><p>Welcome. Application loaded.</p>"
 
 @app.get("/", response_class=HTMLResponse)
-@app.get("/api/index.py", response_class=HTMLResponse)
-@app.get("/api/index", response_class=HTMLResponse)
 def read_index():
     return render_main_html()
 
