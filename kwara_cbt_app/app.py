@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
@@ -526,3 +526,14 @@ def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)
     return {"success": True, "message": "Candidate record reset successfully."}
 
 app.include_router(router)
+
+# Catch-all endpoint for diagnostic inspection of paths received by FastAPI
+@app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def catch_all_debug(request: Request, path_name: str):
+    return JSONResponse({
+        "status": "unmapped_path_debug",
+        "url_path": request.url.path,
+        "path_param": path_name,
+        "scope_path": request.scope.get("path"),
+        "method": request.method
+    })
