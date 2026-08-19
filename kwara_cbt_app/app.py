@@ -10,6 +10,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, Depends, Header, 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.types import ASGIApp, Scope, Receive, Send
 from pydantic import BaseModel
 import pandas as pd
 import openpyxl
@@ -28,8 +29,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-os.makedirs(STATIC_DIR, exist_ok=True)
+# Middleware to fix Vercel serverless path rewrites
+class VercelPathFixMiddleware:
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] == "http":
+            path = scope.get("path", "")
+            if path in ["/api/index.py", "/api/index", "/api/index/"]:
+                scope["path"] = "/"
+            elif path.startswith("/api/index.py/"):
+                scope["path"] = path[len("/api/index.py"):]
+            elif path.startswith("/api/index/"):
+                scope["path"] = path[len("/api/index"):]
+        await self.app(scope, receive, send)
+
+app.add_middleware(VercelPathFixMiddleware)
+
+# Locate static folder across local or Vercel deployments
+STATIC_DIR = None
+potential_static_dirs = [
+    os.path.join(os.path.dirname(__file__), "static"),
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"),
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "kwara_cbt_app", "static"),
+    os.path.join(os.getcwd(), "static"),
+    os.path.join(os.getcwd(), "kwara_cbt_app", "static")
+]
+for p in potential_static_dirs:
+    if os.path.exists(p) and os.path.isdir(p):
+        STATIC_DIR = p
+        break
+
+if not STATIC_DIR:
+    STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+    os.makedirs(STATIC_DIR, exist_ok=True)
+
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
@@ -76,13 +111,26 @@ def verify_admin_auth(
 def startup_event():
     init_db()
 
+def render_main_html():
+    candidates = [
+        os.path.join(STATIC_DIR, "index.html"),
+        os.path.join(os.path.dirname(__file__), "static", "index.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "index.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "kwara_cbt_app", "static", "index.html"),
+        os.path.join(os.getcwd(), "static", "index.html"),
+        os.path.join(os.getcwd(), "kwara_cbt_app", "static", "index.html")
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return f.read()
+    return "<h1>Kwara State Staff Development College CBT Portal</h1><p>Welcome. Application loaded.</p>"
+
 @app.get("/", response_class=HTMLResponse)
+@app.get("/api/index.py", response_class=HTMLResponse)
+@app.get("/api/index", response_class=HTMLResponse)
 def read_index():
-    index_path = os.path.join(STATIC_DIR, "index.html")
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Kwara State Staff Development College CBT Portal</h1><p>Index loading...</p>"
+    return render_main_html()
 
 @app.post("/api/admin/login")
 def admin_login(creds: AdminLoginRequest):
