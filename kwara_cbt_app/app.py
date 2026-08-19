@@ -28,13 +28,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Static directory for local development
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-if not os.path.exists(STATIC_DIR):
-    STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+# Robust static directory resolver for local and Vercel environments
+STATIC_DIR = None
+for p in [
+    os.path.join(os.path.dirname(__file__), "static"),
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"),
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "public", "static"),
+    os.path.join(os.getcwd(), "static"),
+    os.path.join(os.getcwd(), "kwara_cbt_app", "static"),
+    os.path.join(os.getcwd(), "public", "static")
+]:
+    if os.path.exists(p) and os.path.isdir(p):
+        STATIC_DIR = p
+        break
 
-if os.path.exists(STATIC_DIR):
-    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+if not STATIC_DIR:
+    STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+    os.makedirs(STATIC_DIR, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
@@ -82,10 +94,19 @@ def startup_event():
 
 @app.get("/", response_class=HTMLResponse)
 def read_index():
-    index_file = os.path.join(STATIC_DIR, "index.html")
-    if os.path.exists(index_file):
-        with open(index_file, "r", encoding="utf-8") as f:
-            return f.read()
+    candidates = [
+        os.path.join(STATIC_DIR, "index.html"),
+        os.path.join(os.path.dirname(__file__), "static", "index.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "index.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "public", "index.html"),
+        os.path.join(os.getcwd(), "static", "index.html"),
+        os.path.join(os.getcwd(), "kwara_cbt_app", "static", "index.html"),
+        os.path.join(os.getcwd(), "public", "index.html")
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            with open(c, "r", encoding="utf-8") as f:
+                return f.read()
     return "<h1>Kwara State Staff Development College CBT Portal</h1>"
 
 # Router for all CBT Endpoints (supports both /api/* and /* paths)
