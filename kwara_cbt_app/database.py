@@ -1,8 +1,19 @@
 import sqlite3
 import os
+import shutil
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "cbt.db")
+# Check if running in Vercel serverless environment
+if os.environ.get("VERCEL"):
+    DB_PATH = "/tmp/cbt.db"
+    bundled_db = os.path.join(os.path.dirname(__file__), "cbt.db")
+    if not os.path.exists(DB_PATH) and os.path.exists(bundled_db):
+        try:
+            shutil.copyfile(bundled_db, DB_PATH)
+        except Exception:
+            pass
+else:
+    DB_PATH = os.path.join(os.path.dirname(__file__), "cbt.db")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
