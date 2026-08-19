@@ -1,5 +1,6 @@
 import os
 import sys
+import urllib.parse
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(current_dir)
@@ -28,19 +29,25 @@ try:
 except Exception:
     pass
 
-# Custom ASGI wrapper to resolve requested path from Vercel headers
 async def handler(scope: Scope, receive: Receive, send: Send):
     if scope["type"] == "http":
         headers = dict(scope.get("headers", []))
+        route_matches = headers.get(b"x-now-route-matches", b"").decode("latin1")
         matched_path = headers.get(b"x-matched-path", b"").decode("latin1")
-        forwarded_uri = headers.get(b"x-forwarded-uri", b"").decode("latin1")
         
-        if matched_path and matched_path not in ["/api/index.py", "/api/index", "/api"]:
-            scope["path"] = matched_path.split("?")[0]
-        elif forwarded_uri and forwarded_uri not in ["/api/index.py", "/api/index", "/api"]:
-            scope["path"] = forwarded_uri.split("?")[0]
-
+        real_path = None
+        if route_matches:
+            for part in route_matches.split("&"):
+                if part.startswith("1="):
+                    real_path = urllib.parse.unquote(part[2:])
+                    break
+                    
+        if not real_path and matched_path and not matched_path.startswith("/api/index"):
+            real_path = urllib.parse.unquote(matched_path)
+            
+        if real_path:
+            scope["path"] = real_path.split("?")[0]
+            
     await app(scope, receive, send)
 
-# Assign handler as default callable
 app = handler
