@@ -6,7 +6,7 @@ import secrets
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-from fastapi import FastAPI, HTTPException, Request, Response, Depends, Header, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -88,7 +88,11 @@ def read_index():
             return f.read()
     return "<h1>Kwara State Staff Development College CBT Portal</h1>"
 
-@app.post("/api/admin/login")
+# Router for all CBT Endpoints (supports both /api/* and /* paths)
+router = APIRouter()
+
+@router.post("/admin/login")
+@router.post("/api/admin/login")
 def admin_login(creds: AdminLoginRequest):
     u = creds.username.strip()
     p = creds.password.strip()
@@ -103,11 +107,13 @@ def admin_login(creds: AdminLoginRequest):
         }
     raise HTTPException(status_code=401, detail="Invalid administrator username or password.")
 
-@app.get("/api/admin/verify")
+@router.get("/admin/verify")
+@router.get("/api/admin/verify")
 def admin_verify(auth: bool = Depends(verify_admin_auth)):
     return {"success": True, "authenticated": True}
 
-@app.post("/api/admin/logout")
+@router.post("/admin/logout")
+@router.post("/api/admin/logout")
 def admin_logout(
     authorization: Optional[str] = Header(None),
     token: Optional[str] = Query(None)
@@ -119,7 +125,8 @@ def admin_logout(
         ACTIVE_ADMIN_TOKENS.remove(auth_token)
     return {"success": True, "message": "Logged out successfully."}
 
-@app.get("/api/info")
+@router.get("/info")
+@router.get("/api/info")
 def get_exam_info():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -136,7 +143,8 @@ def get_exam_info():
         "total_marks": 100
     }
 
-@app.post("/api/start-exam")
+@router.post("/start-exam")
+@router.post("/api/start-exam")
 def start_exam(data: StartExamRequest):
     name = data.name.strip()
     psn = data.psn.strip()
@@ -211,7 +219,8 @@ def start_exam(data: StartExamRequest):
         "questions": questions
     }
 
-@app.post("/api/submit-exam")
+@router.post("/submit-exam")
+@router.post("/api/submit-exam")
 def submit_exam(data: SubmitExamRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -296,7 +305,8 @@ def submit_exam(data: SubmitExamRequest):
         "submitted_at": submitted_at
     }
 
-@app.get("/api/admin/submissions")
+@router.get("/admin/submissions")
+@router.get("/api/admin/submissions")
 def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -329,7 +339,8 @@ def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
         "submissions": submissions
     }
 
-@app.get("/api/results/excel")
+@router.get("/results/excel")
+@router.get("/api/results/excel")
 def export_results_excel(auth: bool = Depends(verify_admin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -466,7 +477,8 @@ def export_results_excel(auth: bool = Depends(verify_admin_auth)):
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
-@app.get("/api/results/csv")
+@router.get("/results/csv")
+@router.get("/api/results/csv")
 def export_results_csv(auth: bool = Depends(verify_admin_auth)):
     conn = get_db_connection()
     df = pd.read_sql_query("""
@@ -499,7 +511,8 @@ def export_results_csv(auth: bool = Depends(verify_admin_auth)):
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
-@app.post("/api/admin/reset-submission/{submission_id}")
+@router.post("/admin/reset-submission/{submission_id}")
+@router.post("/api/admin/reset-submission/{submission_id}")
 def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -511,3 +524,5 @@ def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)
     if deleted == 0:
         raise HTTPException(status_code=404, detail="Submission not found.")
     return {"success": True, "message": "Candidate record reset successfully."}
+
+app.include_router(router)
