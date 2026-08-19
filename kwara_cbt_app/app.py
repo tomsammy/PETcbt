@@ -8,9 +8,8 @@ from typing import Dict, Any, Optional
 
 from fastapi import FastAPI, HTTPException, Request, Response, Depends, Header, Query
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.types import ASGIApp, Scope, Receive, Send
 from pydantic import BaseModel
 import pandas as pd
 import openpyxl
@@ -29,25 +28,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Locate static folder across local or Vercel deployments
-STATIC_DIR = None
-potential_static_dirs = [
-    os.path.join(os.path.dirname(__file__), "static"),
-    os.path.join(os.path.dirname(os.path.dirname(__file__)), "static"),
-    os.path.join(os.path.dirname(os.path.dirname(__file__)), "kwara_cbt_app", "static"),
-    os.path.join(os.getcwd(), "static"),
-    os.path.join(os.getcwd(), "kwara_cbt_app", "static")
-]
-for p in potential_static_dirs:
-    if os.path.exists(p) and os.path.isdir(p):
-        STATIC_DIR = p
-        break
+# Static directory for local development
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+if not os.path.exists(STATIC_DIR):
+    STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
 
-if not STATIC_DIR:
-    STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
-    os.makedirs(STATIC_DIR, exist_ok=True)
-
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
@@ -93,28 +80,13 @@ def verify_admin_auth(
 def startup_event():
     init_db()
 
-def render_main_html():
-    candidates = [
-        os.path.join(STATIC_DIR, "index.html"),
-        os.path.join(os.path.dirname(__file__), "static", "index.html"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "index.html"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "kwara_cbt_app", "static", "index.html"),
-        os.path.join(os.getcwd(), "static", "index.html"),
-        os.path.join(os.getcwd(), "kwara_cbt_app", "static", "index.html")
-    ]
-    for p in candidates:
-        if os.path.exists(p):
-            with open(p, "r", encoding="utf-8") as f:
-                return f.read()
-    return "<h1>Kwara State Staff Development College CBT Portal</h1><p>Welcome. Application loaded.</p>"
-
-@app.get("/api/debug")
-async def debug_route(request: Request):
-    return {
-        "url": str(request.url),
-        "path": request.url.path,
-        "headers": dict(request.headers)
-    }
+@app.get("/", response_class=HTMLResponse)
+def read_index():
+    index_file = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_file):
+        with open(index_file, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Kwara State Staff Development College CBT Portal</h1>"
 
 @app.post("/api/admin/login")
 def admin_login(creds: AdminLoginRequest):
@@ -188,7 +160,7 @@ def start_exam(data: StartExamRequest):
             detail=f"Officer with PSN {psn} has already completed this evaluation test on {existing_sub['submitted_at']} (Score: {existing_sub['score_percentage']}%). Each officer is allowed only one attempt."
         )
     
-    # Register / record candidate
+    # Register candidate
     cursor.execute("""
         INSERT INTO candidates (name, psn, email, grade_level, mda)
         VALUES (?, ?, ?, ?, ?)
@@ -539,8 +511,3 @@ def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)
     if deleted == 0:
         raise HTTPException(status_code=404, detail="Submission not found.")
     return {"success": True, "message": "Candidate record reset successfully."}
-
-# Catch-all route to serve the SPA index.html
-@app.get("/{full_path:path}", response_class=HTMLResponse)
-def catch_all(full_path: str):
-    return render_main_html()
