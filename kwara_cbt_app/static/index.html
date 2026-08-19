@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kwara State Staff Development College - CBT Productivity Evaluation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation / Header -->
+  <header class="header-bar">
+    <div class="brand-section">
+      <img src="/static/images/logo.png" alt="Kwara State Seal" class="brand-logo" onerror="this.style.display='none'">
+      <div class="brand-titles">
+        <h1>KWARA STATE STAFF DEVELOPMENT COLLEGE</h1>
+        <p>Productivity Enhancement Evaluation CBT Portal</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn-nav active" id="nav-exam-btn">
+        <span>📝 Examination</span>
+      </button>
+      <button type="button" class="btn-nav" id="nav-admin-btn">
+        <span>🔒 Admin</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- ======================================================== -->
+    <!-- VIEW 1: Candidate Entry Screen                           -->
+    <!-- ======================================================== -->
+    <section id="view-entry" class="view-section active">
+      <div class="card-entry">
+        <div class="card-entry-header">
+          <img src="/static/images/logo.png" alt="Kwara State Seal" class="hero-logo" onerror="this.style.display='none'">
+          <h2>Officer Verification & CBT Entry</h2>
+          <p>Enter your details below to commence your evaluation test</p>
+        </div>
+
+        <div class="card-entry-body">
+          <form id="form-entry">
+            <div class="form-group">
+              <label for="input-name">Officer Full Name <span class="req">*</span></label>
+              <input type="text" id="input-name" class="form-control" placeholder="e.g. Ibrahim Abubakar Yusuf" required>
+            </div>
+
+            <div class="form-group">
+              <label for="input-psn">PSN (Public Service Number) <span class="req">*</span></label>
+              <input type="text" id="input-psn" class="form-control" placeholder="e.g. 849201" required>
+            </div>
+
+            <div class="form-group">
+              <label for="input-email">Official / Contact Email Address <span class="req">*</span></label>
+              <input type="email" id="input-email" class="form-control" placeholder="e.g. officer@kwarastate.gov.ng" required>
+            </div>
+
+            <div class="form-group">
+              <label for="select-grade">Evaluation Grade Level Cadre <span class="req">*</span></label>
+              <select id="select-grade" class="form-control" required>
+                <option value="GL 08" selected>Grade Level 08 (Batch B)</option>
+                <option value="GL 06-07">Grade Levels 06 & 07</option>
+                <option value="GL 09">Grade Level 09</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="input-mda">Ministry / Department / Agency (MDA)</label>
+              <input type="text" id="input-mda" class="form-control" placeholder="e.g. Ministry of Finance" value="Kwara State Civil Service">
+            </div>
+
+            <div class="info-banner">
+              <div style="font-size: 1.5rem;">📋</div>
+              <div>
+                <strong>Examination Summary:</strong>
+                <ul>
+                  <li>Total: <strong>50 Multiple-Choice Questions</strong> (2 marks each = 100 marks)</li>
+                  <li>Duration: <strong>45 Minutes</strong> with automatic live submission</li>
+                  <li>Results & Performance Slip available <strong>immediately</strong> upon submission</li>
+                </ul>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-start-exam" class="btn-primary-large">
+              <span>🚀 Start CBT Examination Now</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 2: Active CBT Testing Interface                     -->
+    <!-- ======================================================== -->
+    <section id="view-exam" class="view-section">
+      <!-- Exam Info Bar -->
+      <div class="exam-top-bar">
+        <div class="candidate-badge">
+          <div class="candidate-avatar" id="exam-candidate-avatar">I</div>
+          <div class="candidate-meta">
+            <h3 id="exam-candidate-name">Officer Name</h3>
+            <p id="exam-candidate-psn">PSN: - | GL --</p>
+          </div>
+        </div>
+
+        <div class="timer-box" id="exam-timer">
+          <span>⏱️</span>
+          <span id="timer-text">45:00</span>
+        </div>
+      </div>
+
+      <!-- Main Testing Grid -->
+      <div class="exam-layout">
+        <!-- Question Box -->
+        <div class="question-card">
+          <div class="question-header">
+            <div class="question-num-tag" id="q-current-num">Question 1 of 50</div>
+            <div class="grade-tag" id="q-grade-tag">GL 08</div>
+          </div>
+
+          <div class="question-text" id="q-text">
+            Loading question...
+          </div>
+
+          <div class="options-container" id="options-container">
+            <!-- Options dynamically populated by JS -->
+          </div>
+
+          <!-- Question Controls -->
+          <div class="exam-controls">
+            <div class="btn-group-nav">
+              <button type="button" class="btn-ctrl" id="btn-prev" onclick="prevQuestion()">
+                <span>⬅️ Previous</span>
+              </button>
+              <button type="button" class="btn-ctrl" id="btn-next" onclick="nextQuestion()">
+                <span>Next ➡️</span>
+              </button>
+            </div>
+
+            <div class="btn-group-nav">
+              <button type="button" class="btn-ctrl btn-flag" id="btn-flag" onclick="toggleCurrentFlag()">
+                <span>🏳️ Flag for Review</span>
+              </button>
+              <button type="button" class="btn-ctrl" id="btn-clear" onclick="clearCurrentAnswer()">
+                <span>🔄 Clear</span>
+              </button>
+              <button type="button" class="btn-ctrl btn-submit" onclick="openSubmitModal()">
+                <span>✅ Submit Exam</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question Palette Sidebar -->
+        <aside class="palette-card">
+          <div class="palette-header">
+            <span>Question Palette</span>
+            <span style="font-size: 0.8rem; color: #64748b;">(1 - 50)</span>
+          </div>
+
+          <div class="legend-grid">
+            <div class="legend-item"><div class="legend-dot answered"></div> Answered (<span id="count-answered">0</span>)</div>
+            <div class="legend-item"><div class="legend-dot unanswered"></div> Unanswered (<span id="count-unanswered">50</span>)</div>
+            <div class="legend-item"><div class="legend-dot flagged"></div> Flagged (<span id="count-flagged">0</span>)</div>
+            <div class="legend-item"><div class="legend-dot current"></div> Current</div>
+          </div>
+
+          <div class="palette-numbers" id="palette-numbers">
+            <!-- 50 question buttons populated by JS -->
+          </div>
+
+          <button type="button" class="btn-primary-large" style="padding: 11px;" onclick="openSubmitModal()">
+            <span>Finalize & Submit Test</span>
+          </button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 3: Confirmation Modal                               -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="submit-modal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Confirm Test Submission</h3>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.95rem; color: #334155; line-height: 1.5;">
+            Are you sure you want to submit your examination? Once submitted, your answers will be graded immediately and your score recorded.
+          </p>
+
+          <div class="modal-stats-grid">
+            <div class="modal-stat-box">
+              <div class="num" style="color: #10b981;" id="modal-ans-count">0</div>
+              <div class="lbl">Answered</div>
+            </div>
+            <div class="modal-stat-box">
+              <div class="num" style="color: #64748b;" id="modal-unans-count">50</div>
+              <div class="lbl">Unanswered</div>
+            </div>
+            <div class="modal-stat-box">
+              <div class="num" style="color: #8b5cf6;" id="modal-flag-count">0</div>
+              <div class="lbl">Flagged</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ctrl" onclick="closeSubmitModal()">
+            <span>Return to Test</span>
+          </button>
+          <button type="button" class="btn-ctrl btn-submit" onclick="submitExam()">
+            <span>Yes, Submit Now</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 4: Instant Official Result Slip                     -->
+    <!-- ======================================================== -->
+    <section id="view-result" class="view-section">
+      <div class="result-container">
+        <div class="result-slip-card">
+          <div class="slip-header">
+            <img src="/static/images/logo.png" alt="Kwara State Seal" class="slip-header-logo" onerror="this.style.display='none'">
+            <h2>KWARA STATE STAFF DEVELOPMENT COLLEGE</h2>
+            <p>Productivity Enhancement Evaluation - Official Result Slip</p>
+          </div>
+
+          <div class="slip-body">
+            <!-- Score Hero -->
+            <div class="slip-score-hero">
+              <div class="score-pct" id="res-pct">0%</div>
+              <div class="score-marks" id="res-marks">Total Marks: 0 / 100 marks (0 of 50 correct)</div>
+              <div>
+                <span class="remark-pill distinction" id="res-remark">Evaluation Complete</span>
+              </div>
+            </div>
+
+            <!-- Candidate Details -->
+            <div class="slip-details-grid">
+              <div class="slip-detail-row">
+                <div class="lbl">Officer Name</div>
+                <div class="val" id="res-name">-</div>
+              </div>
+              <div class="slip-detail-row">
+                <div class="lbl">PSN</div>
+                <div class="val" id="res-psn">-</div>
+              </div>
+              <div class="slip-detail-row">
+                <div class="lbl">Email Address</div>
+                <div class="val" id="res-email">-</div>
+              </div>
+              <div class="slip-detail-row">
+                <div class="lbl">Cadre / Grade Level</div>
+                <div class="val" id="res-grade">-</div>
+              </div>
+              <div class="slip-detail-row">
+                <div class="lbl">Ministry / Department / Agency</div>
+                <div class="val" id="res-mda">-</div>
+              </div>
+              <div class="slip-detail-row">
+                <div class="lbl">Time Spent</div>
+                <div class="val" id="res-time">-</div>
+              </div>
+              <div class="slip-detail-row" style="grid-column: span 2;">
+                <div class="lbl">Submission Date & Time</div>
+                <div class="val" id="res-date">-</div>
+              </div>
+            </div>
+
+            <!-- Footer & Signature -->
+            <div class="slip-footer">
+              <div>
+                <div id="res-ref-code" style="font-weight: 700; color: #004d40;">Ref: KWS-SDC-00000</div>
+                <div style="font-size: 0.75rem; margin-top: 2px;">Electronically verified & recorded by Kwara State Staff Development College CBT System</div>
+              </div>
+              <div class="slip-sign-line">
+                Staff Development College
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 24px;">
+            <span>🖨️ Print / Save Result Slip (PDF)</span>
+          </button>
+          <button type="button" class="btn-ctrl" id="btn-new-test" style="padding: 12px 24px;">
+            <span>🔄 Take Another Test</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 5: Admin Management Dashboard                       -->
+    <!-- ======================================================== -->
+    <section id="view-admin" class="view-section">
+      <div class="admin-card">
+        <div class="admin-header">
+          <div>
+            <h2>CBT Evaluation Results & Admin Dashboard</h2>
+            <p style="color: #64748b; font-size: 0.875rem;">Real-time candidate submissions, scoring analytics, and spreadsheet export</p>
+          </div>
+
+          <div class="export-btns" style="align-items:center;">
+            <a href="#" id="btn-download-excel" class="btn-excel">
+              <span>📊 Download Results (Excel .xlsx)</span>
+            </a>
+            <a href="#" id="btn-download-csv" class="btn-csv">
+              <span>📄 Download Results (CSV)</span>
+            </a>
+            <button type="button" class="btn-ctrl" id="btn-admin-logout" style="border-color:#cbd5e1;">
+              <span>🚪 Sign Out</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI Metrics -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-val" id="kpi-total">0</div>
+            <div class="kpi-lbl">Total Candidates</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val" id="kpi-avg">0.0%</div>
+            <div class="kpi-lbl">Average Score</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val" id="kpi-rate">0.0%</div>
+            <div class="kpi-lbl">Pass Rate (≥ 50%)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val" id="kpi-pass" style="color: #10b981;">0 Passed</div>
+            <div class="kpi-lbl">Qualified Candidates</div>
+          </div>
+        </div>
+
+        <!-- Filter & Search -->
+        <div class="filter-bar">
+          <input type="text" id="admin-search" class="form-control" placeholder="🔍 Search candidate by name, PSN, email, or MDA..." style="max-width: 380px;">
+          <select id="admin-grade-filter" class="form-control" style="max-width: 220px;">
+            <option value="ALL">All Grade Levels</option>
+            <option value="GL 08">Grade Level 08</option>
+            <option value="GL 06-07">Grade Levels 06 & 07</option>
+            <option value="GL 09">Grade Level 09</option>
+          </select>
+        </div>
+
+        <!-- Submissions Table -->
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>S/N</th>
+                <th>Candidate Name</th>
+                <th>PSN</th>
+                <th>Email Address</th>
+                <th>Grade</th>
+                <th>MDA</th>
+                <th style="text-align:center;">Marks (Max 100)</th>
+                <th style="text-align:center;">Score (%)</th>
+                <th>Performance Remark</th>
+                <th>Submitted At</th>
+              </tr>
+            </thead>
+            <tbody id="admin-table-body">
+              <tr>
+                <td colspan="10" style="text-align:center; padding: 24px; color:#64748b;">Loading candidate submissions...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 6: Admin Login Modal                                -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="admin-login-modal">
+      <div class="modal-card" style="max-width: 420px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); color: #fff;">
+          <h3 style="color:#fff; display:flex; align-items:center; gap:8px;">
+            <span>🔒 Admin Authentication</span>
+          </h3>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+          <p style="font-size: 0.875rem; color: #475569; margin-bottom: 18px;">
+            Enter administrator credentials to access evaluation results and reports.
+          </p>
+
+          <form id="form-admin-login">
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="admin-user">Administrator Username</label>
+              <input type="text" id="admin-user" class="form-control" placeholder="Username" required autocomplete="username">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label for="admin-pass">Password</label>
+              <input type="password" id="admin-pass" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+
+            <div id="admin-login-error" style="display:none; color:#dc2626; background:#fee2e2; padding:10px; border-radius:6px; font-size:0.85rem; margin-bottom:14px;">
+              Invalid username or password.
+            </div>
+
+            <button type="submit" id="btn-admin-submit-login" class="btn-primary-large" style="padding: 12px;">
+              <span>🔑 Sign In</span>
+            </button>
+          </form>
+        </div>
+        <div class="modal-footer" style="padding: 12px 20px;">
+          <button type="button" class="btn-ctrl" onclick="closeAdminLoginModal()">
+            <span>Cancel</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/static/js/cbt.js"></script>
+</body>
+</html>
