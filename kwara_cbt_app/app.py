@@ -527,7 +527,7 @@ def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)
 
 app.include_router(router)
 
-# Catch-all endpoint for diagnostic inspection of paths received by FastAPI
+# Catch-all endpoint returning full diagnostic data
 @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE"])
 async def catch_all_debug(request: Request, path_name: str):
     return JSONResponse({
@@ -535,5 +535,6 @@ async def catch_all_debug(request: Request, path_name: str):
         "url_path": request.url.path,
         "path_param": path_name,
         "scope_path": request.scope.get("path"),
-        "method": request.method
+        "method": request.method,
+        "headers": dict(request.headers)
     })
