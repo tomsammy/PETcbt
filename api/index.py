@@ -1,6 +1,5 @@
 import os
 import sys
-import urllib.parse
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(current_dir)
@@ -13,8 +12,7 @@ if root_dir not in sys.path:
 
 from database import init_db, get_db_connection
 from parser import seed_database
-from app import app as fastapi_app
-from starlette.types import Scope, Receive, Send
+from app import app
 
 # Initialize database on cold start
 try:
@@ -28,26 +26,3 @@ try:
     conn.close()
 except Exception:
     pass
-
-async def handler(scope: Scope, receive: Receive, send: Send):
-    if scope["type"] == "http":
-        headers = dict(scope.get("headers", []))
-        route_matches = headers.get(b"x-now-route-matches", b"").decode("latin1")
-        matched_path = headers.get(b"x-matched-path", b"").decode("latin1")
-        
-        real_path = None
-        if route_matches:
-            for part in route_matches.split("&"):
-                if part.startswith("1="):
-                    real_path = urllib.parse.unquote(part[2:])
-                    break
-                    
-        if not real_path and matched_path and not matched_path.startswith("/api/index"):
-            real_path = urllib.parse.unquote(matched_path)
-            
-        if real_path:
-            scope["path"] = real_path.split("?")[0]
-            
-    await fastapi_app(scope, receive, send)
-
-app = handler
