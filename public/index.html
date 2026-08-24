@@ -44,6 +44,15 @@
           <p>Enter your details below to commence your evaluation test</p>
         </div>
 
+        <!-- Closed Banner (Dynamically shown when admin closes exam) -->
+        <div id="exam-closed-banner" style="display:none; background:#fee2e2; border:1.5px solid #f87171; border-radius:12px; padding:18px; margin: 16px 24px 0 24px; color:#991b1b; text-align:center;">
+          <div style="font-size:2rem; margin-bottom:6px;">⛔</div>
+          <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:6px; color:#991b1b;">CBT Examination is Currently Closed</h3>
+          <p style="font-size:0.9rem; color:#7f1d1d; line-height:1.5; margin:0;">
+            The evaluation exercise has been suspended or concluded by the Administrator (Office of the Head of Service). Candidate intake and test sessions are temporarily disabled.
+          </p>
+        </div>
+
         <div class="card-entry-body">
           <form id="form-entry">
             <div class="form-group">
@@ -88,7 +97,7 @@
             </div>
 
             <button type="submit" id="btn-start-exam" class="btn-primary-large">
-              <span>🚀 Start CBT Examination Now (20 Mins)</span>
+              <span id="btn-start-exam-text">🚀 Start CBT Examination Now (20 Mins)</span>
             </button>
           </form>
         </div>
@@ -99,7 +108,7 @@
     <!-- VIEW 2: Active CBT Testing Interface                     -->
     <!-- ======================================================== -->
     <section id="view-exam" class="view-section">
-      <!-- Exam Info Bar with Live Countdown -->
+      <!-- Exam Info Bar with Live Countdown & Exit Control -->
       <div class="exam-top-bar">
         <div class="candidate-badge">
           <div class="candidate-avatar" id="exam-candidate-avatar">I</div>
@@ -118,6 +127,10 @@
             <span id="timer-text" class="timer-countdown">20:00</span>
           </div>
         </div>
+
+        <button type="button" class="btn-exit-exam" id="btn-exit-exam" onclick="openExitModal()">
+          <span>🚪 Exit Exam</span>
+        </button>
       </div>
 
       <!-- Main Testing Grid -->
@@ -233,6 +246,29 @@
     </div>
 
     <!-- ======================================================== -->
+    <!-- VIEW 3B: Exit Exam Confirmation Modal                    -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="exit-exam-modal">
+      <div class="modal-card" style="max-width: 440px; text-align: center; padding: 24px;">
+        <div style="width: 50px; height: 50px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin: 0 auto 14px auto;">
+          🚪
+        </div>
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Exit CBT Examination?</h3>
+        <p style="font-size: 0.9rem; color: #475569; line-height: 1.5; margin-bottom: 20px;">
+          Are you sure you want to exit your test session? You can submit your answered questions now for scoring, or return to continue your test.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn-primary-large" style="padding: 11px; font-size: 0.95rem;" onclick="submitExam(false)">
+            <span>✅ Submit & Grade Progress Now</span>
+          </button>
+          <button type="button" class="btn-ctrl" style="padding: 10px; font-size: 0.9rem; border-color: #cbd5e1;" onclick="closeExitModal()">
+            <span>↩️ Return to Test</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
     <!-- VIEW 4: Instant Official Result Slip                     -->
     <!-- ======================================================== -->
     <section id="view-result" class="view-section">
@@ -304,9 +340,12 @@
           </div>
         </div>
 
-        <div class="result-actions">
-          <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 32px; font-size: 1rem;">
+        <div class="result-actions" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+          <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 28px; font-size: 1rem;">
             <span>🖨️ Print / Save Result Slip (PDF)</span>
+          </button>
+          <button type="button" class="btn-ctrl" id="btn-close-session" style="padding: 12px 24px; font-size: 1rem; border-color: #cbd5e1; background: #fff;" onclick="closeExamSession()">
+            <span>❌ Close CBT Session</span>
           </button>
         </div>
       </div>
@@ -320,7 +359,7 @@
         <div class="admin-header">
           <div>
             <h2>CBT Evaluation Results & Admin Dashboard</h2>
-            <p style="color: #64748b; font-size: 0.875rem;">Real-time candidate submissions, scoring analytics, and spreadsheet export</p>
+            <p style="color: #64748b; font-size: 0.875rem;">Real-time candidate submissions, scoring analytics, and portal control</p>
           </div>
 
           <div class="export-btns" style="align-items:center;">
@@ -334,6 +373,20 @@
               <span>🚪 Sign Out</span>
             </button>
           </div>
+        </div>
+
+        <!-- Admin CBT Exam Control Bar -->
+        <div class="admin-control-bar">
+          <div class="admin-status-box" id="admin-status-box">
+            <span class="status-pulse-dot" id="status-pulse-dot"></span>
+            <div>
+              <div style="font-size:0.72rem; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em;">CBT Examination Portal Status</div>
+              <strong id="admin-status-text" class="status-text-open">🟢 ACTIVE & OPEN FOR CANDIDATES</strong>
+            </div>
+          </div>
+          <button type="button" class="btn-toggle-exam btn-status-close" id="btn-toggle-status" onclick="toggleExamStatus()">
+            <span id="btn-toggle-status-text">🔒 Close CBT Examination</span>
+          </button>
         </div>
 
         <!-- KPI Metrics -->
@@ -406,7 +459,7 @@
         </div>
         <div class="modal-body" style="padding: 24px;">
           <p style="font-size: 0.875rem; color: #475569; margin-bottom: 18px;">
-            Enter administrator credentials to access evaluation results and reports.
+            Enter administrator credentials to access evaluation results and portal controls.
           </p>
 
           <form id="form-admin-login">

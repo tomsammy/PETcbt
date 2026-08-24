@@ -16,7 +16,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
-from database import get_db_connection, init_db
+from database import get_db_connection, init_db, get_setting, set_setting
 
 app = FastAPI(title="Kwara State Office of Head of Service CBT Evaluation API")
 
@@ -146,6 +146,18 @@ def admin_logout(
         ACTIVE_ADMIN_TOKENS.remove(auth_token)
     return {"success": True, "message": "Logged out successfully."}
 
+@router.post("/admin/toggle-exam-status")
+@router.post("/api/admin/toggle-exam-status")
+def toggle_exam_status(auth: bool = Depends(verify_admin_auth)):
+    current = get_setting("exam_status", "open")
+    new_status = "closed" if current == "open" else "open"
+    set_setting("exam_status", new_status)
+    return {
+        "success": True,
+        "exam_status": new_status,
+        "message": f"CBT Examination is now officially {'OPEN' if new_status == 'open' else 'CLOSED'}."
+    }
+
 @router.get("/info")
 @router.get("/api/info")
 def get_exam_info():
@@ -155,18 +167,28 @@ def get_exam_info():
     levels = [row["grade_level"] for row in cursor.fetchall()]
     conn.close()
     
+    status = get_setting("exam_status", "open")
+    
     return {
         "title": "Kwara State Office of Head of Service - Productivity Enhancement Evaluation",
         "grade_levels": levels if levels else ["GL 06-07", "GL 08", "GL 09"],
         "default_duration_minutes": 20,
         "questions_per_exam": 50,
         "marks_per_question": 2,
-        "total_marks": 100
+        "total_marks": 100,
+        "exam_status": status
     }
 
 @router.post("/start-exam")
 @router.post("/api/start-exam")
 def start_exam(data: StartExamRequest):
+    exam_status = get_setting("exam_status", "open")
+    if exam_status == "closed":
+        raise HTTPException(
+            status_code=403,
+            detail="The CBT Examination has been officially closed by the Administrator (Office of the Head of Service). No new test sessions can be started."
+        )
+
     name = data.name.strip()
     psn = data.psn.strip()
     email = data.email.strip().lower()
@@ -357,6 +379,7 @@ def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
             "passed_count": passed_count,
             "failed_count": total_count - passed_count
         },
+        "exam_status": get_setting("exam_status", "open"),
         "submissions": submissions
     }
 

@@ -15,7 +15,8 @@ const state = {
   timerInterval: null,
   isSubmitted: false,
   adminToken: sessionStorage.getItem('kws_admin_token') || null,
-  adminSubmissions: []
+  adminSubmissions: [],
+  examStatus: 'open'
 };
 
 // DOM Elements
@@ -70,6 +71,38 @@ function closeAlertModal() {
   if (modal) modal.classList.remove('active');
 }
 
+// Exit Exam Confirmation Modal
+function openExitModal() {
+  const modal = document.getElementById('exit-exam-modal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeExitModal() {
+  const modal = document.getElementById('exit-exam-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+// Close CBT Exam Session
+function closeExamSession() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.candidate = null;
+  state.candidateId = null;
+  state.questions = [];
+  state.answers = {};
+  state.flagged.clear();
+  state.isSubmitted = false;
+
+  const entryForm = document.getElementById('form-entry');
+  if (entryForm) entryForm.reset();
+
+  showView('entry');
+  showAlertModal(
+    'CBT Session Closed',
+    'Your CBT examination session has been closed successfully. You can now safely close your browser tab or proceed.',
+    'success'
+  );
+}
+
 // Switch Views
 function showView(viewName) {
   Object.keys(views).forEach(v => {
@@ -100,12 +133,61 @@ function formatTime(seconds) {
 }
 
 // -------------------------------------------------------------
+// 0. Initialize Exam Status
+// -------------------------------------------------------------
+async function initPortalStatus() {
+  try {
+    const res = await fetch('/api/info');
+    if (res.ok) {
+      const data = await res.json();
+      state.examStatus = data.exam_status || 'open';
+      applyExamStatusToUI(state.examStatus);
+    }
+  } catch (e) {
+    console.warn('Could not fetch portal status:', e);
+  }
+}
+
+function applyExamStatusToUI(status) {
+  const closedBanner = document.getElementById('exam-closed-banner');
+  const startBtn = document.getElementById('btn-start-exam');
+  const startBtnText = document.getElementById('btn-start-exam-text');
+
+  if (status === 'closed') {
+    if (closedBanner) closedBanner.style.display = 'block';
+    if (startBtn) {
+      startBtn.disabled = true;
+      startBtn.style.opacity = '0.6';
+      startBtn.style.cursor = 'not-allowed';
+    }
+    if (startBtnText) startBtnText.textContent = '🔒 Examination is Currently Closed';
+  } else {
+    if (closedBanner) closedBanner.style.display = 'none';
+    if (startBtn) {
+      startBtn.disabled = false;
+      startBtn.style.opacity = '1';
+      startBtn.style.cursor = 'pointer';
+    }
+    if (startBtnText) startBtnText.textContent = '🚀 Start CBT Examination Now (20 Mins)';
+  }
+}
+
+// -------------------------------------------------------------
 // 1. Candidate Entry & Exam Initialization
 // -------------------------------------------------------------
 const entryForm = document.getElementById('form-entry');
 if (entryForm) {
   entryForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    if (state.examStatus === 'closed') {
+      showAlertModal(
+        'Examination Closed',
+        'The CBT Examination is currently closed by the Administrator. Candidate registration and test attempts are suspended.',
+        'error'
+      );
+      return;
+    }
 
     const name = document.getElementById('input-name').value.trim();
     const psn = document.getElementById('input-psn').value.trim();
@@ -160,7 +242,7 @@ if (entryForm) {
       showView('exam');
     } catch (err) {
       showAlertModal(
-        'Single Attempt Notice',
+        'Notice',
         err.message,
         'error'
       );
@@ -372,6 +454,7 @@ async function submitExam(isAuto = false) {
 
   if (state.timerInterval) clearInterval(state.timerInterval);
   closeSubmitModal();
+  closeExitModal();
 
   const timeTaken = state.durationSeconds - state.secondsRemaining;
 
@@ -446,7 +529,7 @@ function renderResultSlip(res) {
 }
 
 // -------------------------------------------------------------
-// 4. Admin Portal & Authentication
+// 4. Admin Portal & Authentication & Exam Status Toggle
 // -------------------------------------------------------------
 function openAdminLoginModal() {
   const modal = document.getElementById('admin-login-modal');
@@ -504,6 +587,77 @@ if (adminLoginForm) {
   });
 }
 
+// Admin Toggle Exam Open / Closed
+async function toggleExamStatus() {
+  if (!state.adminToken) {
+    openAdminLoginModal();
+    return;
+  }
+
+  const btn = document.getElementById('btn-toggle-status');
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/admin/toggle-exam-status', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${state.adminToken}`
+      }
+    });
+
+    if (res.status === 401) {
+      state.adminToken = null;
+      sessionStorage.removeItem('kws_admin_token');
+      openAdminLoginModal();
+      return;
+    }
+
+    const data = await res.json();
+    state.examStatus = data.exam_status;
+    updateAdminStatusUI(data.exam_status);
+    applyExamStatusToUI(data.exam_status);
+
+    showAlertModal(
+      'Exam Status Updated',
+      data.message,
+      data.exam_status === 'open' ? 'success' : 'warning'
+    );
+  } catch (err) {
+    showAlertModal('Error', 'Failed to update exam status: ' + err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function updateAdminStatusUI(status) {
+  const dot = document.getElementById('status-pulse-dot');
+  const text = document.getElementById('admin-status-text');
+  const btn = document.getElementById('btn-toggle-status');
+  const btnText = document.getElementById('btn-toggle-status-text');
+
+  if (status === 'closed') {
+    if (dot) dot.className = 'status-pulse-dot closed';
+    if (text) {
+      text.className = 'status-text-closed';
+      text.textContent = '🔴 CLOSED / LOCKED FOR CANDIDATES';
+    }
+    if (btn) {
+      btn.className = 'btn-toggle-exam btn-status-open';
+    }
+    if (btnText) btnText.textContent = '🔓 Re-Open CBT Examination';
+  } else {
+    if (dot) dot.className = 'status-pulse-dot';
+    if (text) {
+      text.className = 'status-text-open';
+      text.textContent = '🟢 ACTIVE & OPEN FOR CANDIDATES';
+    }
+    if (btn) {
+      btn.className = 'btn-toggle-exam btn-status-close';
+    }
+    if (btnText) btnText.textContent = '🔒 Close CBT Examination';
+  }
+}
+
 async function loadAdminSubmissions() {
   if (!state.adminToken) {
     openAdminLoginModal();
@@ -526,6 +680,10 @@ async function loadAdminSubmissions() {
 
     const data = await response.json();
     state.adminSubmissions = data.submissions || [];
+    state.examStatus = data.exam_status || 'open';
+
+    updateAdminStatusUI(state.examStatus);
+    applyExamStatusToUI(state.examStatus);
 
     // KPI Cards
     document.getElementById('kpi-total').textContent = data.summary.total_submissions;
@@ -594,6 +752,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeAlertModal();
     closeSubmitModal();
+    closeExitModal();
     closeAdminLoginModal();
     return;
   }
@@ -658,3 +817,6 @@ document.getElementById('admin-grade-filter').addEventListener('change', renderA
 document.getElementById('btn-print-slip').addEventListener('click', () => {
   window.print();
 });
+
+// Run initial status check on load
+initPortalStatus();

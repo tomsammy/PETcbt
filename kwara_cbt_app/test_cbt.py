@@ -12,10 +12,11 @@ from fastapi import HTTPException
 from app import (
     app, get_exam_info, start_exam, submit_exam,
     admin_login, get_admin_submissions, export_results_excel, export_results_csv,
+    toggle_exam_status,
     StartExamRequest, SubmitExamRequest, AdminLoginRequest
 )
 from parser import seed_database
-from database import get_db_connection, init_db
+from database import get_db_connection, init_db, set_setting
 
 class TestKwaraCBTDirect(unittest.TestCase):
     @classmethod
@@ -23,6 +24,7 @@ class TestKwaraCBTDirect(unittest.TestCase):
         print("\n--- Initializing database and seeding questions ---")
         init_db()
         seed_database()
+        set_setting("exam_status", "open")
         conn = get_db_connection()
         c = conn.cursor()
         c.execute("DELETE FROM submissions")
@@ -34,6 +36,7 @@ class TestKwaraCBTDirect(unittest.TestCase):
         data = get_exam_info()
         self.assertEqual(data["questions_per_exam"], 50)
         self.assertEqual(data["default_duration_minutes"], 20)
+        self.assertEqual(data["exam_status"], "open")
         self.assertIn("Kwara State Office of Head of Service", data["title"])
         self.assertIn("GL 08", data["grade_levels"])
         self.assertIn("GL 06-07", data["grade_levels"])
@@ -125,6 +128,7 @@ class TestKwaraCBTDirect(unittest.TestCase):
 
         admin_data = get_admin_submissions(auth=True)
         self.assertGreaterEqual(admin_data["summary"]["total_submissions"], 1)
+        self.assertEqual(admin_data["exam_status"], "open")
         print(f"[PASS] /api/admin/submissions verified: {admin_data['summary']['total_submissions']} submission(s)")
 
         excel_res = export_results_excel(auth=True)
@@ -137,6 +141,36 @@ class TestKwaraCBTDirect(unittest.TestCase):
         self.assertIn("PSN", csv_text)
         self.assertIn("771829", csv_text)
         print("[PASS] /api/results/csv export verified")
+
+    def test_05_admin_close_and_open_exam(self):
+        # 1. Admin closes exam
+        toggle_res = toggle_exam_status(auth=True)
+        self.assertEqual(toggle_res["exam_status"], "closed")
+        print("[PASS] Admin toggled exam to CLOSED")
+
+        # 2. Candidate attempts to start when closed -> must be blocked with 403
+        req = StartExamRequest(
+            name="Late Candidate",
+            psn="999999",
+            email="late@kwarastate.gov.ng",
+            grade_level="GL 08",
+            mda="Office of the Head of Service"
+        )
+        with self.assertRaises(HTTPException) as ctx:
+            start_exam(req)
+        self.assertEqual(ctx.exception.status_code, 403)
+        self.assertIn("closed", ctx.exception.detail.lower())
+        print("[PASS] Candidate start-exam correctly blocked with 403 when exam is CLOSED")
+
+        # 3. Admin re-opens exam
+        toggle_res2 = toggle_exam_status(auth=True)
+        self.assertEqual(toggle_res2["exam_status"], "open")
+        print("[PASS] Admin toggled exam back to OPEN")
+
+        # 4. Candidate can now start
+        start_res = start_exam(req)
+        self.assertTrue(start_res["success"])
+        print("[PASS] Candidate can successfully start exam after Admin re-opens it")
 
 if __name__ == "__main__":
     unittest.main()

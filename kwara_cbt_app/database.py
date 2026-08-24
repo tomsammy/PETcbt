@@ -71,7 +71,41 @@ def init_db():
         answers_json TEXT
     )
     """)
+
+    # Table for system settings (e.g. exam_status = 'open' / 'closed')
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS system_settings (
+        setting_key TEXT PRIMARY KEY,
+        setting_value TEXT NOT NULL
+    )
+    """)
+    cursor.execute("""
+    INSERT OR IGNORE INTO system_settings (setting_key, setting_value)
+    VALUES ('exam_status', 'open')
+    """)
     
+    conn.commit()
+    conn.close()
+
+def get_setting(key: str, default: str = "") -> str:
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = ?", (key,))
+        row = cursor.fetchone()
+        conn.close()
+        return row["setting_value"] if row else default
+    except Exception:
+        return default
+
+def set_setting(key: str, value: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+    INSERT INTO system_settings (setting_key, setting_value)
+    VALUES (?, ?)
+    ON CONFLICT(setting_key) DO UPDATE SET setting_value = excluded.setting_value
+    """, (key, value))
     conn.commit()
     conn.close()
 
