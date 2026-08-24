@@ -11,7 +11,7 @@
 </head>
 <body>
 
-  <!-- Top Navigation / Header -->
+  <!-- Top Navigation / Header (Clean brand header with no extra buttons) -->
   <header class="header-bar">
     <div class="brand-section">
       <img src="/static/images/logo.png" alt="Kwara State Seal" class="brand-logo" onerror="this.style.display='none'">
@@ -20,25 +20,20 @@
         <p>Productivity Enhancement Evaluation CBT Portal</p>
       </div>
     </div>
-    <div class="header-actions">
-      <button type="button" class="btn-nav active" id="nav-exam-btn" onclick="navigateToExam()">
-        <span>📝 CBT Portal</span>
-      </button>
-    </div>
   </header>
 
   <!-- Main Container -->
   <main class="main-container">
 
     <!-- ======================================================== -->
-    <!-- VIEW 1: Candidate Entry Screen                           -->
+    <!-- VIEW 1: Candidate CBT Login & Entry Screen               -->
     <!-- ======================================================== -->
     <section id="view-entry" class="view-section active">
       <div class="card-entry">
         <div class="card-entry-header">
           <img src="/static/images/logo.png" alt="Kwara State Seal" class="hero-logo" onerror="this.style.display='none'">
-          <h2>Officer Verification & CBT Entry</h2>
-          <p>Enter your details below to commence your evaluation test</p>
+          <h2>Officer CBT Examination Login</h2>
+          <p>Please enter your official verification details below to log in and begin your evaluation test</p>
         </div>
 
         <!-- Closed Banner (Dynamically shown when admin closes exam) -->
@@ -53,22 +48,22 @@
         <div class="card-entry-body">
           <form id="form-entry">
             <div class="form-group">
-              <label for="input-name">Officer Full Name <span class="req">*</span></label>
-              <input type="text" id="input-name" class="form-control" placeholder="e.g. Ibrahim Abubakar Yusuf" required>
+              <label for="input-name">Officer Full Name (Surname First) <span class="req">*</span></label>
+              <input type="text" id="input-name" class="form-control" placeholder="e.g. Ibrahim Abubakar Yusuf" required autocomplete="name">
             </div>
 
             <div class="form-group">
-              <label for="input-psn">PSN (Public Service Number) <span class="req">*</span></label>
-              <input type="text" id="input-psn" class="form-control" placeholder="e.g. 849201" required>
+              <label for="input-psn">Public Service Number (PSN) <span class="req">*</span></label>
+              <input type="text" id="input-psn" class="form-control" placeholder="e.g. 849201" required autocomplete="off">
             </div>
 
             <div class="form-group">
               <label for="input-email">Official / Contact Email Address <span class="req">*</span></label>
-              <input type="email" id="input-email" class="form-control" placeholder="e.g. officer@kwarastate.gov.ng" required>
+              <input type="email" id="input-email" class="form-control" placeholder="e.g. officer@kwarastate.gov.ng" required autocomplete="email">
             </div>
 
             <div class="form-group">
-              <label for="select-grade">Evaluation Grade Level Cadre <span class="req">*</span></label>
+              <label for="select-grade">Evaluation Cadre / Grade Level <span class="req">*</span></label>
               <select id="select-grade" class="form-control" required>
                 <option value="GL 08" selected>Grade Level 08 (Batch B)</option>
                 <option value="GL 06-07">Grade Levels 06 & 07</option>
@@ -77,24 +72,25 @@
             </div>
 
             <div class="form-group">
-              <label for="input-mda">Ministry / Department / Agency (MDA)</label>
-              <input type="text" id="input-mda" class="form-control" placeholder="e.g. Ministry of Finance" value="Kwara State Civil Service">
+              <label for="input-mda">Ministry / Department / Agency (MDA) <span class="req">*</span></label>
+              <input type="text" id="input-mda" class="form-control" placeholder="e.g. Ministry of Finance" value="Kwara State Civil Service" required>
             </div>
 
             <div class="info-banner">
               <div style="font-size: 1.5rem;">📋</div>
               <div>
-                <strong>Important Examination Notice:</strong>
+                <strong>Important Examination Guidelines:</strong>
                 <ul>
                   <li>Total: <strong>50 Multiple-Choice Questions</strong> (2 marks each = 100 marks)</li>
-                  <li>Duration: <strong>20 Minutes</strong> (Active Live Countdown Timer)</li>
+                  <li>Duration: <strong>20 Minutes</strong> (Live Automatic Countdown Timer)</li>
                   <li><strong>Single Attempt Only</strong>: Each officer can take the evaluation only once.</li>
+                  <li><strong>Instant Grading</strong>: Official Result Slip is generated immediately on submission.</li>
                 </ul>
               </div>
             </div>
 
             <button type="submit" id="btn-start-exam" class="btn-primary-large">
-              <span id="btn-start-exam-text">🚀 Start CBT Examination Now (20 Mins)</span>
+              <span id="btn-start-exam-text">🚀 Login & Commence CBT Examination (20 Mins)</span>
             </button>
           </form>
         </div>
