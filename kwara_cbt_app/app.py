@@ -127,6 +127,7 @@ def startup_event():
     init_db()
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/admin", response_class=HTMLResponse)
 def read_index():
     candidates = [
         os.path.join(STATIC_DIR, "index.html"),

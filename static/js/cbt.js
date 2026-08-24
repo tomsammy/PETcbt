@@ -95,6 +95,7 @@ function closeExamSession() {
   const entryForm = document.getElementById('form-entry');
   if (entryForm) entryForm.reset();
 
+  window.history.pushState({}, '', '/');
   showView('entry');
   showAlertModal(
     'CBT Session Closed',
@@ -111,17 +112,9 @@ function showView(viewName) {
     }
   });
 
-  // Update header buttons
   const navExam = document.getElementById('nav-exam-btn');
-  const navAdmin = document.getElementById('nav-admin-btn');
-  if (navExam && navAdmin) {
-    if (viewName === 'admin') {
-      navAdmin.classList.add('active');
-      navExam.classList.remove('active');
-    } else {
-      navExam.classList.add('active');
-      navAdmin.classList.remove('active');
-    }
+  if (navExam) {
+    navExam.classList.toggle('active', viewName !== 'admin');
   }
 }
 
@@ -133,7 +126,7 @@ function formatTime(seconds) {
 }
 
 // -------------------------------------------------------------
-// 0. Initialize Exam Status
+// 0. Initialize Exam Status & Routing (/admin support)
 // -------------------------------------------------------------
 async function initPortalStatus() {
   try {
@@ -169,6 +162,34 @@ function applyExamStatusToUI(status) {
       startBtn.style.cursor = 'pointer';
     }
     if (startBtnText) startBtnText.textContent = '🚀 Start CBT Examination Now (20 Mins)';
+  }
+}
+
+function checkRoute() {
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+
+  if (path === '/admin' || hash === '#admin') {
+    if (state.adminToken) {
+      showView('admin');
+      loadAdminSubmissions();
+    } else {
+      showView('entry');
+      openAdminLoginModal();
+    }
+  }
+}
+
+function navigateToExam() {
+  if (state.isSubmitted) {
+    showView('result');
+  } else if (state.candidate && state.questions && state.questions.length > 0) {
+    showView('exam');
+  } else {
+    if (window.location.pathname.toLowerCase() === '/admin') {
+      window.history.pushState({}, '', '/');
+    }
+    showView('entry');
   }
 }
 
@@ -557,6 +578,10 @@ function openAdminLoginModal() {
 function closeAdminLoginModal() {
   const modal = document.getElementById('admin-login-modal');
   if (modal) modal.classList.remove('active');
+  if (window.location.pathname.toLowerCase() === '/admin') {
+    window.history.pushState({}, '', '/');
+    showView('entry');
+  }
 }
 
 const adminLoginForm = document.getElementById('form-admin-login');
@@ -588,6 +613,7 @@ if (adminLoginForm) {
 
       closeAdminLoginModal();
       adminLoginForm.reset();
+      window.history.pushState({}, '', '/admin');
       showView('admin');
       loadAdminSubmissions();
     } catch (err) {
@@ -786,26 +812,6 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Admin Button Toggles
-document.getElementById('nav-admin-btn').addEventListener('click', () => {
-  if (state.adminToken) {
-    showView('admin');
-    loadAdminSubmissions();
-  } else {
-    openAdminLoginModal();
-  }
-});
-
-document.getElementById('nav-exam-btn').addEventListener('click', () => {
-  if (state.isSubmitted) {
-    showView('result');
-  } else if (state.candidate) {
-    showView('exam');
-  } else {
-    showView('entry');
-  }
-});
-
 // Admin Logout
 const adminLogoutBtn = document.getElementById('btn-admin-logout');
 if (adminLogoutBtn) {
@@ -820,6 +826,7 @@ if (adminLogoutBtn) {
     }
     state.adminToken = null;
     sessionStorage.removeItem('kws_admin_token');
+    window.history.pushState({}, '', '/');
     showView('entry');
   });
 }
@@ -833,5 +840,8 @@ document.getElementById('btn-print-slip').addEventListener('click', () => {
   window.print();
 });
 
-// Run initial status check on load
+window.addEventListener('popstate', checkRoute);
+
+// Run initial status & route check on load
 initPortalStatus();
+checkRoute();

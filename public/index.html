@@ -21,11 +21,8 @@
       </div>
     </div>
     <div class="header-actions">
-      <button type="button" class="btn-nav active" id="nav-exam-btn">
-        <span>📝 Examination</span>
-      </button>
-      <button type="button" class="btn-nav" id="nav-admin-btn">
-        <span>🔒 Admin</span>
+      <button type="button" class="btn-nav active" id="nav-exam-btn" onclick="navigateToExam()">
+        <span>📝 CBT Portal</span>
       </button>
     </div>
   </header>
@@ -369,6 +366,9 @@
             <a href="#" id="btn-download-csv" class="btn-csv">
               <span>📄 Download Results (CSV)</span>
             </a>
+            <button type="button" class="btn-ctrl" id="btn-return-portal" style="border-color:#cbd5e1;" onclick="navigateToExam()">
+              <span>🏠 Portal Home</span>
+            </button>
             <button type="button" class="btn-ctrl" id="btn-admin-logout" style="border-color:#cbd5e1;">
               <span>🚪 Sign Out</span>
             </button>
