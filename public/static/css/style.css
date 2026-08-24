@@ -289,7 +289,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 70px;
+  z-index: 50;
 }
 
 .candidate-badge {
@@ -324,34 +327,117 @@ body {
 .timer-box {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--surface-alt);
-  border: 1.5px solid var(--border);
-  padding: 8px 16px;
-  border-radius: 30px;
-  font-weight: 700;
-  font-size: 1.15rem;
-  color: var(--primary);
-  transition: all 0.3s ease;
+  gap: 12px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border: 2px solid #86efac;
+  padding: 6px 18px;
+  border-radius: 36px;
+  color: #065f46;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.timer-icon-wrap {
+  font-size: 1.4rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  animation: tickWiggle 2s ease-in-out infinite;
+}
+
+@keyframes tickWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+
+.timer-text-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.timer-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #047857;
+  margin-bottom: 2px;
+}
+
+.timer-countdown {
+  font-size: 1.35rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Inter', monospace, sans-serif;
+  color: #004d40;
 }
 
 .timer-box.warning {
-  background: var(--warning-bg);
-  border-color: var(--warning);
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: #fcd34d;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2);
+}
+
+.timer-box.warning .timer-label {
   color: #b45309;
 }
 
+.timer-box.warning .timer-countdown {
+  color: #92400e;
+}
+
 .timer-box.danger {
-  background: var(--danger-bg);
-  border-color: var(--danger);
-  color: var(--danger);
-  animation: pulseTimer 1s infinite;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+  animation: pulseTimer 1s infinite alternate;
+}
+
+.timer-box.danger .timer-label {
+  color: #dc2626;
+}
+
+.timer-box.danger .timer-countdown {
+  color: #b91c1c;
 }
 
 @keyframes pulseTimer {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.04); }
-  100% { transform: scale(1); }
+  0% { transform: scale(1); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2); }
+  100% { transform: scale(1.04); box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4); }
+}
+
+.sidebar-timer-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.sidebar-timer-badge strong {
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  font-family: 'Inter', monospace, sans-serif;
+}
+
+.sidebar-timer-badge.warning strong {
+  color: #b45309;
+}
+
+.sidebar-timer-badge.danger strong {
+  color: #dc2626;
+  animation: pulseTimer 1s infinite alternate;
 }
 
 /* Question Area */

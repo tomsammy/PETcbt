@@ -18,7 +18,7 @@ from openpyxl.utils import get_column_letter
 
 from database import get_db_connection, init_db
 
-app = FastAPI(title="Kwara State Staff Development College CBT Evaluation API")
+app = FastAPI(title="Kwara State Office of Head of Service CBT Evaluation API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -107,7 +107,7 @@ def read_index():
         if os.path.exists(c):
             with open(c, "r", encoding="utf-8") as f:
                 return f.read()
-    return "<h1>Kwara State Staff Development College CBT Portal</h1>"
+    return "<h1>Kwara State Office of Head of Service CBT Portal</h1>"
 
 # Router for all CBT Endpoints (supports both /api/* and /* paths)
 router = APIRouter()
@@ -156,9 +156,9 @@ def get_exam_info():
     conn.close()
     
     return {
-        "title": "Kwara State Staff Development College - Productivity Enhancement Evaluation",
+        "title": "Kwara State Office of Head of Service - Productivity Enhancement Evaluation",
         "grade_levels": levels if levels else ["GL 06-07", "GL 08", "GL 09"],
-        "default_duration_minutes": 45,
+        "default_duration_minutes": 20,
         "questions_per_exam": 50,
         "marks_per_question": 2,
         "total_marks": 100
@@ -236,7 +236,7 @@ def start_exam(data: StartExamRequest):
             "mda": mda
         },
         "total_questions": len(questions),
-        "duration_minutes": 45,
+        "duration_minutes": 20,
         "questions": questions
     }
 
@@ -388,7 +388,7 @@ def export_results_excel(auth: bool = Depends(verify_admin_auth)):
     
     # Title Block
     ws.merge_cells("A1:L1")
-    ws["A1"] = "KWARA STATE STAFF DEVELOPMENT COLLEGE"
+    ws["A1"] = "KWARA STATE OFFICE OF THE HEAD OF SERVICE"
     ws["A1"].font = Font(name="Arial", size=16, bold=True, color="FFFFFF")
     ws["A1"].fill = PatternFill(start_color=primary_green, end_color=primary_green, fill_type="solid")
     ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
@@ -491,7 +491,7 @@ def export_results_excel(auth: bool = Depends(verify_admin_auth)):
     wb.save(output)
     excel_content = output.getvalue()
     
-    filename = f"Kwara_SDC_CBT_Results_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    filename = f"Kwara_HOS_CBT_Results_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
     return Response(
         content=excel_content,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -525,7 +525,7 @@ def export_results_csv(auth: bool = Depends(verify_admin_auth)):
     df.to_csv(stream, index=False)
     csv_bytes = stream.getvalue().encode("utf-8")
     
-    filename = f"Kwara_SDC_CBT_Results_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
+    filename = f"Kwara_HOS_CBT_Results_{datetime.now().strftime('%Y%m%d_%H%M')}.csv"
     return Response(
         content=csv_bytes,
         media_type="text/csv; charset=utf-8",

@@ -1,5 +1,5 @@
 /**
- * Kwara State Staff Development College CBT Testing Engine
+ * Kwara State Office of the Head of Service CBT Testing Engine
  */
 
 // Application State
@@ -10,8 +10,8 @@ const state = {
   currentIndex: 0,
   answers: {}, // { "1": "A", "2": "C" }
   flagged: new Set(), // Set of question numbers (1-50)
-  durationSeconds: 45 * 60,
-  secondsRemaining: 45 * 60,
+  durationSeconds: 20 * 60,
+  secondsRemaining: 20 * 60,
   timerInterval: null,
   isSubmitted: false,
   adminToken: sessionStorage.getItem('kws_admin_token') || null,
@@ -44,7 +44,7 @@ function showAlertModal(title, message, type = 'warning') {
     iconEl.style.background = '#fee2e2';
     iconEl.style.color = '#dc2626';
   } else if (type === 'timer') {
-    iconEl.textContent = '⏰';
+    iconEl.textContent = '⏱️';
     iconEl.style.background = '#fffbeb';
     iconEl.style.color = '#d97706';
   } else if (type === 'info') {
@@ -146,7 +146,7 @@ if (entryForm) {
       state.answers = {};
       state.flagged.clear();
       state.isSubmitted = false;
-      state.durationSeconds = (data.duration_minutes || 45) * 60;
+      state.durationSeconds = (data.duration_minutes || 20) * 60;
       state.secondsRemaining = state.durationSeconds;
 
       // Update candidate details in exam header
@@ -172,23 +172,30 @@ if (entryForm) {
 }
 
 // -------------------------------------------------------------
-// 2. CBT Testing Engine
+// 2. CBT Testing Engine & Live Countdown
 // -------------------------------------------------------------
 function startTimer() {
   if (state.timerInterval) clearInterval(state.timerInterval);
 
   const timerEl = document.getElementById('exam-timer');
   const timerText = document.getElementById('timer-text');
+  const sidebarTimerBox = document.getElementById('sidebar-timer-box');
+  const sidebarTimerText = document.getElementById('sidebar-timer-text');
 
   function updateDisplay() {
-    timerText.textContent = formatTime(state.secondsRemaining);
+    const formatted = formatTime(state.secondsRemaining);
+    if (timerText) timerText.textContent = formatted;
+    if (sidebarTimerText) sidebarTimerText.textContent = formatted;
 
     if (state.secondsRemaining <= 120) {
-      timerEl.className = 'timer-box danger';
+      if (timerEl) timerEl.className = 'timer-box danger';
+      if (sidebarTimerBox) sidebarTimerBox.className = 'sidebar-timer-badge danger';
     } else if (state.secondsRemaining <= 300) {
-      timerEl.className = 'timer-box warning';
+      if (timerEl) timerEl.className = 'timer-box warning';
+      if (sidebarTimerBox) sidebarTimerBox.className = 'sidebar-timer-badge warning';
     } else {
-      timerEl.className = 'timer-box';
+      if (timerEl) timerEl.className = 'timer-box';
+      if (sidebarTimerBox) sidebarTimerBox.className = 'sidebar-timer-badge';
     }
   }
 
@@ -198,9 +205,11 @@ function startTimer() {
     state.secondsRemaining--;
     if (state.secondsRemaining <= 0) {
       clearInterval(state.timerInterval);
+      state.secondsRemaining = 0;
+      updateDisplay();
       showAlertModal(
         'Time Expired',
-        'Your 45-minute allotted time has concluded. Your test is being automatically submitted and graded now.',
+        'Your 20-minute allotted time has concluded. Your test is being automatically submitted and graded now.',
         'timer'
       );
       submitExam(true);
@@ -432,7 +441,7 @@ function renderResultSlip(res) {
     remarkEl.classList.add('fail');
   }
 
-  const refCode = `KWS-SDC-${res.submission_id.toString().padStart(5, '0')}-${candidate.psn}`;
+  const refCode = `KWS-HOS-${res.submission_id.toString().padStart(5, '0')}-${candidate.psn}`;
   document.getElementById('res-ref-code').textContent = `Ref: ${refCode}`;
 }
 

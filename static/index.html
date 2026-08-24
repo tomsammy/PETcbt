@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kwara State Staff Development College - CBT Productivity Evaluation</title>
+  <title>Kwara State Office of the Head of Service - CBT Productivity Evaluation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
     <div class="brand-section">
       <img src="/static/images/logo.png" alt="Kwara State Seal" class="brand-logo" onerror="this.style.display='none'">
       <div class="brand-titles">
-        <h1>KWARA STATE STAFF DEVELOPMENT COLLEGE</h1>
+        <h1>KWARA STATE OFFICE OF THE HEAD OF SERVICE</h1>
         <p>Productivity Enhancement Evaluation CBT Portal</p>
       </div>
     </div>
@@ -81,14 +81,14 @@
                 <strong>Important Examination Notice:</strong>
                 <ul>
                   <li>Total: <strong>50 Multiple-Choice Questions</strong> (2 marks each = 100 marks)</li>
-                  <li>Duration: <strong>45 Minutes</strong> with automatic live submission</li>
+                  <li>Duration: <strong>20 Minutes</strong> (Active Live Countdown Timer)</li>
                   <li><strong>Single Attempt Only</strong>: Each officer can take the evaluation only once.</li>
                 </ul>
               </div>
             </div>
 
             <button type="submit" id="btn-start-exam" class="btn-primary-large">
-              <span>🚀 Start CBT Examination Now</span>
+              <span>🚀 Start CBT Examination Now (20 Mins)</span>
             </button>
           </form>
         </div>
@@ -99,7 +99,7 @@
     <!-- VIEW 2: Active CBT Testing Interface                     -->
     <!-- ======================================================== -->
     <section id="view-exam" class="view-section">
-      <!-- Exam Info Bar -->
+      <!-- Exam Info Bar with Live Countdown -->
       <div class="exam-top-bar">
         <div class="candidate-badge">
           <div class="candidate-avatar" id="exam-candidate-avatar">I</div>
@@ -110,8 +110,13 @@
         </div>
 
         <div class="timer-box" id="exam-timer">
-          <span>⏱️</span>
-          <span id="timer-text">45:00</span>
+          <div class="timer-icon-wrap">
+            <span class="timer-icon">⏱️</span>
+          </div>
+          <div class="timer-text-wrap">
+            <span class="timer-label">TIME REMAINING</span>
+            <span id="timer-text" class="timer-countdown">20:00</span>
+          </div>
         </div>
       </div>
 
@@ -162,6 +167,12 @@
           <div class="palette-header">
             <span>Question Palette</span>
             <span style="font-size: 0.8rem; color: #64748b;">(1 - 50)</span>
+          </div>
+
+          <!-- Mini Sidebar Timer Display -->
+          <div class="sidebar-timer-badge" id="sidebar-timer-box">
+            <span>⏱️ Time Left:</span>
+            <strong id="sidebar-timer-text">20:00</strong>
           </div>
 
           <div class="legend-grid">
@@ -229,7 +240,7 @@
         <div class="result-slip-card">
           <div class="slip-header">
             <img src="/static/images/logo.png" alt="Kwara State Seal" class="slip-header-logo" onerror="this.style.display='none'">
-            <h2>KWARA STATE STAFF DEVELOPMENT COLLEGE</h2>
+            <h2>KWARA STATE OFFICE OF THE HEAD OF SERVICE</h2>
             <p>Productivity Enhancement Evaluation - Official Result Slip</p>
           </div>
 
@@ -283,11 +294,11 @@
             <!-- Footer & Signature -->
             <div class="slip-footer">
               <div>
-                <div id="res-ref-code" style="font-weight: 700; color: #004d40;">Ref: KWS-SDC-00000</div>
-                <div style="font-size: 0.75rem; margin-top: 2px;">Electronically verified & recorded by Kwara State Staff Development College CBT System</div>
+                <div id="res-ref-code" style="font-weight: 700; color: #004d40;">Ref: KWS-HOS-00000</div>
+                <div style="font-size: 0.75rem; margin-top: 2px;">Electronically verified & recorded by Kwara State Office of the Head of Service CBT Portal</div>
               </div>
               <div class="slip-sign-line">
-                Staff Development College
+                Office of the Head of Service
               </div>
             </div>
           </div>

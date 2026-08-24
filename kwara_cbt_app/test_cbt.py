@@ -33,11 +33,12 @@ class TestKwaraCBTDirect(unittest.TestCase):
     def test_01_info_endpoint(self):
         data = get_exam_info()
         self.assertEqual(data["questions_per_exam"], 50)
-        self.assertIn("Kwara State Staff Development College", data["title"])
+        self.assertEqual(data["default_duration_minutes"], 20)
+        self.assertIn("Kwara State Office of Head of Service", data["title"])
         self.assertIn("GL 08", data["grade_levels"])
         self.assertIn("GL 06-07", data["grade_levels"])
         self.assertIn("GL 09", data["grade_levels"])
-        print("[PASS] /api/info verified")
+        print("[PASS] /api/info verified (20 mins, Kwara State Office of Head of Service)")
 
     def test_02_start_exam_all_grades(self):
         for grade in ["GL 06-07", "GL 08", "GL 09"]:
@@ -46,11 +47,12 @@ class TestKwaraCBTDirect(unittest.TestCase):
                 psn=f"84920{grade[-1]}",
                 email=f"test_{grade.replace(' ', '_')}@kwarastate.gov.ng",
                 grade_level=grade,
-                mda="Staff Development College"
+                mda="Office of the Head of Service"
             )
             data = start_exam(req)
             self.assertTrue(data["success"])
             self.assertEqual(data["total_questions"], 50)
+            self.assertEqual(data["duration_minutes"], 20)
             self.assertEqual(len(data["questions"]), 50)
             
             for q in data["questions"]:
@@ -70,7 +72,7 @@ class TestKwaraCBTDirect(unittest.TestCase):
             psn=psn_test,
             email="aishat.m@kwarastate.gov.ng",
             grade_level="GL 08",
-            mda="Ministry of Finance"
+            mda="Office of the Head of Service"
         )
         start_data = start_exam(req)
         cand_id = start_data["candidate_id"]
@@ -95,9 +97,9 @@ class TestKwaraCBTDirect(unittest.TestCase):
             psn=psn_test,
             email="aishat.m@kwarastate.gov.ng",
             grade_level="GL 08",
-            mda="Ministry of Finance",
+            mda="Office of the Head of Service",
             answers=simulated_answers,
-            time_taken_seconds=1640
+            time_taken_seconds=950
         )
 
         sub_data = submit_exam(sub_req)
