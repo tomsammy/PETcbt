@@ -3,6 +3,8 @@ import json
 import sqlite3
 import io
 import secrets
+import hmac
+import hashlib
 from datetime import datetime
 from typing import Dict, Any, Optional
 
@@ -50,7 +52,36 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+SECRET_KEY = os.environ.get("CBT_SECRET_KEY", "kwara_hos_cbt_secure_secret_2026")
 ACTIVE_ADMIN_TOKENS = set()
+
+def generate_admin_token(username: str) -> str:
+    timestamp = str(int(datetime.now().timestamp()))
+    payload = f"{username}:{timestamp}"
+    signature = hmac.new(SECRET_KEY.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256).hexdigest()
+    return f"{payload}:{signature}"
+
+def verify_admin_token_stateless(token_str: str) -> bool:
+    if not token_str:
+        return False
+    parts = token_str.split(":")
+    if len(parts) != 3:
+        return False
+    username, timestamp, signature = parts
+    if username != ADMIN_USERNAME:
+        return False
+    payload = f"{username}:{timestamp}"
+    expected_sig = hmac.new(SECRET_KEY.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected_sig):
+        return False
+    try:
+        ts = int(timestamp)
+        # Valid for 48 hours
+        if datetime.now().timestamp() - ts > 172800:
+            return False
+    except Exception:
+        return False
+    return True
 
 class AdminLoginRequest(BaseModel):
     username: str
@@ -84,8 +115,11 @@ def verify_admin_auth(
         else:
             auth_token = authorization.strip()
             
-    if not auth_token or auth_token not in ACTIVE_ADMIN_TOKENS:
+    if not auth_token:
         raise HTTPException(status_code=401, detail="Unauthorized: Admin login required.")
+        
+    if not verify_admin_token_stateless(auth_token) and auth_token not in ACTIVE_ADMIN_TOKENS:
+        raise HTTPException(status_code=401, detail="Unauthorized: Invalid or expired administrator session.")
     return True
 
 @app.on_event("startup")
@@ -119,7 +153,7 @@ def admin_login(creds: AdminLoginRequest):
     p = creds.password.strip()
     
     if u == ADMIN_USERNAME and p == ADMIN_PASSWORD:
-        token = secrets.token_hex(24)
+        token = generate_admin_token(u)
         ACTIVE_ADMIN_TOKENS.add(token)
         return {
             "success": True,
@@ -186,7 +220,7 @@ def start_exam(data: StartExamRequest):
     if exam_status == "closed":
         raise HTTPException(
             status_code=403,
-            detail="The CBT Examination is closed by the Administrator (Office of the Head of Service). You cannot take this evaluation test."
+            detail="The CBT Examination has been closed by the Administrator (Office of the Head of Service). Candidate registration and test attempts are suspended. You cannot take the examination."
         )
 
     name = data.name.strip()
