@@ -241,8 +241,23 @@ if (entryForm) {
       startTimer();
       showView('exam');
     } catch (err) {
+      state.candidate = null;
+      state.candidateId = null;
+      state.questions = [];
+      state.answers = {};
+      state.flagged.clear();
+
+      const qText = document.getElementById('q-text');
+      const optCont = document.getElementById('options-container');
+      const palNum = document.getElementById('palette-numbers');
+      if (qText) qText.textContent = '';
+      if (optCont) optCont.innerHTML = '';
+      if (palNum) palNum.innerHTML = '';
+
+      showView('entry');
+
       showAlertModal(
-        'Notice',
+        'Examination Closed',
         err.message,
         'error'
       );

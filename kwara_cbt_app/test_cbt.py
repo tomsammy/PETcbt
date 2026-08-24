@@ -117,7 +117,7 @@ class TestKwaraCBTDirect(unittest.TestCase):
         with self.assertRaises(HTTPException) as ctx:
             start_exam(req)
         self.assertEqual(ctx.exception.status_code, 400)
-        self.assertIn("already completed this evaluation", ctx.exception.detail)
+        self.assertIn("cannot take the examination again", ctx.exception.detail)
         print("[PASS] Single attempt enforcement verified: duplicate attempt blocked with 400 error")
 
     def test_04_admin_auth_and_exports(self):

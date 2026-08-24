@@ -186,7 +186,7 @@ def start_exam(data: StartExamRequest):
     if exam_status == "closed":
         raise HTTPException(
             status_code=403,
-            detail="The CBT Examination has been officially closed by the Administrator (Office of the Head of Service). No new test sessions can be started."
+            detail="The CBT Examination is closed by the Administrator (Office of the Head of Service). You cannot take this evaluation test."
         )
 
     name = data.name.strip()
@@ -208,7 +208,7 @@ def start_exam(data: StartExamRequest):
         conn.close()
         raise HTTPException(
             status_code=400,
-            detail=f"Officer with PSN {psn} has already completed this evaluation test on {existing_sub['submitted_at']} (Score: {existing_sub['score_percentage']}%). Each officer is allowed only one attempt."
+            detail=f"The CBT Examination is closed for this record. Officer with PSN {psn} has already taken this test on {existing_sub['submitted_at']} (Score: {existing_sub['score_percentage']}%). You cannot take the examination again."
         )
     
     # Register candidate
