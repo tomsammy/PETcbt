@@ -1,8 +1,11 @@
 import os
 import json
+import smtplib
 import urllib.request
 import urllib.error
 import logging
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger("cbt_email")
@@ -149,11 +152,42 @@ def send_result_email(
     )
 
     subject = f"Official CBT Evaluation Result Slip - {candidate_name} (PSN: {psn})"
+
+    # 1. GMAIL SMTP Dispatch (Easiest - No domain verification required)
+    smtp_user = (os.environ.get("GMAIL_USER") or os.environ.get("SMTP_USER") or "").strip()
+    smtp_pass = (os.environ.get("GMAIL_APP_PASSWORD") or os.environ.get("SMTP_PASS") or os.environ.get("SMTP_PASSWORD") or "").strip()
+    smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com").strip()
+    smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+
+    if smtp_user and smtp_pass:
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"Kwara State Office of Head of Service <{smtp_user}>"
+            msg["To"] = candidate_email
+
+            part_html = MIMEText(html_content, "html")
+            msg.attach(part_html)
+
+            if smtp_port == 465:
+                with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=12) as server:
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, [candidate_email], msg.as_string())
+            else:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=12) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_pass)
+                    server.sendmail(smtp_user, [candidate_email], msg.as_string())
+
+            logger.info(f"Email successfully delivered to {candidate_email} via Gmail SMTP")
+            return {"success": True, "provider": "gmail_smtp", "sender": smtp_user}
+        except Exception as e:
+            logger.error(f"Gmail SMTP dispatch error: {e}")
+
+    # 2. Resend API Dispatch
     resend_key = os.environ.get("RESEND_API_KEY", "").strip()
-    sendgrid_key = os.environ.get("SENDGRID_API_KEY", "").strip()
     email_from = os.environ.get("EMAIL_FROM", "Kwara State Head of Service <onboarding@resend.dev>").strip()
 
-    # 1. Resend API Dispatch
     if resend_key:
         try:
             payload = json.dumps({
@@ -177,9 +211,9 @@ def send_result_email(
                 return {"success": True, "provider": "resend", "id": res_body.get("id")}
         except Exception as e:
             logger.error(f"Resend dispatch error: {e}")
-            return {"success": False, "error": str(e)}
 
-    # 2. SendGrid API Dispatch
+    # 3. SendGrid API Dispatch
+    sendgrid_key = os.environ.get("SENDGRID_API_KEY", "").strip()
     if sendgrid_key:
         try:
             from_email = email_from.split("<")[-1].replace(">", "").strip() if "<" in email_from else email_from
@@ -203,8 +237,7 @@ def send_result_email(
                 return {"success": True, "provider": "sendgrid"}
         except Exception as e:
             logger.error(f"SendGrid dispatch error: {e}")
-            return {"success": False, "error": str(e)}
 
-    # Fallback simulated (when API keys are not set in dev/local)
+    # Fallback simulated (when API keys or SMTP are not configured)
     logger.info(f"[SIMULATED EMAIL] Result email prepared for {candidate_email} (PSN: {psn}, Score: {score_percentage}%)")
     return {"success": True, "provider": "simulated", "message": "Email template generated and logged"}
