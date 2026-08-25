@@ -181,6 +181,43 @@ body {
   margin-top: 4px;
 }
 
+.entry-nav-tabs {
+  display: flex;
+  background: #f1f5f9;
+  border-bottom: 1.5px solid var(--border);
+  padding: 6px;
+  gap: 6px;
+}
+
+.entry-tab-btn {
+  flex: 1;
+  padding: 11px 16px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.92rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.entry-tab-btn:hover {
+  color: var(--primary);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.entry-tab-btn.active {
+  background: #ffffff;
+  color: var(--primary);
+  border-color: var(--border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
 .card-entry-body {
   padding: 32px 28px;
 }

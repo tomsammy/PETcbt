@@ -27,13 +27,14 @@ const views = {
   admin: document.getElementById('view-admin')
 };
 
-// Custom Alert Modal System
-function showAlertModal(title, message, type = 'warning') {
+// Custom Alert Modal System with Optional Action Buttons
+function showAlertModal(title, message, type = 'warning', actionConfig = null) {
   const modal = document.getElementById('custom-alert-modal');
   const titleEl = document.getElementById('alert-modal-title');
   const msgEl = document.getElementById('alert-modal-msg');
   const iconEl = document.getElementById('alert-modal-icon');
   const okBtn = document.getElementById('alert-modal-ok-btn');
+  const viewResBtn = document.getElementById('alert-modal-view-res-btn');
 
   if (!modal) return;
 
@@ -60,6 +61,19 @@ function showAlertModal(title, message, type = 'warning') {
     iconEl.textContent = '⚠️';
     iconEl.style.background = '#fef3c7';
     iconEl.style.color = '#b45309';
+  }
+
+  if (viewResBtn) {
+    if (actionConfig && actionConfig.showResultBtn && actionConfig.psn) {
+      viewResBtn.style.display = 'block';
+      viewResBtn.onclick = () => {
+        closeAlertModal();
+        retrieveResultByPsn(actionConfig.psn);
+      };
+    } else {
+      viewResBtn.style.display = 'none';
+      viewResBtn.onclick = null;
+    }
   }
 
   modal.classList.add('active');
@@ -94,14 +108,24 @@ function closeExamSession() {
 
   const entryForm = document.getElementById('form-entry');
   if (entryForm) entryForm.reset();
+  const retrieveForm = document.getElementById('form-retrieve-result');
+  if (retrieveForm) retrieveForm.reset();
 
   window.history.pushState({}, '', '/');
   showView('entry');
+  switchEntryTab('start');
   showAlertModal(
     'CBT Session Closed',
     'Your CBT examination session has been closed successfully. You can now safely close your browser tab or proceed.',
     'success'
   );
+}
+
+// Return to Portal Home from Result View
+function returnToPortalHome() {
+  window.history.pushState({}, '', '/');
+  showView('entry');
+  switchEntryTab('retrieve');
 }
 
 // Switch Views
@@ -161,7 +185,7 @@ function applyExamStatusToUI(status) {
       startBtn.style.opacity = '1';
       startBtn.style.cursor = 'pointer';
     }
-    if (startBtnText) startBtnText.textContent = '🚀 Start CBT Examination Now (20 Mins)';
+    if (startBtnText) startBtnText.textContent = '🚀 Login & Commence CBT Examination (20 Mins)';
   }
 }
 
@@ -194,8 +218,79 @@ function navigateToExam() {
 }
 
 // -------------------------------------------------------------
-// 1. Candidate Entry & Exam Initialization
+// 1. Candidate Entry Tabs: Take Exam vs Retrieve Result
 // -------------------------------------------------------------
+function switchEntryTab(tab) {
+  const btnStart = document.getElementById('tab-btn-start');
+  const btnRetrieve = document.getElementById('tab-btn-retrieve');
+  const contentStart = document.getElementById('tab-content-start');
+  const contentRetrieve = document.getElementById('tab-content-retrieve');
+  const title = document.getElementById('entry-card-title');
+  const subtitle = document.getElementById('entry-card-subtitle');
+
+  if (tab === 'retrieve') {
+    if (btnStart) btnStart.classList.remove('active');
+    if (btnRetrieve) btnRetrieve.classList.add('active');
+    if (contentStart) contentStart.style.display = 'none';
+    if (contentRetrieve) contentRetrieve.style.display = 'block';
+    if (title) title.textContent = 'Retrieve Official Result Slip';
+    if (subtitle) subtitle.textContent = 'Enter your Public Service Number (PSN) to view, verify, and reprint your official result slip anytime';
+    const inputPsn = document.getElementById('input-retrieve-psn');
+    if (inputPsn) inputPsn.focus();
+  } else {
+    if (btnStart) btnStart.classList.add('active');
+    if (btnRetrieve) btnRetrieve.classList.remove('active');
+    if (contentStart) contentStart.style.display = 'block';
+    if (contentRetrieve) contentRetrieve.style.display = 'none';
+    if (title) title.textContent = 'Officer CBT Examination Login';
+    if (subtitle) subtitle.textContent = 'Please enter your official verification details below to log in and begin your evaluation test';
+  }
+}
+
+// Result Retrieval by PSN
+async function retrieveResultByPsn(psn) {
+  const btn = document.getElementById('btn-retrieve-result');
+  const originalText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳ Searching Examination Records...</span>`;
+  }
+
+  try {
+    const res = await fetch(`/api/result/${encodeURIComponent(psn)}`);
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || `No examination result found for PSN: ${psn}`);
+    }
+
+    renderResultSlip(data);
+    showView('result');
+    closeAlertModal();
+  } catch (err) {
+    showAlertModal('Result Not Found', err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+}
+
+// Retrieve Result Form Event Listener
+const retrieveForm = document.getElementById('form-retrieve-result');
+if (retrieveForm) {
+  retrieveForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const psn = document.getElementById('input-retrieve-psn').value.trim();
+    if (!psn) {
+      showAlertModal('PSN Required', 'Please enter your Public Service Number (PSN) to retrieve your result slip.', 'warning');
+      return;
+    }
+    await retrieveResultByPsn(psn);
+  });
+}
+
+// Candidate Entry & Exam Initialization
 const entryForm = document.getElementById('form-entry');
 if (entryForm) {
   entryForm.addEventListener('submit', async (e) => {
@@ -277,10 +372,12 @@ if (entryForm) {
 
       showView('entry');
 
+      const isAlreadyTaken = err.message.toLowerCase().includes('already taken') || err.message.toLowerCase().includes('cannot take');
       showAlertModal(
         'Examination Closed',
         err.message,
-        'error'
+        'error',
+        isAlreadyTaken ? { showResultBtn: true, psn: psn } : null
       );
     } finally {
       btn.disabled = false;
@@ -828,6 +925,7 @@ if (adminLogoutBtn) {
     sessionStorage.removeItem('kws_admin_token');
     window.history.pushState({}, '', '/');
     showView('entry');
+    switchEntryTab('start');
   });
 }
 

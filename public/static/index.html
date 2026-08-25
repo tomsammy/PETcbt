@@ -26,14 +26,24 @@
   <main class="main-container">
 
     <!-- ======================================================== -->
-    <!-- VIEW 1: Candidate CBT Login & Entry Screen               -->
+    <!-- VIEW 1: Candidate CBT Login & Result Retrieval Screen    -->
     <!-- ======================================================== -->
     <section id="view-entry" class="view-section active">
       <div class="card-entry">
         <div class="card-entry-header">
           <img src="/static/images/logo.png" alt="Kwara State Seal" class="hero-logo" onerror="this.style.display='none'">
-          <h2>Officer CBT Examination Login</h2>
-          <p>Please enter your official verification details below to log in and begin your evaluation test</p>
+          <h2 id="entry-card-title">Officer CBT Evaluation Portal</h2>
+          <p id="entry-card-subtitle">Take your evaluation test or retrieve and print your official result slip anytime</p>
+        </div>
+
+        <!-- Segmented Navigation Tabs -->
+        <div class="entry-nav-tabs">
+          <button type="button" class="entry-tab-btn active" id="tab-btn-start" onclick="switchEntryTab('start')">
+            <span>📝 Take Examination</span>
+          </button>
+          <button type="button" class="entry-tab-btn" id="tab-btn-retrieve" onclick="switchEntryTab('retrieve')">
+            <span>🔍 Check & Print Result</span>
+          </button>
         </div>
 
         <!-- Closed Banner (Dynamically shown when admin closes exam) -->
@@ -46,53 +56,79 @@
         </div>
 
         <div class="card-entry-body">
-          <form id="form-entry">
-            <div class="form-group">
-              <label for="input-name">Officer Full Name (Surname First) <span class="req">*</span></label>
-              <input type="text" id="input-name" class="form-control" placeholder="e.g. Ibrahim Abubakar Yusuf" required autocomplete="name">
-            </div>
-
-            <div class="form-group">
-              <label for="input-psn">Public Service Number (PSN) <span class="req">*</span></label>
-              <input type="text" id="input-psn" class="form-control" placeholder="e.g. 849201" required autocomplete="off">
-            </div>
-
-            <div class="form-group">
-              <label for="input-email">Official / Contact Email Address <span class="req">*</span></label>
-              <input type="email" id="input-email" class="form-control" placeholder="e.g. officer@kwarastate.gov.ng" required autocomplete="email">
-            </div>
-
-            <div class="form-group">
-              <label for="select-grade">Evaluation Cadre / Grade Level <span class="req">*</span></label>
-              <select id="select-grade" class="form-control" required>
-                <option value="GL 08" selected>Grade Level 08 (Batch B)</option>
-                <option value="GL 06-07">Grade Levels 06 & 07</option>
-                <option value="GL 09">Grade Level 09</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="input-mda">Ministry / Department / Agency (MDA) <span class="req">*</span></label>
-              <input type="text" id="input-mda" class="form-control" placeholder="e.g. Ministry of Finance" value="Kwara State Civil Service" required>
-            </div>
-
-            <div class="info-banner">
-              <div style="font-size: 1.5rem;">📋</div>
-              <div>
-                <strong>Important Examination Guidelines:</strong>
-                <ul>
-                  <li>Total: <strong>50 Multiple-Choice Questions</strong> (2 marks each = 100 marks)</li>
-                  <li>Duration: <strong>20 Minutes</strong> (Live Automatic Countdown Timer)</li>
-                  <li><strong>Single Attempt Only</strong>: Each officer can take the evaluation only once.</li>
-                  <li><strong>Instant Grading</strong>: Official Result Slip is generated immediately on submission.</li>
-                </ul>
+          <!-- TAB 1: Take Examination Form -->
+          <div id="tab-content-start">
+            <form id="form-entry">
+              <div class="form-group">
+                <label for="input-name">Officer Full Name (Surname First) <span class="req">*</span></label>
+                <input type="text" id="input-name" class="form-control" placeholder="e.g. Ibrahim Abubakar Yusuf" required autocomplete="name">
               </div>
+
+              <div class="form-group">
+                <label for="input-psn">Public Service Number (PSN) <span class="req">*</span></label>
+                <input type="text" id="input-psn" class="form-control" placeholder="e.g. 849201" required autocomplete="off">
+              </div>
+
+              <div class="form-group">
+                <label for="input-email">Official / Contact Email Address <span class="req">*</span></label>
+                <input type="email" id="input-email" class="form-control" placeholder="e.g. officer@kwarastate.gov.ng" required autocomplete="email">
+              </div>
+
+              <div class="form-group">
+                <label for="select-grade">Evaluation Cadre / Grade Level <span class="req">*</span></label>
+                <select id="select-grade" class="form-control" required>
+                  <option value="GL 08" selected>Grade Level 08 (Batch B)</option>
+                  <option value="GL 06-07">Grade Levels 06 & 07</option>
+                  <option value="GL 09">Grade Level 09</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="input-mda">Ministry / Department / Agency (MDA) <span class="req">*</span></label>
+                <input type="text" id="input-mda" class="form-control" placeholder="e.g. Ministry of Finance" value="Kwara State Civil Service" required>
+              </div>
+
+              <div class="info-banner">
+                <div style="font-size: 1.5rem;">📋</div>
+                <div>
+                  <strong>Important Examination Guidelines:</strong>
+                  <ul>
+                    <li>Total: <strong>50 Multiple-Choice Questions</strong> (2 marks each = 100 marks)</li>
+                    <li>Duration: <strong>20 Minutes</strong> (Live Automatic Countdown Timer)</li>
+                    <li><strong>Single Attempt Only</strong>: Each officer can take the evaluation only once.</li>
+                    <li><strong>Instant Grading</strong>: Official Result Slip is generated immediately on submission.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <button type="submit" id="btn-start-exam" class="btn-primary-large">
+                <span id="btn-start-exam-text">🚀 Login & Commence CBT Examination (20 Mins)</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- TAB 2: Retrieve / Check Result Form -->
+          <div id="tab-content-retrieve" style="display:none;">
+            <div style="background: #e0f2fe; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 16px 18px; margin-bottom: 24px; color: #0369a1; font-size: 0.9rem; line-height: 1.55;">
+              <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <span>ℹ️ Official Result Verification & Reprint</span>
+              </div>
+              Candidates who have completed their evaluation can retrieve, review, and print their official result slip anytime by entering their registered PSN.
             </div>
 
-            <button type="submit" id="btn-start-exam" class="btn-primary-large">
-              <span id="btn-start-exam-text">🚀 Login & Commence CBT Examination (20 Mins)</span>
-            </button>
-          </form>
+            <form id="form-retrieve-result">
+              <div class="form-group">
+                <label for="input-retrieve-psn">Enter Your Public Service Number (PSN) <span class="req">*</span></label>
+                <input type="text" id="input-retrieve-psn" class="form-control" placeholder="e.g. 849201" required autocomplete="off" style="font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em;">
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Enter the exact PSN used during your examination session</p>
+              </div>
+
+              <button type="submit" id="btn-retrieve-result" class="btn-primary-large" style="margin-top: 8px;">
+                <span id="btn-retrieve-result-text">🔍 Retrieve Official Result Slip</span>
+              </button>
+            </form>
+          </div>
+
         </div>
       </div>
     </section>
@@ -337,6 +373,9 @@
           <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 28px; font-size: 1rem;">
             <span>🖨️ Print / Save Result Slip (PDF)</span>
           </button>
+          <button type="button" class="btn-ctrl" id="btn-return-home" style="padding: 12px 24px; font-size: 1rem; border-color: #cbd5e1; background: #fff;" onclick="returnToPortalHome()">
+            <span>🏠 Return to Portal Home</span>
+          </button>
           <button type="button" class="btn-ctrl" id="btn-close-session" style="padding: 12px 24px; font-size: 1rem; border-color: #cbd5e1; background: #fff;" onclick="closeExamSession()">
             <span>❌ Close CBT Session</span>
           </button>
@@ -500,9 +539,14 @@
         <div id="alert-modal-msg" style="font-size: 0.95rem; color: #475569; line-height: 1.6; margin-bottom: 24px; padding: 0 8px;">
           Alert message content goes here.
         </div>
-        <button type="button" class="btn-primary-large" id="alert-modal-ok-btn" style="padding: 13px; font-size: 1rem; width: 100%;" onclick="closeAlertModal()">
-          <span>Understood</span>
-        </button>
+        <div id="alert-modal-actions" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+          <button type="button" class="btn-primary-large" id="alert-modal-view-res-btn" style="display:none; padding: 12px; font-size: 0.95rem; width: 100%;">
+            <span>📄 View & Print My Result Slip</span>
+          </button>
+          <button type="button" class="btn-primary-large" id="alert-modal-ok-btn" style="padding: 12px; font-size: 0.95rem; width: 100%;" onclick="closeAlertModal()">
+            <span>Understood</span>
+          </button>
+        </div>
       </div>
     </div>
 

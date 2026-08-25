@@ -12,8 +12,8 @@ from fastapi import HTTPException
 from app import (
     app, get_exam_info, start_exam, submit_exam,
     admin_login, get_admin_submissions, export_results_excel, export_results_csv,
-    toggle_exam_status,
-    StartExamRequest, SubmitExamRequest, AdminLoginRequest
+    toggle_exam_status, retrieve_result,
+    StartExamRequest, SubmitExamRequest, AdminLoginRequest, RetrieveResultRequest
 )
 from parser import seed_database
 from database import get_db_connection, init_db, set_setting
@@ -171,6 +171,23 @@ class TestKwaraCBTDirect(unittest.TestCase):
         start_res = start_exam(req)
         self.assertTrue(start_res["success"])
         print("[PASS] Candidate can successfully start exam after Admin re-opens it")
+
+    def test_06_retrieve_result_by_psn(self):
+        # Retrieve existing result for PSN 771829
+        res_data = retrieve_result(psn="771829")
+        self.assertTrue(res_data["success"])
+        self.assertEqual(res_data["candidate"]["name"], "Aishat Mohammed")
+        self.assertEqual(res_data["candidate"]["psn"], "771829")
+        self.assertEqual(res_data["score"]["score_percentage"], 84.0)
+        self.assertEqual(res_data["score"]["grade_remark"], "Distinction (Excellent)")
+        print("[PASS] /api/result/{psn} successfully retrieved result for existing candidate")
+
+        # Query non-existent PSN -> must raise 404
+        with self.assertRaises(HTTPException) as ctx:
+            retrieve_result(psn="000000_NOT_FOUND")
+        self.assertEqual(ctx.exception.status_code, 404)
+        self.assertIn("No examination result found", ctx.exception.detail)
+        print("[PASS] /api/result/{psn} correctly returned 404 for unknown PSN")
 
 if __name__ == "__main__":
     unittest.main()

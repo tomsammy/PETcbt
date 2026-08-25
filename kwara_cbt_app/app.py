@@ -104,6 +104,9 @@ class SubmitExamRequest(BaseModel):
     answers: Dict[str, str] = {}
     time_taken_seconds: Optional[int] = 0
 
+class RetrieveResultRequest(BaseModel):
+    psn: str
+
 def verify_admin_auth(
     authorization: Optional[str] = Header(None),
     token: Optional[str] = Query(None)
@@ -381,6 +384,60 @@ def submit_exam(data: SubmitExamRequest):
         },
         "time_taken_seconds": data.time_taken_seconds or 0,
         "submitted_at": submitted_at
+    }
+
+@router.get("/result/{psn}")
+@router.get("/api/result/{psn}")
+@router.post("/retrieve-result")
+@router.post("/api/retrieve-result")
+def retrieve_result(
+    psn: Optional[str] = None,
+    data: Optional[RetrieveResultRequest] = None
+):
+    query_psn = (psn or (data.psn if data else "")).strip()
+    if not query_psn:
+        raise HTTPException(status_code=400, detail="Public Service Number (PSN) is required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, candidate_id, candidate_name, psn, email, grade_level, mda,
+               total_questions, correct_count, score_percentage, grade_remark,
+               time_taken_seconds, submitted_at
+        FROM submissions
+        WHERE psn = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (query_psn,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No examination result found for PSN: {query_psn}. Please confirm the PSN or verify that the evaluation was submitted."
+        )
+        
+    return {
+        "success": True,
+        "submission_id": row["id"],
+        "candidate": {
+            "name": row["candidate_name"],
+            "psn": row["psn"],
+            "email": row["email"],
+            "grade_level": row["grade_level"],
+            "mda": row["mda"]
+        },
+        "score": {
+            "correct_count": row["correct_count"],
+            "total_questions": row["total_questions"],
+            "score_percentage": row["score_percentage"],
+            "total_marks": row["correct_count"] * 2,
+            "max_marks": row["total_questions"] * 2,
+            "grade_remark": row["grade_remark"]
+        },
+        "time_taken_seconds": row["time_taken_seconds"],
+        "submitted_at": row["submitted_at"]
     }
 
 @router.get("/admin/submissions")
