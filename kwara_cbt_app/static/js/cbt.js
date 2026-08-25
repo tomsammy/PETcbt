@@ -659,6 +659,48 @@ function renderResultSlip(res) {
 
   const refCode = `KWS-HOS-${res.submission_id.toString().padStart(5, '0')}-${candidate.psn}`;
   document.getElementById('res-ref-code').textContent = `Ref: ${refCode}`;
+
+  state.lastResult = res;
+}
+
+// Resend / Email Result Slip on Demand
+async function emailCurrentResultSlip() {
+  if (!state.lastResult || !state.lastResult.candidate) {
+    showAlertModal('No Result Loaded', 'Please complete or retrieve an examination result first.', 'warning');
+    return;
+  }
+
+  const psn = state.lastResult.candidate.psn;
+  const email = state.lastResult.candidate.email;
+  const btn = document.getElementById('btn-email-slip');
+  const btnText = document.getElementById('btn-email-slip-text');
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = '⏳ Sending Email...';
+
+  try {
+    const response = await fetch('/api/send-result-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ psn, email })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.detail || 'Failed to dispatch result email.');
+    }
+
+    showAlertModal(
+      'Result Slip Dispatched',
+      `Your official CBT evaluation result slip has been emailed to ${email}.`,
+      'success'
+    );
+  } catch (err) {
+    showAlertModal('Email Error', err.message, 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.textContent = '📧 Email Result Slip';
+  }
 }
 
 // -------------------------------------------------------------

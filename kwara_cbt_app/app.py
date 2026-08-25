@@ -8,7 +8,7 @@ import hashlib
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,6 +19,7 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 
 from database import get_db_connection, init_db, get_setting, set_setting
+from email_service import send_result_email
 
 app = FastAPI(title="Kwara State Office of Head of Service CBT Evaluation API")
 
@@ -106,6 +107,10 @@ class SubmitExamRequest(BaseModel):
 
 class RetrieveResultRequest(BaseModel):
     psn: str
+
+class SendResultEmailRequest(BaseModel):
+    psn: str
+    email: Optional[str] = None
 
 def verify_admin_auth(
     authorization: Optional[str] = Header(None),
@@ -302,7 +307,7 @@ def start_exam(data: StartExamRequest):
 
 @router.post("/submit-exam")
 @router.post("/api/submit-exam")
-def submit_exam(data: SubmitExamRequest):
+def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = BackgroundTasks()):
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -363,6 +368,26 @@ def submit_exam(data: SubmitExamRequest):
     
     conn.commit()
     conn.close()
+
+    # Automatically dispatch official result email in background
+    if background_tasks is not None:
+        background_tasks.add_task(
+            send_result_email,
+            candidate_email=data.email.strip().lower(),
+            candidate_name=data.name.strip(),
+            psn=data.psn.strip(),
+            grade_level=data.grade_level.strip(),
+            mda=(data.mda or "State Civil Service").strip(),
+            score_percentage=score_percentage,
+            total_marks=correct_count * 2,
+            max_marks=total_questions * 2,
+            correct_count=correct_count,
+            total_questions=total_questions,
+            grade_remark=grade_remark,
+            time_taken_seconds=data.time_taken_seconds or 0,
+            submitted_at=submitted_at,
+            submission_id=submission_id
+        )
     
     return {
         "success": True,
@@ -383,7 +408,8 @@ def submit_exam(data: SubmitExamRequest):
             "grade_remark": grade_remark
         },
         "time_taken_seconds": data.time_taken_seconds or 0,
-        "submitted_at": submitted_at
+        "submitted_at": submitted_at,
+        "email_dispatched": True
     }
 
 @router.get("/result/{psn}")
@@ -438,6 +464,59 @@ def retrieve_result(
         },
         "time_taken_seconds": row["time_taken_seconds"],
         "submitted_at": row["submitted_at"]
+    }
+
+@router.post("/send-result-email")
+@router.post("/api/send-result-email")
+def send_result_email_endpoint(data: SendResultEmailRequest, background_tasks: BackgroundTasks = BackgroundTasks()):
+    query_psn = data.psn.strip()
+    if not query_psn:
+        raise HTTPException(status_code=400, detail="Public Service Number (PSN) is required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, candidate_id, candidate_name, psn, email, grade_level, mda,
+               total_questions, correct_count, score_percentage, grade_remark,
+               time_taken_seconds, submitted_at
+        FROM submissions
+        WHERE psn = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (query_psn,))
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No examination record found for PSN: {query_psn}."
+        )
+        
+    target_email = (data.email or row["email"]).strip().lower()
+    
+    send_res = send_result_email(
+        candidate_email=target_email,
+        candidate_name=row["candidate_name"],
+        psn=row["psn"],
+        grade_level=row["grade_level"],
+        mda=row["mda"],
+        score_percentage=row["score_percentage"],
+        total_marks=row["correct_count"] * 2,
+        max_marks=row["total_questions"] * 2,
+        correct_count=row["correct_count"],
+        total_questions=row["total_questions"],
+        grade_remark=row["grade_remark"],
+        time_taken_seconds=row["time_taken_seconds"],
+        submitted_at=row["submitted_at"],
+        submission_id=row["id"]
+    )
+    
+    return {
+        "success": True,
+        "email": target_email,
+        "message": f"Official result slip has been dispatched to {target_email}.",
+        "provider_result": send_res
     }
 
 @router.get("/admin/submissions")

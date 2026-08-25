@@ -189,5 +189,37 @@ class TestKwaraCBTDirect(unittest.TestCase):
         self.assertIn("No examination result found", ctx.exception.detail)
         print("[PASS] /api/result/{psn} correctly returned 404 for unknown PSN")
 
+    def test_07_send_result_email(self):
+        from app import send_result_email_endpoint, SendResultEmailRequest
+        from email_service import build_result_email_html
+
+        # Test HTML template generation
+        html = build_result_email_html(
+            candidate_name="Aishat Mohammed",
+            psn="771829",
+            email="aishat.m@kwarastate.gov.ng",
+            grade_level="GL 08",
+            mda="Office of the Head of Service",
+            score_percentage=84.0,
+            total_marks=84,
+            max_marks=100,
+            correct_count=42,
+            total_questions=50,
+            grade_remark="Distinction (Excellent)",
+            time_taken_seconds=950,
+            submitted_at="2026-08-25 12:00:00",
+            submission_id=1
+        )
+        self.assertIn("KWARA STATE OFFICE OF THE HEAD OF SERVICE", html)
+        self.assertIn("84.0%", html)
+        self.assertIn("771829", html)
+        print("[PASS] Result email HTML template generation verified")
+
+        # Test endpoint execution
+        res = send_result_email_endpoint(SendResultEmailRequest(psn="771829"))
+        self.assertTrue(res["success"])
+        self.assertEqual(res["email"], "aishat.m@kwarastate.gov.ng")
+        print("[PASS] /api/send-result-email verified")
+
 if __name__ == "__main__":
     unittest.main()
