@@ -183,6 +183,7 @@ def send_result_email(
             return {"success": True, "provider": "gmail_smtp", "sender": smtp_user}
         except Exception as e:
             logger.error(f"Gmail SMTP dispatch error: {e}")
+            return {"success": False, "error": str(e), "provider": "gmail_smtp", "sender": smtp_user}
 
     # 2. Resend API Dispatch
     resend_key = os.environ.get("RESEND_API_KEY", "").strip()
