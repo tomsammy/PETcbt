@@ -21,12 +21,16 @@ from database import get_db_connection, init_db, set_setting
 class TestKwaraCBTDirect(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        print("\n--- Initializing database and seeding questions ---")
+        print("\n--- Initializing database and verifying questions ---")
         init_db()
-        seed_database()
-        set_setting("exam_status", "open")
         conn = get_db_connection()
         c = conn.cursor()
+        c.execute("SELECT COUNT(*) as cnt FROM questions")
+        row = c.fetchone()
+        cnt = row["cnt"] if isinstance(row, dict) else row[0]
+        if cnt == 0:
+            seed_database()
+        set_setting("exam_status", "open")
         c.execute("DELETE FROM submissions")
         c.execute("DELETE FROM candidates")
         conn.commit()
