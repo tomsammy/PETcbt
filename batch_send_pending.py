@@ -1,5 +1,5 @@
 import sys
-sys.stdout.reconfigure(line_buffering=True)
+sys.stdout.reconfigure(encoding='utf-8', errors='replace', line_buffering=True)
 import os
 import time
 import argparse
@@ -129,19 +129,19 @@ def run_batch_email(limit=None, dry_run=False, gmail_user=None, gmail_pass=None)
                 WHERE id = %s
             """, (submission_id,))
 
-            print("✅ SENT")
+            print("[SENT]")
             sent_count += 1
             time.sleep(0.8) # safe delay between messages
 
         except smtplib.SMTPResponseException as e:
-            print(f"❌ SMTP ERROR ({e.smtp_code}): {e.smtp_error.decode('utf-8', errors='ignore')}")
+            print(f"[SMTP ERROR] ({e.smtp_code}): {e.smtp_error.decode('utf-8', errors='ignore')}")
             failed_count += 1
             if "quota" in str(e.smtp_error).lower() or e.smtp_code in (421, 451, 550):
-                print("\n⚠️ Google daily sending quota reached! Pausing batch now.")
+                print("\n[WARNING] Google daily sending quota reached! Pausing batch now.")
                 print(f"Dispatched {sent_count} emails successfully before quota limit.")
                 break
         except Exception as e:
-            print(f"❌ ERROR: {e}")
+            print(f"[ERROR]: {e}")
             failed_count += 1
 
     if server:
