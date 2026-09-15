@@ -112,6 +112,10 @@ class SendResultEmailRequest(BaseModel):
     psn: str
     email: Optional[str] = None
 
+class ResetCandidateRequest(BaseModel):
+    psn: str
+    reason: Optional[str] = "Approved by Admin for Retake"
+
 def verify_admin_auth(
     authorization: Optional[str] = Header(None),
     token: Optional[str] = Query(None)
@@ -552,6 +556,51 @@ def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
         },
         "exam_status": get_setting("exam_status", "open"),
         "submissions": submissions
+    }
+
+@router.post("/admin/reset-candidate")
+@router.post("/api/admin/reset-candidate")
+def reset_candidate_for_retake(data: ResetCandidateRequest, auth: bool = Depends(verify_admin_auth)):
+    query_psn = data.psn.strip()
+    if not query_psn:
+        raise HTTPException(status_code=400, detail="PSN is required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, candidate_id, candidate_name, psn, email, grade_level, mda,
+               total_questions, correct_count, score_percentage, grade_remark,
+               time_taken_seconds, submitted_at, answers_json
+        FROM submissions
+        WHERE psn = ?
+    """, (query_psn,))
+    rows = cursor.fetchall()
+    if not rows:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"No active submission found for PSN: {query_psn}.")
+        
+    for r in rows:
+        cursor.execute("""
+            INSERT INTO archived_submissions (
+                original_submission_id, candidate_id, candidate_name, psn, email,
+                grade_level, mda, total_questions, correct_count, score_percentage,
+                grade_remark, time_taken_seconds, submitted_at, answers_json, reason
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            r["id"], r.get("candidate_id"), r.get("candidate_name"), r.get("psn"), r.get("email"),
+            r.get("grade_level"), r.get("mda"), r.get("total_questions"), r.get("correct_count"),
+            r.get("score_percentage"), r.get("grade_remark"), r.get("time_taken_seconds"),
+            r.get("submitted_at"), str(r.get("answers_json")), data.reason or "Approved by Admin for Retake"
+        ))
+        
+    cursor.execute("DELETE FROM submissions WHERE psn = ?", (query_psn,))
+    conn.commit()
+    conn.close()
+    
+    return {
+        "success": True,
+        "message": f"Officer with PSN {query_psn} has been unlocked for a CBT retake. Previous record archived safely."
     }
 
 @router.get("/results/excel")
