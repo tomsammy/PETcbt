@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kwara State CSC 2026 CBT - Candidate Registration Slips</title>
+  <title>Kwara State CSC 2026 CBT - Candidate Registration Clearance Slips</title>
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -10,8 +10,8 @@
       padding: 0;
     }
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f8fafc;
       color: #0f172a;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
@@ -28,11 +28,12 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.18);
     }
     .no-print h1 {
       font-size: 1.15rem;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: -0.01em;
     }
     .controls-group {
       display: flex;
@@ -46,11 +47,13 @@
       border: 1px solid #cbd5e1;
       font-size: 0.85rem;
       font-family: inherit;
+      background: #fff;
+      color: #0f172a;
     }
     .btn-print {
       background: #f59e0b;
       color: #000;
-      font-weight: 700;
+      font-weight: 800;
       border: none;
       padding: 9px 18px;
       border-radius: 6px;
@@ -59,6 +62,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
+      transition: background 0.2s ease;
     }
     .btn-print:hover {
       background: #d97706;
@@ -67,94 +71,132 @@
 
     /* A4 Print Layout */
     .print-container {
-      max-width: 1100px;
-      margin: 20px auto;
+      max-width: 1160px;
+      margin: 24px auto;
       padding: 0 16px;
     }
     .slips-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+      gap: 20px;
     }
 
     .slip-card {
-      background: #fff;
-      border: 2px solid #004d40;
-      border-radius: 8px;
-      padding: 16px;
+      background: #ffffff;
+      border: 2.5px solid #004d40;
+      border-radius: 10px;
+      padding: 18px 18px 14px 18px;
       position: relative;
       page-break-inside: avoid;
       break-inside: avoid;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
 
     .slip-header {
       text-align: center;
       border-bottom: 2px solid #004d40;
       padding-bottom: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
     .slip-header h2 {
-      font-size: 0.92rem;
-      font-weight: 800;
+      font-size: 0.95rem;
+      font-weight: 900;
       color: #004d40;
-      letter-spacing: 0.02em;
+      letter-spacing: 0.03em;
       text-transform: uppercase;
     }
     .slip-header h3 {
-      font-size: 0.78rem;
-      font-weight: 700;
+      font-size: 0.8rem;
+      font-weight: 800;
       color: #047857;
       margin-top: 2px;
     }
     .slip-header p {
-      font-size: 0.7rem;
-      font-weight: 600;
+      font-size: 0.72rem;
+      font-weight: 700;
       color: #475569;
       margin-top: 2px;
       text-transform: uppercase;
-    }
-
-    .code-box {
-      background: #fffbeb;
-      border: 2px dashed #d97706;
-      border-radius: 6px;
-      padding: 8px 12px;
-      text-align: center;
-      margin: 10px 0;
-    }
-    .code-label {
-      font-size: 0.68rem;
-      font-weight: 800;
-      color: #92400e;
-      text-transform: uppercase;
       letter-spacing: 0.04em;
     }
-    .code-val {
-      font-size: 1.45rem;
+
+    /* Prominent Officer Banner */
+    .officer-hero-banner {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .officer-hero-label {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #166534;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .officer-hero-name {
+      font-size: 1.12rem;
       font-weight: 900;
-      color: #b45309;
-      letter-spacing: 0.1em;
-      font-family: monospace;
-      margin-top: 2px;
+      color: #004d40;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
     }
 
+    /* Extra Bold Large Code 1 Box */
+    .code-box-hero {
+      background: #fffbeb;
+      border: 2.5px dashed #d97706;
+      border-radius: 8px;
+      padding: 10px 14px;
+      text-align: center;
+      margin: 10px 0 12px 0;
+      box-shadow: inset 0 0 8px rgba(217, 119, 6, 0.06);
+    }
+    .code-box-title {
+      font-size: 0.72rem;
+      font-weight: 900;
+      color: #92400e;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .code-box-number {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: #78350f;
+      letter-spacing: 0.16em;
+      font-family: "Consolas", "Courier New", Courier, monospace;
+      margin: 4px 0 2px 0;
+      line-height: 1.05;
+      text-shadow: 0 1px 2px rgba(180, 83, 9, 0.12);
+    }
+    .code-box-sub {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #b45309;
+    }
+
+    /* Candidate Details Table */
     .details-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.76rem;
-      margin-bottom: 8px;
+      font-size: 0.78rem;
+      margin-bottom: 10px;
     }
     .details-table td {
-      padding: 3.5px 4px;
+      padding: 4px 6px;
       border-bottom: 1px solid #e2e8f0;
+      vertical-align: middle;
     }
     .details-table td.lbl {
       font-weight: 700;
       color: #475569;
-      width: 38%;
+      width: 36%;
     }
     .details-table td.val {
       font-weight: 800;
@@ -164,43 +206,57 @@
     .schedule-strip {
       background: #e0f2fe;
       border: 1px solid #bae6fd;
-      border-radius: 4px;
-      padding: 6px 8px;
-      font-size: 0.72rem;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.74rem;
       color: #0369a1;
-      line-height: 1.35;
-      margin-bottom: 8px;
+      line-height: 1.4;
+      margin-bottom: 10px;
     }
 
     .instructions-strip {
       background: #f8fafc;
-      border-left: 3px solid #004d40;
-      padding: 6px 8px;
-      font-size: 0.68rem;
+      border-left: 3.5px solid #004d40;
+      border-radius: 0 6px 6px 0;
+      padding: 8px 10px;
+      font-size: 0.70rem;
       color: #334155;
-      line-height: 1.35;
+      line-height: 1.4;
     }
     .instructions-strip ol {
-      margin-left: 14px;
-      margin-top: 2px;
+      margin-left: 16px;
+      margin-top: 3px;
     }
 
     .slip-footer {
-      margin-top: 8px;
-      padding-top: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
       border-top: 1px dashed #cbd5e1;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.62rem;
+      font-size: 0.65rem;
       color: #64748b;
+    }
+    .single-print-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      padding: 3px 8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+    }
+    .single-print-btn:hover {
+      background: #e2e8f0;
     }
 
     @media print {
       body {
         background: #fff;
       }
-      .no-print {
+      .no-print, .single-print-btn {
         display: none !important;
       }
       .print-container {
@@ -214,13 +270,13 @@
         gap: 12px;
       }
       .slip-card {
-        border: 1.5px solid #004d40;
-        padding: 12px;
+        border: 2px solid #004d40;
+        padding: 12px 14px;
         box-shadow: none;
         break-inside: avoid;
         page-break-inside: avoid;
       }
-      /* 4 slips per A4 page */
+      /* 4 slips per A4 sheet */
       .slip-card:nth-child(4n) {
         page-break-after: always;
         break-after: page;
@@ -233,8 +289,8 @@
   <div class="no-print">
     <div>
       <h1>Kwara State CSC - Candidate Registration Clearance Slips</h1>
-      <p style="font-size: 0.78rem; opacity: 0.9; margin-top: 2px;">
-        Total: <span id="count-display">2,494</span> Slips | Format: 4 Slips Per A4 Sheet (Print or Save as PDF)
+      <p style="font-size: 0.8rem; opacity: 0.9; margin-top: 2px;">
+        Total: <span id="count-display">2,494</span> Slips | 4 Slips Per A4 Sheet (Print or Export to PDF)
       </p>
     </div>
 
@@ -259,7 +315,7 @@
 
   <div class="print-container">
     <div class="slips-grid" id="slips-container">
-      <!-- Dynamically generated slips -->
+      <!-- Dynamically rendered slips -->
     </div>
   </div>
 
@@ -276,6 +332,30 @@
       mdaSelect.appendChild(opt);
     });
 
+    function printSingleSlip(cardId) {
+      const card = document.getElementById(cardId);
+      if (!card) return;
+      const win = window.open('', '_blank');
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Candidate Registration Slip</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; padding: 20px; }
+            ${document.querySelector('style').innerHTML}
+            .single-print-btn { display: none !important; }
+            .slip-card { max-width: 580px; margin: 0 auto; box-shadow: none; }
+          </style>
+        </head>
+        <body onload="window.print()">
+          ${card.outerHTML}
+        </body>
+        </html>
+      `);
+      win.document.close();
+    }
+
     function renderSlips(items) {
       const container = document.getElementById('slips-container');
       const countDisplay = document.getElementById('count-display');
@@ -287,43 +367,50 @@
       }
 
       let html = '';
-      items.forEach(c => {
+      items.forEach((c, idx) => {
+        const cardId = 'slip-card-' + idx;
         html += `
-        <div class="slip-card">
+        <div class="slip-card" id="${cardId}">
           <div class="slip-header">
             <h2>KWARA STATE CIVIL SERVICE COMMISSION</h2>
             <h3>2026 PROMOTION EVALUATION EXAMINATIONS</h3>
             <p>Official Candidate Onboarding & Clearance Slip</p>
           </div>
 
-          <div class="code-box">
-            <div class="code-label">REGISTRATION CLEARANCE CODE (CODE 1)</div>
-            <div class="code-val">${c.code_1}</div>
+          <!-- Prominent Officer Name -->
+          <div class="officer-hero-banner">
+            <span class="officer-hero-label">Officer Full Name:</span>
+            <div class="officer-hero-name">${c.name}</div>
           </div>
 
+          <!-- Very Bold & Large Code 1 Box -->
+          <div class="code-box-hero">
+            <div class="code-box-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+            <div class="code-box-number">${c.code_1}</div>
+            <div class="code-box-sub">Required with your PSN to log in to the portal & upload passport photo</div>
+          </div>
+
+          <!-- Candidate Official Details Table -->
           <table class="details-table">
             <tr>
-              <td class="lbl">Officer Name:</td>
-              <td class="val">${c.name}</td>
-            </tr>
-            <tr>
               <td class="lbl">Public Service No (PSN):</td>
-              <td class="val" style="color:#004d40; font-size:0.85rem;">${c.psn}</td>
+              <td class="val" style="color:#004d40; font-size:0.92rem; letter-spacing:0.04em;">${c.psn}</td>
             </tr>
             <tr>
-              <td class="lbl">MDA / Organization:</td>
-              <td class="val">${c.mda}</td>
+              <td class="lbl">Ministry / MDA:</td>
+              <td class="val" style="color:#0f172a; font-size:0.85rem;">${c.mda}</td>
             </tr>
             <tr>
               <td class="lbl">Cadre / Proposed GL:</td>
-              <td class="val">${c.rank} (GL ${c.gl})</td>
+              <td class="val" style="color:#0f172a; font-size:0.85rem;">${c.rank} <span style="background:#e2e8f0; padding:1px 6px; border-radius:4px; font-weight:800; color:#0f172a;">GL ${c.gl}</span></td>
             </tr>
             <tr>
-              <td class="lbl">Group & Subject:</td>
-              <td class="val">${c.group} | ${c.exam_code}</td>
+              <td class="lbl">Group & Subject Code:</td>
+              <td class="val">${c.group} | <strong style="color:#047857;">${c.exam_code}</strong></td>
             </tr>
           </table>
 
+          <!-- Examination Schedule -->
           <div class="schedule-strip">
             <strong>📅 Examination Timetable:</strong><br>
             <strong>Date:</strong> ${c.exam_date}<br>
@@ -331,19 +418,22 @@
             <strong>Accreditation:</strong> ${c.accreditation_time} | <strong>Duration:</strong> 20 Minutes
           </div>
 
+          <!-- Step-by-Step Onboarding Guide -->
           <div class="instructions-strip">
-            <strong>📋 How to Complete Online Verification:</strong>
+            <strong>📋 Online Onboarding Instructions:</strong>
             <ol>
               <li>Go to the CBT Portal & click <strong>Verification & Photocard</strong>.</li>
               <li>Enter your <strong>PSN (${c.psn})</strong> and <strong>Code 1 (${c.code_1})</strong>.</li>
-              <li>Upload your passport photo, verify details, and print your <strong>CBT Photocard</strong>.</li>
-              <li>Bring your printed Photocard to the CBT Hall for accreditation.</li>
+              <li>Upload your passport photo, confirm details, and print your <strong>CBT Photocard</strong>.</li>
+              <li>Bring printed Photocard to the CBT Hall to receive your 5-digit exam scratch token.</li>
             </ol>
           </div>
 
+          <!-- Footer with Individual Print Button -->
           <div class="slip-footer">
             <span>Ref: KWS-CSC-REG-${c.psn}</span>
             <span>Venue: Kwara State CBT Centre, Ilorin</span>
+            <button type="button" class="single-print-btn" onclick="printSingleSlip('${cardId}')">🖨️ Print Slip</button>
           </div>
         </div>
         `;
@@ -372,7 +462,6 @@
       renderSlips(filtered);
     }
 
-    // Initial render
     renderSlips(candidates);
   </script>
 </body>
