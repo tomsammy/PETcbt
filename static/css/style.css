@@ -1208,10 +1208,25 @@ body {
 }
 
 /* Print Stylesheet */
+@page {
+  size: A4 portrait;
+  margin: 6mm 8mm;
+}
+
 @media print {
-  body {
-    background: #fff;
-    color: #000;
+  @page {
+    size: A4 portrait;
+    margin: 6mm 8mm;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    height: auto !important;
   }
   
   .header-bar,
@@ -1219,38 +1234,147 @@ body {
   .exam-top-bar,
   .palette-card,
   .btn-nav,
-  .export-btns {
+  .export-btns,
+  .photocard-actions,
+  .modal-overlay {
     display: none !important;
   }
   
+  .main-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   .result-container {
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   .result-slip-card {
-    border: 2px solid #000 !important;
+    border: 1.5px solid #000 !important;
     box-shadow: none !important;
   }
   
-  .photocard-slip-card {
-    border: 2px solid #000 !important;
-    box-shadow: none !important;
+  .photocard-container {
     max-width: 100% !important;
     margin: 0 !important;
+    padding: 0 !important;
   }
-  
-  .photocard-actions {
-    display: none !important;
+
+  .photocard-slip-card {
+    border: 1.5px solid #004d40 !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .photocard-header {
+    padding: 8px 14px !important;
+    background: #004d40 !important;
+    color: #fff !important;
+    text-align: center !important;
+  }
+
+  .photocard-header img {
+    height: 36px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .photocard-header h2 {
+    font-size: 1rem !important;
+    margin-bottom: 2px !important;
+    color: #fff !important;
+  }
+
+  .photocard-header h3 {
+    font-size: 0.8rem !important;
+    margin-bottom: 1px !important;
+    color: #fef08a !important;
+  }
+
+  .photocard-header p {
+    font-size: 0.68rem !important;
+    color: #e2e8f0 !important;
+    margin: 0 !important;
+  }
+
+  .photocard-body {
+    padding: 10px 14px !important;
+  }
+
+  .photocard-meta-grid {
+    grid-template-columns: 110px 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .passport-box {
+    width: 110px !important;
+    height: 130px !important;
+    border: 1.5px solid #004d40 !important;
+  }
+
+  .candidate-info-table th,
+  .candidate-info-table td {
+    padding: 2px 6px !important;
+    font-size: 0.74rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .schedule-banner-box {
+    padding: 6px 10px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .schedule-banner-box h4 {
+    font-size: 0.78rem !important;
+    margin-bottom: 3px !important;
+  }
+
+  .schedule-grid {
+    gap: 4px !important;
+  }
+
+  .schedule-item {
+    font-size: 0.68rem !important;
+  }
+
+  .schedule-item span {
+    font-size: 0.74rem !important;
+  }
+
+  .photocard-rules {
+    padding: 6px 10px !important;
+    margin: 6px 0 !important;
+    font-size: 0.68rem !important;
+    line-height: 1.3 !important;
+    border: 1px solid #fde68a !important;
+    border-left: 4px solid #d97706 !important;
+  }
+
+  .photocard-rules ol {
+    margin: 2px 0 0 14px !important;
+    gap: 2px !important;
+  }
+
+  .photocard-footer {
+    padding-top: 6px !important;
+    font-size: 0.68rem !important;
   }
 }
 
 /* Photocard & Passport Styling */
 .photocard-container {
   max-width: 760px;
-  margin: 24px auto 40px auto;
-  padding: 0 16px;
+  margin: 16px auto 30px auto;
+  padding: 0 14px;
 }
 
 .photocard-slip-card {
@@ -1265,44 +1389,45 @@ body {
 .photocard-header {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: #fff;
-  padding: 20px 24px;
+  padding: 14px 20px;
   text-align: center;
 }
 
 .photocard-header h2 {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   letter-spacing: 0.03em;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .photocard-header h3 {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #fef08a;
   margin-bottom: 2px;
 }
 
 .photocard-header p {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #e2e8f0;
+  margin: 0;
 }
 
 .photocard-body {
-  padding: 24px 28px;
+  padding: 16px 20px;
 }
 
 .photocard-meta-grid {
   display: grid;
-  grid-template-columns: 140px 1fr;
-  gap: 24px;
+  grid-template-columns: 120px 1fr;
+  gap: 18px;
   align-items: start;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
 }
 
 .passport-box {
-  width: 140px;
-  height: 160px;
+  width: 120px;
+  height: 140px;
   border: 2px dashed #94a3b8;
   border-radius: 8px;
   background: #f8fafc;
@@ -1327,8 +1452,8 @@ body {
 
 .candidate-info-table th,
 .candidate-info-table td {
-  padding: 8px 10px;
-  font-size: 0.88rem;
+  padding: 4px 8px;
+  font-size: 0.82rem;
   border-bottom: 1px solid #f1f5f9;
   text-align: left;
 }
@@ -1348,50 +1473,51 @@ body {
   background: #f0fdf4;
   border: 1.5px solid #86efac;
   border-radius: 8px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
 }
 
 .schedule-banner-box h4 {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 800;
   color: #166534;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .schedule-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 8px;
 }
 
 .schedule-item {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
 }
 
 .schedule-item span {
   display: block;
   color: #15803d;
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
 }
 
 .photocard-rules {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-left: 5px solid #d97706;
   border-radius: 8px;
-  padding: 14px 18px;
-  font-size: 0.8rem;
-  color: #475569;
-  line-height: 1.5;
-  margin-bottom: 20px;
+  padding: 10px 14px;
+  font-size: 0.75rem;
+  color: #78350f;
+  line-height: 1.4;
+  margin-bottom: 12px;
 }
 
 .photocard-rules ol {
-  margin: 6px 0 0 16px;
+  margin: 4px 0 0 16px;
   padding: 0;
 }
 
@@ -1400,8 +1526,8 @@ body {
   justify-content: space-between;
   align-items: center;
   border-top: 1px dashed #cbd5e1;
-  padding-top: 16px;
-  font-size: 0.75rem;
+  padding-top: 10px;
+  font-size: 0.72rem;
   color: #64748b;
 }
 

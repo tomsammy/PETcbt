@@ -554,60 +554,60 @@ function renderPhotocard(c) {
       <div>
         <table class="candidate-info-table">
           <tr>
-            <th>Candidate Name:</th>
-            <td><strong style="font-size: 1.05rem; color: #004d40;">${displayName}</strong></td>
+            <th style="padding: 3px 6px;">Candidate Name:</th>
+            <td style="padding: 3px 6px;"><strong style="font-size: 1rem; color: #004d40;">${displayName}</strong></td>
           </tr>
           <tr>
-            <th>Public Service No (PSN):</th>
-            <td><code style="font-size: 1rem; font-weight: 800; color: #0f172a;">${c.psn}</code></td>
+            <th style="padding: 3px 6px;">Public Service No (PSN):</th>
+            <td style="padding: 3px 6px;"><code style="font-size: 0.95rem; font-weight: 800; color: #0f172a;">${c.psn}</code></td>
           </tr>
           <tr>
-            <th>Ministry / MDA:</th>
-            <td>${c.mda}</td>
+            <th style="padding: 3px 6px;">Ministry / MDA:</th>
+            <td style="padding: 3px 6px;">${c.mda}</td>
           </tr>
           <tr>
-            <th>Present / Proposed Rank:</th>
-            <td>${c.proposed_rank || 'Civil Service Cadre'}</td>
+            <th style="padding: 3px 6px;">Present / Proposed Rank:</th>
+            <td style="padding: 3px 6px;">${c.proposed_rank || 'Civil Service Cadre'}</td>
           </tr>
           <tr>
-            <th>Proposed Grade Level:</th>
-            <td><span class="badge-cadre">${c.proposed_gl || ''} (${c.group_category || ''})</span></td>
+            <th style="padding: 3px 6px;">Proposed Grade Level:</th>
+            <td style="padding: 3px 6px;"><span class="badge-cadre" style="padding: 2px 6px; font-size: 0.78rem;">${c.proposed_gl || ''} (${c.group_category || ''})</span></td>
           </tr>
           <tr>
-            <th>Examination Subject:</th>
-            <td><strong style="color: #0369a1;">${c.exam_code}</strong> (${c.group_category || ''})</td>
+            <th style="padding: 3px 6px;">Examination Subject:</th>
+            <td style="padding: 3px 6px;"><strong style="color: #0369a1;">${c.exam_code}</strong> (${c.group_category || ''})</td>
           </tr>
           <tr>
-            <th>Registration Code (Code 1):</th>
-            <td><span class="badge-code1">${c.code_1}</span></td>
+            <th style="padding: 3px 6px;">Registration Code (Code 1):</th>
+            <td style="padding: 3px 6px;"><span class="badge-code1" style="padding: 2px 6px; font-size: 0.8rem;">${c.code_1}</span></td>
           </tr>
         </table>
       </div>
     </div>
 
     <!-- Examination Timetable Allocation -->
-    <div class="schedule-banner-box">
-      <h4>📅 Official Examination Schedule Allocation</h4>
-      <div class="schedule-grid">
+    <div class="schedule-banner-box" style="padding: 8px 12px; margin-bottom: 10px;">
+      <h4 style="font-size: 0.84rem; margin-bottom: 4px;">📅 Official Examination Schedule Allocation</h4>
+      <div class="schedule-grid" style="gap: 6px;">
         <div class="schedule-item">
           Examination Date:
-          <span>${c.exam_date || 'Tuesday, 29th September 2026'}</span>
+          <span style="font-size: 0.84rem;">${c.exam_date || 'Tuesday, 29th September 2026'}</span>
         </div>
         <div class="schedule-item">
           Session / Batch:
-          <span>${c.batch_session || 'Day 1 - Batch 1'}</span>
+          <span style="font-size: 0.84rem;">${c.batch_session || 'Day 1 - Batch 1'}</span>
         </div>
         <div class="schedule-item">
           Accreditation Time:
-          <span>${c.accreditation_time || '09:00 AM'}</span>
+          <span style="font-size: 0.84rem;">${c.accreditation_time || '09:00 AM'}</span>
         </div>
         <div class="schedule-item">
           Exam Commencement:
-          <span>${c.batch_time || '10:00 AM'}</span>
+          <span style="font-size: 0.84rem;">${c.batch_time || '10:00 AM'}</span>
         </div>
-        <div class="schedule-item" style="grid-column: 1 / -1; background: #f0fdf4; border: 1.5px solid #86efac;">
-          <strong style="color: #166534; font-size: 0.8rem; text-transform: uppercase;">📍 Designated Examination Venue:</strong>
-          <span style="font-weight: 900; color: #004d40; font-size: 0.95rem; display: block; margin-top: 3px; line-height: 1.35;">
+        <div class="schedule-item" style="grid-column: 1 / -1; background: #f0fdf4; border: 1.5px solid #86efac; padding: 5px 8px; border-radius: 6px;">
+          <strong style="color: #166534; font-size: 0.76rem; text-transform: uppercase;">📍 Designated Examination Venue:</strong>
+          <span style="font-weight: 800; color: #004d40; font-size: 0.88rem; display: block; margin-top: 2px; line-height: 1.25;">
             Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State, Nigeria
           </span>
         </div>
@@ -615,26 +615,26 @@ function renderPhotocard(c) {
     </div>
 
     <!-- Candidate Regulations -->
-    <div class="photocard-rules" style="background: #fffbeb; border: 1.5px solid #fde68a; border-left: 5px solid #d97706; padding: 14px 16px; border-radius: 8px; margin: 16px 0;">
-      <div style="font-weight: 900; color: #92400e; font-size: 0.88rem; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+    <div class="photocard-rules" style="background: #fffbeb; border: 1.5px solid #fde68a; border-left: 4px solid #d97706; padding: 8px 12px; border-radius: 6px; margin: 8px 0;">
+      <div style="font-weight: 800; color: #92400e; font-size: 0.78rem; margin-bottom: 4px; text-transform: uppercase; display: flex; align-items: center; gap: 4px;">
         <span>⚠️ MANDATORY EXAMINATION REGULATIONS & VENUE INSTRUCTIONS:</span>
       </div>
-      <ol style="margin-left: 18px; font-size: 0.82rem; color: #78350f; line-height: 1.6; display: flex; flex-direction: column; gap: 5px;">
+      <ol style="margin-left: 16px; font-size: 0.74rem; color: #78350f; line-height: 1.35; display: flex; flex-direction: column; gap: 2.5px;">
         <li><strong>Designated Venue:</strong> Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State, Nigeria.</li>
-        <li><strong>Strict Punctuality & Zero-Loitering Policy:</strong> Candidates must come to the venue at the stipulated accreditation time only (arrival is permitted at most <strong>20 minutes earlier</strong>). <strong>Loitering, crowding, or parading around the vicinity will NOT be tolerated</strong> under any circumstances.</li>
-        <li><strong>Mandatory Smart Mobile Device:</strong> Candidates <strong>MUST come to the venue with their smartphone</strong> (Android, iPhone, or any smart mobile device). The device <strong>MUST have a functional, working web browser installed</strong> (Google Chrome, Safari, etc.) and active.</li>
+        <li><strong>Strict Punctuality & Zero-Loitering Policy:</strong> Candidates must come to the venue at the stipulated accreditation time only (arrival is permitted at most <strong>20 minutes earlier</strong>). <strong>Loitering, crowding, or parading around the vicinity will NOT be tolerated.</strong></li>
+        <li><strong>Mandatory Smart Mobile Device:</strong> Candidates <strong>MUST come to the venue with their smartphone</strong> (Android, iPhone, or any smart mobile device) with an active, functional web browser installed.</li>
         <li><strong>Physical Photocard Required:</strong> This printed physical photocard must be presented physically to the invigilator during hall accreditation.</li>
         <li><strong>Hall Scratch Card Token:</strong> Upon physical accreditation in the CBT hall, you will receive your single-use <strong>5-Digit Exam Scratch Card Token</strong> to unlock your workstation test.</li>
         <li><strong>Exam Duration:</strong> Strictly <strong>20 Minutes</strong> (50 cadre-specific multiple choice questions). The test automatically submits when the countdown timer expires.</li>
       </ol>
     </div>
 
-    <div class="photocard-footer">
+    <div class="photocard-footer" style="padding-top: 8px; font-size: 0.72rem;">
       <div>
         <div><strong>Status:</strong> <span style="color:#059669; font-weight:800;">VERIFIED & ACCREDITED FOR CBT</span></div>
-        <div style="font-size: 0.7rem; margin-top: 2px;">Security Verification Code: ${c.code_1}-${c.psn}</div>
+        <div style="font-size: 0.68rem; margin-top: 1px;">Security Verification Code: ${c.code_1}-${c.psn}</div>
       </div>
-      <div class="slip-sign-line" style="width: 220px;">
+      <div class="slip-sign-line" style="width: 200px; font-size: 0.74rem;">
         Kwara State Civil Service Commission
       </div>
     </div>
