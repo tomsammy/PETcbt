@@ -404,35 +404,23 @@
               <td class="lbl">Cadre / Proposed GL:</td>
               <td class="val" style="color:#0f172a; font-size:0.85rem;">${c.rank} <span style="background:#e2e8f0; padding:1px 6px; border-radius:4px; font-weight:800; color:#0f172a;">GL ${c.gl}</span></td>
             </tr>
-            <tr>
-              <td class="lbl">Group & Subject Code:</td>
-              <td class="val">${c.group} | <strong style="color:#047857;">${c.exam_code}</strong></td>
-            </tr>
           </table>
-
-          <!-- Examination Schedule -->
-          <div class="schedule-strip">
-            <strong>📅 Examination Timetable:</strong><br>
-            <strong>Date:</strong> ${c.exam_date}<br>
-            <strong>Batch:</strong> ${c.batch_session} (${c.batch_time})<br>
-            <strong>Accreditation:</strong> ${c.accreditation_time} | <strong>Duration:</strong> 20 Minutes
-          </div>
 
           <!-- Step-by-Step Onboarding Guide -->
           <div class="instructions-strip">
             <strong>📋 Online Onboarding Instructions:</strong>
             <ol>
-              <li>Go to the CBT Portal & click <strong>Verification & Photocard</strong>.</li>
+              <li>Visit the CBT Portal and click <strong>Verification & Photocard</strong>.</li>
               <li>Enter your <strong>PSN (${c.psn})</strong> and <strong>Code 1 (${c.code_1})</strong>.</li>
-              <li>Upload your passport photo, confirm details, and print your <strong>CBT Photocard</strong>.</li>
-              <li>Bring printed Photocard to the CBT Hall to receive your 5-digit exam scratch token.</li>
+              <li>Upload your passport photograph, verify details, and generate your <strong>Official CBT Photocard</strong>.</li>
+              <li>Print and bring your Photocard to the CBT Hall to receive your exam scratch token.</li>
             </ol>
           </div>
 
           <!-- Footer with Individual Print Button -->
           <div class="slip-footer">
             <span>Ref: KWS-CSC-REG-${c.psn}</span>
-            <span>Venue: Kwara State CBT Centre, Ilorin</span>
+            <span>Official Clearance Document • Kwara State Civil Service Commission</span>
             <button type="button" class="single-print-btn" onclick="printSingleSlip('${cardId}')">🖨️ Print Slip</button>
           </div>
         </div>
