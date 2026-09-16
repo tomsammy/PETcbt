@@ -1,0 +1,3903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MOC - CBT Registration Clearance Slips (10 Per Page)</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 6mm 6mm;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Screen-only Controls */
+    .no-print {
+      background: #004d40;
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+
+    .no-print h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .no-print p {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-print {
+      background: #f59e0b;
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease;
+    }
+    .btn-print:hover {
+      background: #d97706;
+      color: #fff;
+    }
+
+    .btn-back {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .btn-back:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* Screen Wrapper */
+    .screen-wrapper {
+      max-width: 900px;
+      margin: 20px auto;
+    }
+
+    /* A4 PAGE CONTAINER: Exactly 10 Slips (2 Columns x 5 Rows) */
+    .page-container {
+      width: 198mm;
+      height: 284mm;
+      margin: 0 auto 20px auto;
+      background: #fff;
+      display: grid;
+      grid-template-columns: repeat(2, 95mm);
+      grid-template-rows: repeat(5, 52.8mm);
+      gap: 4mm 6mm;
+      padding: 2mm 0;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Individual Slip Card (Fits 52.8mm height x 95mm width) */
+    .slip-card {
+      background: #ffffff;
+      border: 1.5px dashed #004d40;
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .slip-card.blank-card {
+      border: 1px dashed #cbd5e1;
+      background: transparent;
+      visibility: hidden;
+    }
+
+    .slip-header {
+      text-align: center;
+      border-bottom: 1px solid #004d40;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+    }
+    .header-seal {
+      font-size: 7.5px;
+      font-weight: 900;
+      color: #004d40;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .header-sub {
+      font-size: 6.2px;
+      font-weight: 700;
+      color: #047857;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .name-block {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 3px;
+      padding: 2px 5px;
+      margin-bottom: 3px;
+    }
+    .lbl-small {
+      font-size: 5.5px;
+      font-weight: 800;
+      color: #166534;
+      text-transform: uppercase;
+      display: block;
+      line-height: 1;
+    }
+    .officer-name {
+      font-size: 9.8px;
+      font-weight: 900;
+      color: #004d40;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+
+    /* Extra Bold & Large Code 1 Box */
+    .code-box {
+      background: #fffbeb;
+      border: 1.8px dashed #d97706;
+      border-radius: 4px;
+      padding: 1px 4px;
+      text-align: center;
+      margin-bottom: 3px;
+    }
+    .code-title {
+      font-size: 6px;
+      font-weight: 900;
+      color: #92400e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+    .code-val {
+      font-size: 1.38rem;
+      font-weight: 900;
+      color: #78350f;
+      letter-spacing: 0.14em;
+      font-family: "Consolas", "Courier New", Courier, monospace;
+      line-height: 1.05;
+      margin: 1px 0;
+    }
+
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.2px;
+      margin-bottom: 2px;
+    }
+    .details-table td {
+      padding: 1px 2px;
+      vertical-align: middle;
+      line-height: 1.15;
+    }
+    .td-lbl {
+      font-weight: 700;
+      color: #475569;
+      width: 18%;
+    }
+    .td-val {
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .psn-highlight {
+      color: #004d40;
+      font-size: 8.5px;
+      font-weight: 900;
+    }
+
+    .instruction-box {
+      background: #f8fafc;
+      border-left: 2.5px solid #004d40;
+      padding: 2px 4px;
+      font-size: 6px;
+      color: #334155;
+      line-height: 1.2;
+      border-radius: 0 2px 2px 0;
+      margin-bottom: 2px;
+    }
+
+    .slip-footer {
+      border-top: 0.8px dashed #cbd5e1;
+      padding-top: 1.5px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 5.8px;
+      color: #64748b;
+      line-height: 1;
+    }
+
+    /* Print Optimizations: Exactly 10 Slips per Sheet */
+    @media print {
+      body {
+        background: #fff;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .screen-wrapper {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .page-container {
+        box-shadow: none;
+        margin: 0;
+        width: 198mm;
+        height: 284mm;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slip-card {
+        border: 1.5px dashed #004d40;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print">
+    <div>
+      <h1>Kwara State CSC — MOC (91 Candidates)</h1>
+      <p>Total: 91 Candidates | 10 A4 Pages (Strictly 10 Slips Per Page)</p>
+    </div>
+
+    <div class="controls-group">
+      <a href="00_INDEX.html" class="btn-back">&larr; Back to All MDAs Folder</a>
+      <button type="button" class="btn-print" onclick="window.print()">
+        <span>&#128438; Print / Save as PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="screen-wrapper">
+    
+        <!-- A4 PAGE 1 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulkadir M.B Hauwa</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-33833</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">138043</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Info Offi <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (138043)</strong> + <strong>Code 1 (A-33833)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-138043</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adeyinka Desmond Adeniyi</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-17818</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128172</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Info Offi <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128172)</strong> + <strong>Code 1 (A-17818)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128172</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ajayi Joseph Laisi</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-88645</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128167</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Exec Offi Info <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128167)</strong> + <strong>Code 1 (A-88645)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128167</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Isiaq Atinuke Quadirat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-18953</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128450</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Culture Offi <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128450)</strong> + <strong>Code 1 (A-18953)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128450</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Lawal Abdullahi Baba</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-19425</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128552</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Info Offi <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128552)</strong> + <strong>Code 1 (A-19425)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128552</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Mashood Agboola Abdulrafiu</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-84905</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">123152</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Info Offi <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (123152)</strong> + <strong>Code 1 (A-84905)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-123152</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Muritala Bukola Shakirat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-45332</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128173</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Info Offi <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128173)</strong> + <strong>Code 1 (A-45332)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128173</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Taiwo Olugbenga Olusegun</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">A-66928</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128449</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Chief Culture Offi <strong>(GL 14)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128449)</strong> + <strong>Code 1 (A-66928)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128449</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulbaki Rukayat Tope</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-17077</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135613</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135613)</strong> + <strong>Code 1 (B-17077)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135613</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulganiyu Hajarat Bukola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-24674</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135728</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135728)</strong> + <strong>Code 1 (B-24674)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135728</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 2 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulhameed Rukayat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-55624</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135665</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135665)</strong> + <strong>Code 1 (B-55624)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135665</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulkadir Babatunde Rofiat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-76228</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135968</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Cultural Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135968)</strong> + <strong>Code 1 (B-76228)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135968</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulkadir Muinat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-54000</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128725</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Info I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128725)</strong> + <strong>Code 1 (B-54000)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128725</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdullahi Falilat Bola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-88216</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135706</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135706)</strong> + <strong>Code 1 (B-88216)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135706</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adebisi Titilayo Idowu</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-31893</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">133807</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Info I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (133807)</strong> + <strong>Code 1 (B-31893)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-133807</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adekanye Aderonke Susan</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-72996</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135679</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135679)</strong> + <strong>Code 1 (B-72996)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135679</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Afolabi Temple Olushola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-19027</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135397</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135397)</strong> + <strong>Code 1 (B-19027)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135397</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Agidingbadi Mutiat Olabisi</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-75361</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135680</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Info I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135680)</strong> + <strong>Code 1 (B-75361)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135680</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ajiboye Racheal</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-67596</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135727</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135727)</strong> + <strong>Code 1 (B-67596)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135727</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Anigilaje Wasiu Akande</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-60724</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135718</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135718)</strong> + <strong>Code 1 (B-60724)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135718</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 3 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ariyo Mariam Monisola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-73900</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135778</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Cultural Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135778)</strong> + <strong>Code 1 (B-73900)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135778</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ashaolu Omotola Festus</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-85293</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128553</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Ass. Chief Inf. Off. <strong>(GL 13)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128553)</strong> + <strong>Code 1 (B-85293)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128553</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Bankole Babafemi Emmanuel</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-60012</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">142159</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (142159)</strong> + <strong>Code 1 (B-60012)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-142159</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Haruna Shuaib Magaji</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-12078</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135969</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135969)</strong> + <strong>Code 1 (B-12078)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135969</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Hassan Adamu Koro</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-47018</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135705</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135705)</strong> + <strong>Code 1 (B-47018)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135705</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Idowu Mosunmola Blessing</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-43936</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135844</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Graphic Art officer <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135844)</strong> + <strong>Code 1 (B-43936)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135844</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Idrees Falilat Tinuola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-82148</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135935</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135935)</strong> + <strong>Code 1 (B-82148)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135935</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ige Grace Olufisayo</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-81618</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135543</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Info I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135543)</strong> + <strong>Code 1 (B-81618)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135543</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ismaila Muibat Alaba</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-51016</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136311</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136311)</strong> + <strong>Code 1 (B-51016)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136311</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Kolawole Temitope</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-38087</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135830</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135830)</strong> + <strong>Code 1 (B-38087)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135830</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 4 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Komolafe Peter Toluwase</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-93682</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135879</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Culture I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135879)</strong> + <strong>Code 1 (B-93682)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135879</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Lawal Afusat Adenike</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-86543</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135500</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135500)</strong> + <strong>Code 1 (B-86543)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135500</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Magaji Oluwakemi Aishat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-22102</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135382</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Cultural Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135382)</strong> + <strong>Code 1 (B-22102)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135382</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Mohammed Adamu Hussani</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-20679</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">115434</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (115434)</strong> + <strong>Code 1 (B-20679)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-115434</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Mohammed Salihu</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-75902</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135685</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135685)</strong> + <strong>Code 1 (B-75902)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135685</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Musa Dare Ismail</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-53903</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">129019</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (129019)</strong> + <strong>Code 1 (B-53903)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-129019</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Okanlawon Solomon Oladoyin</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-99535</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">131166</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Ass. Chief Inf. Offi <strong>(GL 13)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (131166)</strong> + <strong>Code 1 (B-99535)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-131166</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Okanlawon Taiwo Omowumi</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-42570</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">130720</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Ass. Chief Inf. Offi <strong>(GL 13)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (130720)</strong> + <strong>Code 1 (B-42570)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-130720</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Olabode Obafemi. E</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-15030</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135754</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Tourism Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135754)</strong> + <strong>Code 1 (B-15030)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135754</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Olarewaju Saidat Tope</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-56224</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135624</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135624)</strong> + <strong>Code 1 (B-56224)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135624</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 5 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Olukotun Olayinka Monsurat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-31083</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135383</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal officer I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135383)</strong> + <strong>Code 1 (B-31083)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135383</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Oyedepo Femi Hamad</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-74145</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135865</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135865)</strong> + <strong>Code 1 (B-74145)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135865</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Oyewale Olajumoke. G.</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-54526</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136266</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136266)</strong> + <strong>Code 1 (B-54526)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136266</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Sadiq Bolarinwa Abiodun</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-40997</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136037</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Ass. Chief Info Off. <strong>(GL 13)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136037)</strong> + <strong>Code 1 (B-40997)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136037</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Saheed Rukayat Bolanle</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-64358</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128692</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Info I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128692)</strong> + <strong>Code 1 (B-64358)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128692</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Salaudeen Dare Solibu</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-20189</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135999</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">PrinTourism Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135999)</strong> + <strong>Code 1 (B-20189)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135999</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Sayedi Musa Hajji</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-24013</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135546</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Cultural Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135546)</strong> + <strong>Code 1 (B-24013)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135546</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Shehu Kolade Abdulrasak</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-57230</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135990</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Officer Tourism I <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135990)</strong> + <strong>Code 1 (B-57230)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135990</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Sidiq A . Folarin</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-73558</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136457</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136457)</strong> + <strong>Code 1 (B-73558)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136457</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Yusuf Ademola Idris</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-68593</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135805</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Principal Info. Offi <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135805)</strong> + <strong>Code 1 (B-68593)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135805</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 6 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Yusuf Bolaji Saheed</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">B-62645</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135461</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Tourism Officer <strong>(GL 12)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135461)</strong> + <strong>Code 1 (B-62645)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135461</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulfatai Sodiq Olowo</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-10370</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141347</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141347)</strong> + <strong>Code 1 (C-10370)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141347</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulkadir Rashidat Bukola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-61592</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141263</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Tourism Officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141263)</strong> + <strong>Code 1 (C-61592)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141263</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdulraheem Ishaq</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-28635</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141729</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141729)</strong> + <strong>Code 1 (C-28635)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141729</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Abdurazaq Abdulkodir</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-56690</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141728</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141728)</strong> + <strong>Code 1 (C-56690)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141728</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adebayo Lateefat Aromaradu</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-11015</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141668</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141668)</strong> + <strong>Code 1 (C-11015)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141668</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adebayo Murital Adeshola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-57511</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136456</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen Exec Officer (Info) <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136456)</strong> + <strong>Code 1 (C-57511)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136456</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adekeye Omolara Fumilola D</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-84217</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141344</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141344)</strong> + <strong>Code 1 (C-84217)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141344</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adekunle Abiola Jelilat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-40491</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141901</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen Exec Officer (Info) <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141901)</strong> + <strong>Code 1 (C-40491)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141901</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adeleye Sofiyullahi Ademola</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-29106</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136923</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen Exec Officer (Info) <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136923)</strong> + <strong>Code 1 (C-29106)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136923</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 7 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adelowo Kehinde</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-91583</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135917</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec Graphic Art Officer <strong>(GL 10)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135917)</strong> + <strong>Code 1 (C-91583)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135917</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adewoye Abosede Oluwatosin</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-66866</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141264</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen Exec Officer (Info) <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141264)</strong> + <strong>Code 1 (C-66866)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141264</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ahmed Abdulquadir Kayode</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-83481</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141697</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141697)</strong> + <strong>Code 1 (C-83481)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141697</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ahmed Abeeb Oredunni</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-91098</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136481</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen Exec Officer (Info) <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136481)</strong> + <strong>Code 1 (C-91098)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136481</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ahmed Kamardeen Funsho</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-97226</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141346</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141346)</strong> + <strong>Code 1 (C-97226)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141346</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Ajayi Oyenike Temitayo</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-68531</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141854</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141854)</strong> + <strong>Code 1 (C-68531)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141854</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Al-Amin Rukayat Idowu</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-96076</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">128724</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Princ Exec Photo Officer II <strong>(GL 10)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128724)</strong> + <strong>Code 1 (C-96076)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-128724</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Bashir Kolawole Turawa</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-83261</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141339</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141339)</strong> + <strong>Code 1 (C-83261)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141339</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Fauzeyat Abdulazeez</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-68824</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141722</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141722)</strong> + <strong>Code 1 (C-68824)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141722</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Imam A. Lukman</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-68592</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">133955</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Info II <strong>(GL 10)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (133955)</strong> + <strong>Code 1 (C-68592)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-133955</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 8 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Inuwa Kabir</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-89976</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141341</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen. Exec. Officer Tourism <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141341)</strong> + <strong>Code 1 (C-89976)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141341</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Magaji Muritala Adebayo</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-56793</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141211</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141211)</strong> + <strong>Code 1 (C-56793)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141211</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Mohammed Aminat Shaab</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-58775</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141349</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141349)</strong> + <strong>Code 1 (C-58775)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141349</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Olayinka Muhammed Mubaraq</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-17225</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141345</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen. Exec. Officer Tourism <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141345)</strong> + <strong>Code 1 (C-17225)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141345</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Olutimilehin Funke Kunbi</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-85909</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141669</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141669)</strong> + <strong>Code 1 (C-85909)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141669</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Oluwaseyi Folusho Esther</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-22682</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141212</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141212)</strong> + <strong>Code 1 (C-22682)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141212</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Onimago Bashurat. A</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-17629</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136631</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen Exec Officer (Info) <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136631)</strong> + <strong>Code 1 (C-17629)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136631</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Opadiran Blessing Olufunsho</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-64584</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141723</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141723)</strong> + <strong>Code 1 (C-64584)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141723</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Sese Surajudeen. O.</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-27203</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">112774</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Photographer Offi <strong>(GL 10)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (112774)</strong> + <strong>Code 1 (C-27203)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-112774</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Sulaiman D Aishat</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-82784</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136552</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen Exec Officer (Info) <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136552)</strong> + <strong>Code 1 (C-82784)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136552</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 9 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Sulyman Kabiru Olatunji</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-32226</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">133440</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Prin Exec. Officer Info II <strong>(GL 10)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (133440)</strong> + <strong>Code 1 (C-32226)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-133440</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Taiwo Titoluwani Favour</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-74903</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136512</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen. Exec. Officer Tourism <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136512)</strong> + <strong>Code 1 (C-74903)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136512</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Tijani Aminat Yusuf</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-38074</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141730</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141730)</strong> + <strong>Code 1 (C-38074)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141730</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Yakeen Shakirat Oluwakemi</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-59470</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141670</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Sen. Exec. Officer Tourism <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141670)</strong> + <strong>Code 1 (C-59470)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141670</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Yakubu Mohammed Toyeeb</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">C-12348</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141698</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Information officer I <strong>(GL 9)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141698)</strong> + <strong>Code 1 (C-12348)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141698</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adebayo Gbenga Joseph</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">D-61282</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">135387</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Exec Officer Tourism <strong>(GL 7)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (135387)</strong> + <strong>Code 1 (D-61282)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-135387</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Adelodun Victoria Kehinde</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">D-42280</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">142688</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Exec Officer (Info) <strong>(GL 7)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (142688)</strong> + <strong>Code 1 (D-42280)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-142688</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Bakare Baliqees</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">D-52331</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141343</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Exec Officer (Info) <strong>(GL 7)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141343)</strong> + <strong>Code 1 (D-52331)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141343</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Rabiu Rafiat Temitope</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">D-72389</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">141667</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Exec Officer (Info) <strong>(GL 7)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141667)</strong> + <strong>Code 1 (D-72389)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-141667</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Suleima Jelilat. A</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">D-56441</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">136534</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Higher Exec Officer Culture <strong>(GL 8)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (136534)</strong> + <strong>Code 1 (D-56441)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-136534</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            
+        </div>
+        
+        <!-- A4 PAGE 10 of 10 -->
+        <div class="page-container">
+          
+            <div class="slip-card">
+              <div class="slip-header">
+                <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+                <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+              </div>
+
+              <div class="name-block">
+                <span class="lbl-small">OFFICER FULL NAME:</span>
+                <div class="officer-name">Olarewaju D.A</div>
+              </div>
+
+              <div class="code-box">
+                <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+                <div class="code-val">D-23826</div>
+              </div>
+
+              <table class="details-table">
+                <tr>
+                  <td class="td-lbl">PSN:</td>
+                  <td class="td-val psn-highlight">112948</td>
+                  <td class="td-lbl">MDA:</td>
+                  <td class="td-val">MOC</td>
+                </tr>
+                <tr>
+                  <td class="td-lbl">Cadre / Proposed GL:</td>
+                  <td class="td-val" colspan="3">Director. Info <strong>(GL 17)</strong></td>
+                </tr>
+              </table>
+
+              <div class="instruction-box">
+                <strong>How to Register:</strong> Go to CBT Portal &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (112948)</strong> + <strong>Code 1 (D-23826)</strong> &rarr; Upload passport photo & print official Photocard.
+              </div>
+
+              <div class="slip-footer">
+                <span>Ref: KWS-CSC-REG-112948</span>
+                <span>Civil Service Commission</span>
+              </div>
+            </div>
+            <div class="slip-card blank-card"></div><div class="slip-card blank-card"></div><div class="slip-card blank-card"></div><div class="slip-card blank-card"></div><div class="slip-card blank-card"></div><div class="slip-card blank-card"></div><div class="slip-card blank-card"></div><div class="slip-card blank-card"></div><div class="slip-card blank-card"></div>
+        </div>
+        
+  </div>
+
+</body>
+</html>
