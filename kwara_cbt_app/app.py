@@ -6,7 +6,7 @@ import secrets
 import hmac
 import hashlib
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
@@ -96,12 +96,13 @@ class StartExamRequest(BaseModel):
     mda: Optional[str] = "State Civil Service"
 
 class SubmitExamRequest(BaseModel):
-    candidate_id: Optional[int] = None
+    candidate_id: Optional[Union[int, str]] = None
     name: str
     psn: str
     email: str
     grade_level: str
     mda: Optional[str] = "State Civil Service"
+    paper_code: Optional[str] = None
     answers: Dict[str, str] = {}
     time_taken_seconds: Optional[int] = 0
 
@@ -115,6 +116,22 @@ class SendResultEmailRequest(BaseModel):
 class ResetCandidateRequest(BaseModel):
     psn: str
     reason: Optional[str] = "Approved by Admin for Retake"
+
+class CandidateLookupRequest(BaseModel):
+    psn: str
+    code_1: str
+
+class CompleteRegistrationRequest(BaseModel):
+    psn: str
+    code_1: str
+    amended_name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    passport_photo: str
+
+class StartExamWithTokenRequest(BaseModel):
+    psn: str
+    token_code: str
 
 def verify_admin_auth(
     authorization: Optional[str] = Header(None),
@@ -309,23 +326,97 @@ def start_exam(data: StartExamRequest):
         "questions": questions
     }
 
+def fetch_cbt_questions(cursor, paper_code, mda, group_category):
+    clean_paper = (paper_code or "").strip()
+    clean_mda = (mda or "").strip()
+    clean_group = (group_category or "").replace("GROUP ", "").strip()
+    
+    rows = []
+    matched_paper = clean_paper
+
+    # 1. Exact paper_code match
+    if clean_paper:
+        cursor.execute("""
+            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            FROM cbt_questions
+            WHERE paper_code = ? OR paper_code = ?
+            ORDER BY question_number ASC
+        """, (clean_paper, clean_paper.replace("/", "-")))
+        rows = cursor.fetchall()
+
+    # 2. Same MDA match
+    if not rows and clean_mda:
+        cursor.execute("""
+            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            FROM cbt_questions
+            WHERE mda = ?
+            ORDER BY question_number ASC
+            LIMIT 50
+        """, (clean_mda,))
+        rows = cursor.fetchall()
+        if rows:
+            matched_paper = f"{clean_mda} Cadre"
+
+    # 3. Same Group Category in OHOS (Civil Service General)
+    if not rows and clean_group:
+        cursor.execute("""
+            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            FROM cbt_questions
+            WHERE mda = 'OHOS' AND group_category = ?
+            ORDER BY question_number ASC
+            LIMIT 50
+        """, (clean_group,))
+        rows = cursor.fetchall()
+        if rows:
+            matched_paper = f"OHOS/{clean_group}1"
+
+    # 4. Fallback to questions table
+    if not rows:
+        cursor.execute("""
+            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            FROM questions
+            ORDER BY question_number ASC
+            LIMIT 50
+        """)
+        rows = cursor.fetchall()
+        matched_paper = "Civil Service General"
+
+    rows = [dict(r) for r in rows]
+
+    # If fewer than 50 questions, pad up to exactly 50 with General Civil Service questions
+    if len(rows) < 50:
+        needed = 50 - len(rows)
+        cursor.execute("""
+            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            FROM questions
+            ORDER BY question_number ASC
+            LIMIT ?
+        """, (needed,))
+        pad_rows = [dict(r) for r in cursor.fetchall()]
+        rows.extend(pad_rows)
+
+    # Renumber sequentially 1..50 so palette and scoring are always 1 to 50
+    renumbered = []
+    for idx, r in enumerate(rows[:50], start=1):
+        r["question_number"] = idx
+        renumbered.append(r)
+
+    return renumbered, matched_paper
+
 @router.post("/submit-exam")
 @router.post("/api/submit-exam")
 def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = BackgroundTasks()):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("""
-        SELECT question_number, correct_answer
-        FROM questions
-        WHERE grade_level = ?
-        ORDER BY question_number ASC
-    """, (data.grade_level,))
+    paper_code = (data.paper_code or "").strip()
+    mda = (data.mda or "State Civil Service").strip()
+    group_cat = data.grade_level.replace("GROUP ", "").strip()
     
-    q_rows = cursor.fetchall()
+    q_rows, loaded_paper = fetch_cbt_questions(cursor, paper_code, mda, group_cat)
     if not q_rows:
         conn.close()
-        raise HTTPException(status_code=404, detail="Invalid grade level questions.")
+        raise HTTPException(status_code=404, detail="No examination answer key found.")
         
     correct_key_map = {str(r["question_number"]): r["correct_answer"].strip().upper() for r in q_rows}
     total_questions = len(correct_key_map)
@@ -351,6 +442,13 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
         
     answers_json_str = json.dumps(candidate_answers)
     
+    cid = data.candidate_id
+    if cid is not None:
+        try:
+            cid = int(cid)
+        except Exception:
+            cid = None
+
     cursor.execute("""
         INSERT INTO submissions (
             candidate_id, candidate_name, psn, email, grade_level, mda,
@@ -358,7 +456,7 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
             time_taken_seconds, answers_json
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        data.candidate_id, data.name.strip(), data.psn.strip(),
+        cid, data.name.strip(), data.psn.strip(),
         data.email.strip().lower(), data.grade_level.strip(),
         (data.mda or "State Civil Service").strip(),
         total_questions, correct_count, score_percentage, grade_remark,
@@ -369,6 +467,13 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
     cursor.execute("SELECT submitted_at FROM submissions WHERE id = ?", (submission_id,))
     sub_row = cursor.fetchone()
     submitted_at = sub_row["submitted_at"] if sub_row else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Mark exam token and candidate roster as completed/tested
+    try:
+        cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE assigned_to_psn = ?", (data.psn.strip(),))
+        cursor.execute("UPDATE candidate_roster SET registration_status = 'tested' WHERE psn = ?", (data.psn.strip(),))
+    except Exception:
+        pass
     
     conn.commit()
     conn.close()
@@ -414,6 +519,275 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
         "time_taken_seconds": data.time_taken_seconds or 0,
         "submitted_at": submitted_at,
         "email_dispatched": True
+    }
+
+@router.post("/candidate/lookup")
+@router.post("/api/candidate/lookup")
+def candidate_lookup(data: CandidateLookupRequest):
+    psn = data.psn.strip()
+    code_1 = data.code_1.strip().upper()
+    
+    if not psn or not code_1:
+        raise HTTPException(status_code=400, detail="Both PSN and Registration Code 1 are required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, psn, name, amended_name, code_1, mda, exam_code,
+               proposed_rank, proposed_gl, group_category,
+               exam_date, batch_session, batch_time, accreditation_time,
+               phone, email, passport_photo, registration_status
+        FROM candidate_roster
+        WHERE psn = ? AND UPPER(code_1) = ?
+    """, (psn, code_1))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Authentication Failed: No officer matched PSN '{psn}' with Registration Code '{code_1}'. Please check your slip and try again."
+        )
+        
+    return {
+        "success": True,
+        "candidate": dict(row)
+    }
+
+@router.post("/candidate/complete-registration")
+@router.post("/api/candidate/complete-registration")
+def complete_candidate_registration(data: CompleteRegistrationRequest):
+    psn = data.psn.strip()
+    code_1 = data.code_1.strip().upper()
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT id FROM candidate_roster WHERE psn = ? AND UPPER(code_1) = ?", (psn, code_1))
+    existing = cursor.fetchone()
+    if not existing:
+        conn.close()
+        raise HTTPException(status_code=401, detail="Authentication Failed: Invalid PSN or Registration Code.")
+        
+    cursor.execute("""
+        UPDATE candidate_roster
+        SET amended_name = ?, phone = ?, email = ?, passport_photo = ?,
+            registration_status = 'registered', registered_at = CURRENT_TIMESTAMP
+        WHERE psn = ?
+    """, (
+        (data.amended_name or "").strip(),
+        (data.phone or "").strip(),
+        (data.email or "").strip().lower(),
+        data.passport_photo,
+        psn
+    ))
+    
+    cursor.execute("""
+        SELECT id, psn, name, amended_name, code_1, mda, exam_code,
+               proposed_rank, proposed_gl, group_category,
+               exam_date, batch_session, batch_time, accreditation_time,
+               phone, email, passport_photo, registration_status, registered_at
+        FROM candidate_roster
+        WHERE psn = ?
+    """, (psn,))
+    
+    updated_row = cursor.fetchone()
+    conn.commit()
+    conn.close()
+    
+    return {
+        "success": True,
+        "message": "Registration verified and photocard generated successfully!",
+        "candidate": dict(updated_row)
+    }
+
+@router.get("/candidate/photocard/{psn}")
+@router.get("/api/candidate/photocard/{psn}")
+def get_candidate_photocard(psn: str):
+    query_psn = psn.strip()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, psn, name, amended_name, code_1, mda, exam_code,
+               proposed_rank, proposed_gl, group_category,
+               exam_date, batch_session, batch_time, accreditation_time,
+               phone, email, passport_photo, registration_status, registered_at
+        FROM candidate_roster
+        WHERE psn = ?
+    """, (query_psn,))
+    
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail=f"No registration photocard found for PSN: {query_psn}")
+        
+    return {
+        "success": True,
+        "photocard": dict(row)
+    }
+
+@router.post("/exam/start-with-token")
+@router.post("/api/exam/start-with-token")
+def start_exam_with_token(data: StartExamWithTokenRequest):
+    psn = data.psn.strip()
+    token_code = data.token_code.strip()
+    
+    if not psn or not token_code:
+        raise HTTPException(status_code=400, detail="Both PSN and 5-digit Exam Token are required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # 1. Check if exam is open
+    status = get_setting("exam_status", "open")
+    if status == "closed":
+        conn.close()
+        raise HTTPException(status_code=403, detail="The CBT Examination portal is currently closed by Administrator.")
+        
+    # 2. Check single attempt protection in submissions
+    cursor.execute("SELECT id, submitted_at, score_percentage FROM submissions WHERE psn = ?", (psn,))
+    sub = cursor.fetchone()
+    if sub:
+        conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"This examination has already been completed for PSN {psn} on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
+        )
+        
+    # 3. Validate Token
+    cursor.execute("SELECT id, token_code, status, assigned_to_psn FROM exam_tokens WHERE token_code = ?", (token_code,))
+    tok = cursor.fetchone()
+    if not tok:
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"Invalid Exam Access Token '{token_code}'. Please check your token slip.")
+        
+    # Check if assigned to another PSN
+    if tok["assigned_to_psn"] and tok["assigned_to_psn"] != psn:
+        conn.close()
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access Denied: This 5-digit token ({token_code}) has already been activated by another officer."
+        )
+        
+    # If unassigned, bind atomically to this PSN
+    if not tok["assigned_to_psn"]:
+        cursor.execute("""
+            UPDATE exam_tokens
+            SET assigned_to_psn = ?, status = 'active', activated_at = CURRENT_TIMESTAMP
+            WHERE token_code = ? AND assigned_to_psn IS NULL
+        """, (psn, token_code))
+        
+    # 4. Fetch candidate details from candidate_roster
+    cursor.execute("""
+        SELECT id, psn, name, amended_name, mda, exam_code, proposed_rank, proposed_gl, group_category, email
+        FROM candidate_roster
+        WHERE psn = ?
+    """, (psn,))
+    cand = cursor.fetchone()
+    
+    if not cand:
+        # Fallback to candidates table
+        cursor.execute("SELECT id, name, psn, email, grade_level, mda FROM candidates WHERE psn = ?", (psn,))
+        c_old = cursor.fetchone()
+        if c_old:
+            cand = {
+                "id": c_old["id"],
+                "psn": c_old["psn"],
+                "name": c_old["name"],
+                "amended_name": c_old["name"],
+                "mda": c_old["mda"],
+                "exam_code": "OHOS/C1",
+                "proposed_rank": "Officer",
+                "proposed_gl": c_old["grade_level"],
+                "group_category": "C",
+                "email": c_old["email"]
+            }
+        else:
+            conn.close()
+            raise HTTPException(status_code=404, detail=f"Officer record with PSN '{psn}' not found in candidate roster.")
+            
+    # 5. Fetch questions matching candidate's exam_code
+    paper_code = cand["exam_code"]
+    mda = cand["mda"]
+    group_cat = cand["group_category"].replace("GROUP ", "").strip()
+    
+    q_rows, loaded_paper = fetch_cbt_questions(cursor, paper_code, mda, group_cat)
+    
+    conn.commit()
+    conn.close()
+    
+    if not q_rows:
+        raise HTTPException(status_code=404, detail="No examination questions found for this cadre.")
+        
+    questions = []
+    for r in q_rows:
+        questions.append({
+            "id": r["id"],
+            "number": r["question_number"],
+            "question": r["question_text"],
+            "options": {
+                "A": r["option_a"],
+                "B": r["option_b"],
+                "C": r["option_c"],
+                "D": r["option_d"]
+            }
+        })
+        
+    display_name = cand["amended_name"] if cand["amended_name"] else cand["name"]
+    
+    return {
+        "success": True,
+        "candidate_id": cand.get("id"),
+        "candidate": {
+            "name": display_name,
+            "psn": cand["psn"],
+            "email": cand.get("email") or f"{psn}@cbt.kw.gov.ng",
+            "grade_level": cand.get("proposed_gl") or "10",
+            "mda": cand["mda"],
+            "paper_code": loaded_paper
+        },
+        "paper_code": loaded_paper,
+        "total_questions": len(questions),
+        "duration_minutes": 20,
+        "questions": questions
+    }
+
+@router.get("/admin/tokens")
+@router.get("/api/admin/tokens")
+def get_admin_tokens(auth: bool = Depends(verify_admin_auth)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT COUNT(*) as total FROM exam_tokens")
+    total = cursor.fetchone()["total"]
+    
+    cursor.execute("SELECT COUNT(*) as unassigned FROM exam_tokens WHERE status = 'unassigned'")
+    unassigned = cursor.fetchone()["unassigned"]
+    
+    cursor.execute("SELECT COUNT(*) as active FROM exam_tokens WHERE status = 'active'")
+    active = cursor.fetchone()["active"]
+    
+    cursor.execute("SELECT COUNT(*) as completed FROM exam_tokens WHERE status = 'completed'")
+    completed = cursor.fetchone()["completed"]
+    
+    # Return 100 sample unassigned tokens for printing
+    cursor.execute("SELECT token_code FROM exam_tokens WHERE status = 'unassigned' ORDER BY id ASC LIMIT 250")
+    sample_tokens = [r["token_code"] for r in cursor.fetchall()]
+    
+    conn.close()
+    
+    return {
+        "summary": {
+            "total_tokens": total,
+            "unassigned": unassigned,
+            "active": active,
+            "completed": completed
+        },
+        "sample_unassigned_tokens": sample_tokens
     }
 
 @router.get("/result/{psn}")

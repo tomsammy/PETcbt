@@ -16,8 +16,8 @@
     <div class="brand-section">
       <img src="/static/images/logo.png" alt="Kwara State Seal" class="brand-logo" onerror="this.style.display='none'">
       <div class="brand-titles">
-        <h1>KWARA STATE OFFICE OF THE HEAD OF SERVICE</h1>
-        <p>Productivity Enhancement Evaluation CBT Portal</p>
+        <h1>KWARA STATE CIVIL SERVICE COMMISSION</h1>
+        <p>2026 Promotion Evaluation CBT Examination Portal</p>
       </div>
     </div>
   </header>
@@ -26,20 +26,23 @@
   <main class="main-container">
 
     <!-- ======================================================== -->
-    <!-- VIEW 1: Candidate CBT Login & Result Retrieval Screen    -->
+    <!-- VIEW 1: Candidate Accreditation, Exam & Result Portal    -->
     <!-- ======================================================== -->
     <section id="view-entry" class="view-section active">
-      <div class="card-entry">
+      <div class="card-entry" style="max-width: 680px;">
         <div class="card-entry-header">
           <img src="/static/images/logo.png" alt="Kwara State Seal" class="hero-logo" onerror="this.style.display='none'">
-          <h2 id="entry-card-title">Officer CBT Evaluation Portal</h2>
-          <p id="entry-card-subtitle">Take your evaluation test or retrieve and print your official result slip anytime</p>
+          <h2 id="entry-card-title">Candidate Verification & Photocard</h2>
+          <p id="entry-card-subtitle">Verify your promotion candidate record, upload passport photo, and generate your official CBT photocard</p>
         </div>
 
         <!-- Segmented Navigation Tabs -->
         <div class="entry-nav-tabs">
-          <button type="button" class="entry-tab-btn active" id="tab-btn-start" onclick="switchEntryTab('start')">
-            <span>📝 Take Examination</span>
+          <button type="button" class="entry-tab-btn active" id="tab-btn-register" onclick="switchEntryTab('register')">
+            <span>🪪 Verification & Photocard</span>
+          </button>
+          <button type="button" class="entry-tab-btn" id="tab-btn-start" onclick="switchEntryTab('start')">
+            <span>📝 Take CBT Exam</span>
           </button>
           <button type="button" class="entry-tab-btn" id="tab-btn-retrieve" onclick="switchEntryTab('retrieve')">
             <span>🔍 Check & Print Result</span>
@@ -51,61 +54,191 @@
           <div style="font-size:2rem; margin-bottom:6px;">⛔</div>
           <h3 style="font-size:1.15rem; font-weight:800; margin-bottom:6px; color:#991b1b;">CBT Examination is Currently Closed</h3>
           <p style="font-size:0.9rem; color:#7f1d1d; line-height:1.5; margin:0;">
-            The evaluation exercise has been suspended or concluded by the Administrator (Office of the Head of Service). Candidate intake and test sessions are temporarily disabled.
+            The evaluation exercise has been suspended or concluded by the Administrator (Office of the Head of Service / Civil Service Commission). Candidate intake and test sessions are temporarily disabled.
           </p>
         </div>
 
         <div class="card-entry-body">
-          <!-- TAB 1: Take Examination Form -->
-          <div id="tab-content-start">
-            <form id="form-entry">
-              <div class="form-group">
-                <label for="input-name">Officer Full Name (Surname First) <span class="req">*</span></label>
-                <input type="text" id="input-name" class="form-control" placeholder="e.g. Ibrahim Abubakar Yusuf" required autocomplete="name">
-              </div>
-
-              <div class="form-group">
-                <label for="input-psn">Public Service Number (PSN) <span class="req">*</span></label>
-                <input type="text" id="input-psn" class="form-control" placeholder="e.g. 849201" required autocomplete="off">
-              </div>
-
-              <div class="form-group">
-                <label for="input-email">Official / Contact Email Address <span class="req">*</span></label>
-                <input type="email" id="input-email" class="form-control" placeholder="e.g. officer@kwarastate.gov.ng" required autocomplete="email">
-              </div>
-
-              <div class="form-group">
-                <label for="select-grade">Evaluation Cadre / Grade Level <span class="req">*</span></label>
-                <select id="select-grade" class="form-control" required>
-                  <option value="GL 08" selected>Grade Level 08 (Batch B)</option>
-                  <option value="GL 06-07">Grade Levels 06 & 07</option>
-                  <option value="GL 09">Grade Level 09</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="input-mda">Ministry / Department / Agency (MDA) <span class="req">*</span></label>
-                <input type="text" id="input-mda" class="form-control" placeholder="e.g. Ministry of Finance" value="Kwara State Civil Service" required>
-              </div>
-
-              <div class="info-banner">
-                <div style="font-size: 1.5rem;">📋</div>
-                <div>
-                  <strong>Important Examination Guidelines:</strong>
-                  <ul>
-                    <li>Total: <strong>50 Multiple-Choice Questions</strong> (2 marks each = 100 marks)</li>
-                    <li>Duration: <strong>20 Minutes</strong> (Live Automatic Countdown Timer)</li>
-                    <li><strong>Single Attempt Only</strong>: Each officer can take the evaluation only once.</li>
-                    <li><strong>Instant Grading</strong>: Official Result Slip is generated immediately on submission.</li>
-                  </ul>
+          <!-- TAB 1: Candidate Verification & Photocard Generation -->
+          <div id="tab-content-register">
+            <!-- Step 1: Lookup Form -->
+            <div id="reg-lookup-box">
+              <div style="background: #e0f2fe; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 16px 18px; margin-bottom: 20px; color: #0369a1; font-size: 0.9rem; line-height: 1.55;">
+                <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span>ℹ️ Candidate Self-Service Clearance</span>
                 </div>
+                Enter your <strong>Public Service Number (PSN)</strong> and your <strong>Registration Clearance Code (Code 1, e.g. A-77253)</strong> to verify your records, upload your passport photograph, and generate your printable CBT Examination Photocard.
               </div>
 
-              <button type="submit" id="btn-start-exam" class="btn-primary-large">
-                <span id="btn-start-exam-text">🚀 Login & Commence CBT Examination (20 Mins)</span>
+              <form id="form-candidate-lookup">
+                <div class="form-group">
+                  <label for="reg-input-psn">Public Service Number (PSN) <span class="req">*</span></label>
+                  <input type="text" id="reg-input-psn" class="form-control" placeholder="e.g. 128439" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                  <label for="reg-input-code1">Registration Clearance Code (Code 1) <span class="req">*</span></label>
+                  <input type="text" id="reg-input-code1" class="form-control" placeholder="e.g. A-77253" required autocomplete="off" style="text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
+                  <p style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Enter the exact clearance code issued to your MDA record</p>
+                </div>
+
+                <button type="submit" id="btn-lookup-candidate" class="btn-primary-large">
+                  <span id="btn-lookup-text">🔍 Verify Officer Record</span>
+                </button>
+              </form>
+            </div>
+
+            <!-- Step 2: Candidate Profile & Passport Photo Upload (Shown after lookup) -->
+            <div id="reg-profile-box" style="display:none;">
+              <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; color: #166534; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <strong style="font-size: 1rem;">✅ Officer Record Verified</strong>
+                  <div style="font-size: 0.85rem; color: #15803d; margin-top: 2px;">Review details, amend spelling if necessary, upload passport photo, and generate photocard.</div>
+                </div>
+                <button type="button" class="btn-ctrl" style="padding: 6px 12px; font-size: 0.8rem;" onclick="resetCandidateLookup()">
+                  <span>🔄 Change PSN</span>
+                </button>
+              </div>
+
+              <form id="form-complete-reg">
+                <!-- Profile Data Grid -->
+                <div class="reg-profile-grid">
+                  <div class="form-group">
+                    <label for="reg-amended-name">Officer Full Name (Surname First) <span class="req">*</span></label>
+                    <input type="text" id="reg-amended-name" class="form-control" required placeholder="Surname Firstname Othername">
+                    <small style="font-size: 0.75rem; color: #64748b;">Roster Name: <span id="reg-orig-name-lbl" style="font-weight: 600;">-</span> (Amend above if misspelled)</small>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Public Service Number (PSN)</label>
+                    <input type="text" id="reg-disp-psn" class="form-control" readonly style="background: #f1f5f9; font-weight: 700; color: #004d40;">
+                  </div>
+
+                  <div class="form-group">
+                    <label>Ministry / Department / Agency (MDA)</label>
+                    <input type="text" id="reg-disp-mda" class="form-control" readonly style="background: #f1f5f9; font-weight: 600;">
+                  </div>
+
+                  <div class="form-group">
+                    <label>Cadre / Proposed Rank</label>
+                    <input type="text" id="reg-disp-rank" class="form-control" readonly style="background: #f1f5f9; font-weight: 600;">
+                  </div>
+
+                  <div class="form-group">
+                    <label>Proposed Grade Level / Group</label>
+                    <input type="text" id="reg-disp-gl" class="form-control" readonly style="background: #f1f5f9; font-weight: 700;">
+                  </div>
+
+                  <div class="form-group">
+                    <label>Examination Subject Code & Paper</label>
+                    <input type="text" id="reg-disp-paper" class="form-control" readonly style="background: #f1f5f9; font-weight: 700; color: #0369a1;">
+                  </div>
+                </div>
+
+                <!-- Schedule Box -->
+                <div class="schedule-banner-box">
+                  <h4>📅 Official Examination Timetable Allocation</h4>
+                  <div class="schedule-grid">
+                    <div class="schedule-item">
+                      Date of Exam:
+                      <span id="reg-disp-date">-</span>
+                    </div>
+                    <div class="schedule-item">
+                      Allocated Batch:
+                      <span id="reg-disp-batch">-</span>
+                    </div>
+                    <div class="schedule-item">
+                      Accreditation Time:
+                      <span id="reg-disp-accred">-</span>
+                    </div>
+                    <div class="schedule-item">
+                      Exam Time:
+                      <span id="reg-disp-examtime">-</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contact Inputs -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                  <div class="form-group">
+                    <label for="reg-input-phone">Mobile Phone Number <span class="req">*</span></label>
+                    <input type="tel" id="reg-input-phone" class="form-control" placeholder="e.g. 08031234567" required autocomplete="tel">
+                  </div>
+                  <div class="form-group">
+                    <label for="reg-input-email">Contact / Official Email Address <span class="req">*</span></label>
+                    <input type="email" id="reg-input-email" class="form-control" placeholder="e.g. officer@kwarastate.gov.ng" required autocomplete="email">
+                  </div>
+                </div>
+
+                <!-- Passport Photograph Upload & Webcam Capture -->
+                <div class="reg-photo-upload-wrap">
+                  <div class="reg-passport-preview-box">
+                    <img id="reg-passport-preview" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'><rect width='140' height='160' fill='%23f1f5f9'/><circle cx='70' cy='55' r='30' fill='%23cbd5e1'/><path d='M20 145 C20 105 50 95 70 95 C90 95 120 105 120 145 Z' fill='%23cbd5e1'/><text x='70' y='155' text-anchor='middle' font-size='10' fill='%2394a3b8' font-family='sans-serif'>No Photo</text></svg>" alt="Passport Photograph">
+                  </div>
+                  <div style="flex: 1;">
+                    <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; margin-bottom: 4px;">Passport Photograph <span class="req">*</span></div>
+                    <p style="font-size: 0.82rem; color: #64748b; line-height: 1.45; margin-bottom: 12px;">
+                      A clear, front-facing passport photograph is required on your official CBT photocard. You can take a live webcam snapshot or upload an image file from your device.
+                    </p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                      <button type="button" class="btn-ctrl" id="btn-webcam-trigger" style="background:#f0fdf4; border-color:#86efac; color:#166534; font-weight:700;" onclick="openWebcamModal()">
+                        <span>📸 Live Webcam Capture</span>
+                      </button>
+                      <button type="button" class="btn-ctrl" id="btn-file-trigger" style="background:#f8fafc; border-color:#cbd5e1; font-weight:600;" onclick="document.getElementById('reg-file-input').click()">
+                        <span>📁 Upload Photo File</span>
+                      </button>
+                      <input type="file" id="reg-file-input" accept="image/*" style="display: none;" onchange="handlePassportFileSelect(this)">
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                  <button type="submit" id="btn-save-photocard" class="btn-primary-large">
+                    <span id="btn-save-photocard-text">💾 Save Registration & Generate Official CBT Photocard</span>
+                  </button>
+                  <button type="button" id="btn-direct-photocard" class="btn-ctrl" style="display:none; padding: 12px; font-weight: 700; border-color: #0284c7; color: #0369a1; background: #f0f9ff;" onclick="viewDirectPhotocard()">
+                    <span>🖨️ View & Print Registered Photocard Directly</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- TAB 2: Take Examination Form (5-Digit Token) -->
+          <div id="tab-content-start" style="display:none;">
+            <div class="info-banner" style="margin-top: 0;">
+              <div style="font-size: 1.6rem;">⏱️</div>
+              <div>
+                <strong>Official Examination Hall Instructions:</strong>
+                <ul style="margin-top: 4px; margin-left: 18px; font-size: 0.85rem;">
+                  <li>Duration: <strong>Strictly 20 Minutes</strong> (Live automatic countdown timer)</li>
+                  <li>Questions: <strong>50 Cadre-Specific Multiple Choice Questions</strong> (2 marks each = 100 marks)</li>
+                  <li>Authentication: <strong>PSN + 5-Digit Scratch Card Token</strong> issued physically in the examination hall</li>
+                  <li>Token Binding: Token binds permanently to your PSN upon first login. Single attempt only.</li>
+                </ul>
+              </div>
+            </div>
+
+            <form id="form-token-exam">
+              <div class="form-group">
+                <label for="token-exam-psn">Public Service Number (PSN) <span class="req">*</span></label>
+                <input type="text" id="token-exam-psn" class="form-control" placeholder="e.g. 128439" required autocomplete="off" style="font-size: 1.05rem; font-weight: 700;">
+              </div>
+
+              <div class="form-group">
+                <label for="token-exam-code">5-Digit Examination Scratch Card Token <span class="req">*</span></label>
+                <input type="text" id="token-exam-code" class="form-control token-code-input" placeholder="•••••" maxlength="5" pattern="[0-9]{5}" required autocomplete="off">
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: 6px; text-align: center;">
+                  Enter the 5-digit number on the scratch card slip issued to you in the CBT hall
+                </p>
+              </div>
+
+              <button type="submit" id="btn-start-token-exam" class="btn-primary-large" style="margin-top: 16px;">
+                <span id="btn-start-token-text">🚀 Unlock & Commence 20-Minute Exam</span>
               </button>
             </form>
           </div>
+
 
           <!-- TAB 2: Retrieve / Check Result Form -->
           <div id="tab-content-retrieve" style="display:none;">
@@ -298,6 +431,38 @@
     </div>
 
     <!-- ======================================================== -->
+    <!-- VIEW: Official Candidate CBT Photocard                   -->
+    <!-- ======================================================== -->
+    <section id="view-photocard" class="view-section">
+      <div class="photocard-container">
+        <div class="photocard-slip-card">
+          <div class="photocard-header">
+            <img src="/static/images/logo.png" alt="Kwara State Seal" style="height: 54px; margin-bottom: 6px;" onerror="this.style.display='none'">
+            <h2>KWARA STATE CIVIL SERVICE COMMISSION</h2>
+            <h3>2026 PROMOTION EVALUATION EXAMINATIONS</h3>
+            <p>OFFICIAL CBT ACCREDITATION & CLEARANCE PHOTOCARD</p>
+          </div>
+
+          <div class="photocard-body" id="photocard-render-target">
+            <!-- Dynamically populated by JS renderPhotocard() -->
+          </div>
+        </div>
+
+        <div class="photocard-actions">
+          <button type="button" class="btn-ctrl btn-submit" id="btn-print-photocard" style="padding: 12px 28px; font-size: 1rem;" onclick="window.print()">
+            <span>🖨️ Print CBT Photocard (PDF)</span>
+          </button>
+          <button type="button" class="btn-ctrl" style="padding: 12px 24px; font-size: 1rem; border-color: #059669; color: #047857; background: #ecfdf5; font-weight: 700;" onclick="proceedToExamFromPhotocard()">
+            <span>📝 Proceed to CBT Examination</span>
+          </button>
+          <button type="button" class="btn-ctrl" style="padding: 12px 24px; font-size: 1rem; border-color: #cbd5e1; background: #fff;" onclick="returnToPortalHome()">
+            <span>🏠 Return to Portal Home</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
     <!-- VIEW 4: Instant Official Result Slip                     -->
     <!-- ======================================================== -->
     <section id="view-result" class="view-section">
@@ -305,8 +470,8 @@
         <div class="result-slip-card">
           <div class="slip-header">
             <img src="/static/images/logo.png" alt="Kwara State Seal" class="slip-header-logo" onerror="this.style.display='none'">
-            <h2>KWARA STATE OFFICE OF THE HEAD OF SERVICE</h2>
-            <p>Productivity Enhancement Evaluation - Official Result Slip</p>
+            <h2>KWARA STATE CIVIL SERVICE COMMISSION</h2>
+            <p>2026 Promotion Evaluation Examination - Official Result Slip</p>
           </div>
 
           <div class="slip-body">
@@ -447,6 +612,27 @@
           </div>
         </div>
 
+        <!-- Admin Scratch Card Token Management Bar -->
+        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 14px 20px; margin-bottom: 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px;">
+          <div>
+            <div style="font-size:0.75rem; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">Exam Day Scratch Card Tokens (5-Digit)</div>
+            <div style="font-size:0.95rem; font-weight:700; color:#0f172a; margin-top:3px;">
+              Pool Total: <strong id="admin-tok-total">3,500</strong> &nbsp;|&nbsp;
+              Available: <strong id="admin-tok-unassigned" style="color:#059669;">3,500</strong> &nbsp;|&nbsp;
+              Active: <strong id="admin-tok-active" style="color:#2563eb;">0</strong> &nbsp;|&nbsp;
+              Completed: <strong id="admin-tok-completed" style="color:#7c3aed;">0</strong>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn-ctrl" style="background:#ecfdf5; border-color:#86efac; color:#166534; font-weight:700;" onclick="openAdminTokensModal()">
+              <span>🎟️ Print Token Slips (Batches)</span>
+            </button>
+            <button type="button" class="btn-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#991b1b; font-weight:700;" onclick="openAdminResetModal()">
+              <span>🔄 Reset Candidate PSN</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Filter & Search -->
         <div class="filter-bar">
           <input type="text" id="admin-search" class="form-control" placeholder="🔍 Search candidate by name, PSN, email, or MDA..." style="max-width: 380px;">
@@ -548,6 +734,93 @@
           </button>
           <button type="button" class="btn-primary-large" id="alert-modal-ok-btn" style="padding: 12px; font-size: 0.95rem; width: 100%;" onclick="closeAlertModal()">
             <span>Understood</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 8: Live Webcam Capture Modal                        -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="webcam-modal">
+      <div class="modal-card" style="max-width: 440px; text-align: center; padding: 24px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">
+          📸 Live Webcam Passport Snapshot
+        </h3>
+        <p style="font-size: 0.85rem; color: #475569; margin-bottom: 16px;">
+          Position your face clearly within the frame under proper lighting.
+        </p>
+        <div style="position: relative; width: 280px; height: 320px; margin: 0 auto 16px auto; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid #004d40;">
+          <video id="webcam-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+          <div style="position: absolute; top: 15px; left: 25px; right: 25px; bottom: 25px; border: 2px dashed rgba(255,255,255,0.7); border-radius: 8px; pointer-events: none;"></div>
+        </div>
+        <canvas id="webcam-canvas" width="280" height="320" style="display: none;"></canvas>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button type="button" class="btn-primary-large" style="padding: 10px 22px; width: auto;" onclick="captureWebcamPhoto()">
+            <span>📸 Capture Snapshot</span>
+          </button>
+          <button type="button" class="btn-ctrl" style="padding: 10px 18px;" onclick="closeWebcamModal()">
+            <span>Cancel</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 9: Admin Exam Tokens Slips Modal (Printable)        -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="admin-tokens-modal">
+      <div class="modal-card" style="max-width: 760px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); color: #fff;">
+          <h3 style="color:#fff;">🎟️ Examination Scratch Card Tokens (Hall Slips)</h3>
+        </div>
+        <div class="modal-body" style="padding: 20px; overflow-y: auto; flex: 1;">
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 14px;">
+            These are pure 5-digit unassigned exam tokens from the secure pool. Invigilators can print, cut, and distribute them to candidates in the CBT hall. At first login, the token permanently binds to the candidate's PSN.
+          </p>
+          <div id="admin-tokens-grid" class="token-slips-grid">
+            <div style="text-align: center; color: #64748b; padding: 24px; grid-column: 1 / -1;">Loading tokens...</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ctrl btn-submit" onclick="printTokenSlips()">
+            <span>🖨️ Print Token Slips Sheet</span>
+          </button>
+          <button type="button" class="btn-ctrl" onclick="closeAdminTokensModal()">
+            <span>Close</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 10: Admin Candidate Reset / Retake Modal            -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="admin-reset-modal">
+      <div class="modal-card" style="max-width: 440px;">
+        <div class="modal-header" style="background: #b91c1c; color: #fff;">
+          <h3 style="color:#fff;">🔄 Admin Candidate Retake Reset</h3>
+        </div>
+        <div class="modal-body" style="padding: 20px;">
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 14px;">
+            Enter the officer's PSN to archive any previous incomplete/failed attempt and unlock them for a clean re-examination session.
+          </p>
+          <div class="form-group">
+            <label for="admin-reset-psn">Candidate PSN</label>
+            <input type="text" id="admin-reset-psn" class="form-control" placeholder="e.g. 138777" required>
+          </div>
+          <div class="form-group">
+            <label for="admin-reset-reason">Reason for Reset / Invigilator Note</label>
+            <input type="text" id="admin-reset-reason" class="form-control" placeholder="e.g. Technical system disruption during session">
+          </div>
+          <div id="admin-reset-msg" style="display:none; padding: 10px; border-radius: 6px; font-size: 0.85rem; margin-top: 10px;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ctrl" onclick="closeAdminResetModal()">
+            <span>Cancel</span>
+          </button>
+          <button type="button" class="btn-ctrl" style="background:#dc2626; color:#fff; border-color:#b91c1c;" onclick="executeAdminCandidateReset()">
+            <span>Execute Reset & Unlock PSN</span>
           </button>
         </div>
       </div>

@@ -6,6 +6,9 @@
 const state = {
   candidate: null,
   candidateId: null,
+  registeredCandidate: null,
+  tempPassportBase64: null,
+  webcamStream: null,
   questions: [],
   currentIndex: 0,
   answers: {}, // { "1": "A", "2": "C" }
@@ -16,12 +19,14 @@ const state = {
   isSubmitted: false,
   adminToken: sessionStorage.getItem('kws_admin_token') || null,
   adminSubmissions: [],
+  adminTokensSummary: null,
   examStatus: 'open'
 };
 
 // DOM Elements
 const views = {
   entry: document.getElementById('view-entry'),
+  photocard: document.getElementById('view-photocard'),
   exam: document.getElementById('view-exam'),
   result: document.getElementById('view-result'),
   admin: document.getElementById('view-admin')
@@ -218,33 +223,509 @@ function navigateToExam() {
 }
 
 // -------------------------------------------------------------
-// 1. Candidate Entry Tabs: Take Exam vs Retrieve Result
+// 1. Candidate Entry Navigation: Registration vs Exam vs Result
 // -------------------------------------------------------------
 function switchEntryTab(tab) {
+  const btnRegister = document.getElementById('tab-btn-register');
   const btnStart = document.getElementById('tab-btn-start');
   const btnRetrieve = document.getElementById('tab-btn-retrieve');
+
+  const contentRegister = document.getElementById('tab-content-register');
   const contentStart = document.getElementById('tab-content-start');
   const contentRetrieve = document.getElementById('tab-content-retrieve');
+
   const title = document.getElementById('entry-card-title');
   const subtitle = document.getElementById('entry-card-subtitle');
 
-  if (tab === 'retrieve') {
-    if (btnStart) btnStart.classList.remove('active');
-    if (btnRetrieve) btnRetrieve.classList.add('active');
-    if (contentStart) contentStart.style.display = 'none';
-    if (contentRetrieve) contentRetrieve.style.display = 'block';
+  // Reset active classes on tabs
+  if (btnRegister) btnRegister.classList.toggle('active', tab === 'register');
+  if (btnStart) btnStart.classList.toggle('active', tab === 'start');
+  if (btnRetrieve) btnRetrieve.classList.toggle('active', tab === 'retrieve');
+
+  // Switch content visibility
+  if (contentRegister) contentRegister.style.display = (tab === 'register') ? 'block' : 'none';
+  if (contentStart) contentStart.style.display = (tab === 'start') ? 'block' : 'none';
+  if (contentRetrieve) contentRetrieve.style.display = (tab === 'retrieve') ? 'block' : 'none';
+
+  if (tab === 'register') {
+    if (title) title.textContent = 'Candidate Verification & Photocard';
+    if (subtitle) subtitle.textContent = 'Verify your promotion candidate record, upload passport photo, and generate your official CBT photocard';
+    const inputRegPsn = document.getElementById('reg-input-psn');
+    if (inputRegPsn) inputRegPsn.focus();
+  } else if (tab === 'start') {
+    if (title) title.textContent = 'Take CBT Examination';
+    if (subtitle) subtitle.textContent = 'Enter your Public Service Number (PSN) and 5-digit Exam Scratch Card Token issued in the examination hall';
+    const inputTokenPsn = document.getElementById('token-exam-psn');
+    if (inputTokenPsn) inputTokenPsn.focus();
+  } else if (tab === 'retrieve') {
     if (title) title.textContent = 'Retrieve Official Result Slip';
     if (subtitle) subtitle.textContent = 'Enter your Public Service Number (PSN) to view, verify, and reprint your official result slip anytime';
     const inputPsn = document.getElementById('input-retrieve-psn');
     if (inputPsn) inputPsn.focus();
-  } else {
-    if (btnStart) btnStart.classList.add('active');
-    if (btnRetrieve) btnRetrieve.classList.remove('active');
-    if (contentStart) contentStart.style.display = 'block';
-    if (contentRetrieve) contentRetrieve.style.display = 'none';
-    if (title) title.textContent = 'Officer CBT Examination Login';
-    if (subtitle) subtitle.textContent = 'Please enter your official verification details below to log in and begin your evaluation test';
   }
+}
+
+// -------------------------------------------------------------
+// 1B. Candidate Clearance & Photocard Generation (Code 1)
+// -------------------------------------------------------------
+function resetCandidateLookup() {
+  const lookupBox = document.getElementById('reg-lookup-box');
+  const profileBox = document.getElementById('reg-profile-box');
+  if (lookupBox) lookupBox.style.display = 'block';
+  if (profileBox) profileBox.style.display = 'none';
+  state.registeredCandidate = null;
+  state.tempPassportBase64 = null;
+}
+
+// Lookup Form Event Listener
+const lookupForm = document.getElementById('form-candidate-lookup');
+if (lookupForm) {
+  lookupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const psn = document.getElementById('reg-input-psn').value.trim();
+    const code1 = document.getElementById('reg-input-code1').value.trim().toUpperCase();
+
+    if (!psn || !code1) {
+      showAlertModal('Information Required', 'Please provide both your PSN and your Registration Clearance Code (Code 1).', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('btn-lookup-candidate');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳ Verifying Clearance Records...</span>`;
+    }
+
+    try {
+      const res = await fetch('/api/candidate/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ psn, code_1: code1 })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Candidate lookup failed. Please check your credentials.');
+      }
+
+      const cand = data.candidate;
+      state.registeredCandidate = cand;
+
+      // Populate form
+      document.getElementById('reg-orig-name-lbl').textContent = cand.name;
+      document.getElementById('reg-amended-name').value = cand.amended_name || cand.name;
+      document.getElementById('reg-disp-psn').value = cand.psn;
+      document.getElementById('reg-disp-mda').value = cand.mda;
+      document.getElementById('reg-disp-rank').value = cand.proposed_rank || 'Civil Service Cadre';
+      document.getElementById('reg-disp-gl').value = `${cand.proposed_gl || ''} (${cand.group_category || ''})`;
+      document.getElementById('reg-disp-paper').value = `${cand.exam_code} - ${cand.group_category}`;
+
+      document.getElementById('reg-disp-date').textContent = cand.exam_date || 'Tuesday, 29th September 2026';
+      document.getElementById('reg-disp-batch').textContent = cand.batch_session || 'Batch 1';
+      document.getElementById('reg-disp-accred').textContent = cand.accreditation_time || '09:00 AM';
+      document.getElementById('reg-disp-examtime').textContent = cand.batch_time || '10:00 AM';
+
+      document.getElementById('reg-input-phone').value = cand.phone || '';
+      document.getElementById('reg-input-email').value = cand.email || '';
+
+      const previewImg = document.getElementById('reg-passport-preview');
+      if (cand.passport_photo) {
+        previewImg.src = cand.passport_photo;
+        state.tempPassportBase64 = cand.passport_photo;
+      } else {
+        previewImg.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'><rect width='140' height='160' fill='%23f1f5f9'/><circle cx='70' cy='55' r='30' fill='%23cbd5e1'/><path d='M20 145 C20 105 50 95 70 95 C90 95 120 105 120 145 Z' fill='%23cbd5e1'/><text x='70' y='155' text-anchor='middle' font-size='10' fill='%2394a3b8' font-family='sans-serif'>No Photo</text></svg>";
+        state.tempPassportBase64 = null;
+      }
+
+      const directBtn = document.getElementById('btn-direct-photocard');
+      if (directBtn) {
+        directBtn.style.display = (cand.registration_status === 'registered' || cand.registration_status === 'tested' || cand.passport_photo) ? 'block' : 'none';
+      }
+
+      document.getElementById('reg-lookup-box').style.display = 'none';
+      document.getElementById('reg-profile-box').style.display = 'block';
+
+    } catch (err) {
+      showAlertModal('Verification Unsuccessful', err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+  });
+}
+
+// Handle Passport File Upload
+function handlePassportFileSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  if (!file.type.startsWith('image/')) {
+    showAlertModal('Invalid File', 'Please select an image file (PNG, JPG, JPEG).', 'warning');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      // Resize to standard passport dimensions (280x320)
+      const canvas = document.createElement('canvas');
+      canvas.width = 280;
+      canvas.height = 320;
+      const ctx = canvas.getContext('2d');
+
+      // Crop center to maintain aspect ratio
+      const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+      const w = img.width * scale;
+      const h = img.height * scale;
+      const x = (canvas.width - w) / 2;
+      const y = (canvas.height - h) / 2;
+
+      ctx.drawImage(img, x, y, w, h);
+      const dataUri = canvas.toDataURL('image/jpeg', 0.85);
+      state.tempPassportBase64 = dataUri;
+      const preview = document.getElementById('reg-passport-preview');
+      if (preview) preview.src = dataUri;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Live Webcam Snapshot Handling
+async function openWebcamModal() {
+  const modal = document.getElementById('webcam-modal');
+  const video = document.getElementById('webcam-video');
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+    });
+    state.webcamStream = stream;
+    if (video) {
+      video.srcObject = stream;
+      video.play();
+    }
+    if (modal) modal.classList.add('active');
+  } catch (err) {
+    showAlertModal(
+      'Webcam Unavailable',
+      'Unable to access camera (' + err.message + '). Please use the "Upload Photo File" button to upload your passport photo directly.',
+      'warning'
+    );
+  }
+}
+
+function captureWebcamPhoto() {
+  const video = document.getElementById('webcam-video');
+  const canvas = document.getElementById('webcam-canvas');
+  if (!video || !canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  canvas.width = 280;
+  canvas.height = 320;
+
+  // Mirror effect compensation
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+
+  const vWidth = video.videoWidth || 640;
+  const vHeight = video.videoHeight || 480;
+  const scale = Math.max(canvas.width / vWidth, canvas.height / vHeight);
+  const w = vWidth * scale;
+  const h = vHeight * scale;
+  const x = (canvas.width - w) / 2;
+  const y = (canvas.height - h) / 2;
+
+  ctx.drawImage(video, x, y, w, h);
+  const dataUri = canvas.toDataURL('image/jpeg', 0.85);
+  state.tempPassportBase64 = dataUri;
+
+  const preview = document.getElementById('reg-passport-preview');
+  if (preview) preview.src = dataUri;
+
+  closeWebcamModal();
+}
+
+function closeWebcamModal() {
+  if (state.webcamStream) {
+    state.webcamStream.getTracks().forEach(track => track.stop());
+    state.webcamStream = null;
+  }
+  const modal = document.getElementById('webcam-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+// Save Registration and View Photocard
+const completeRegForm = document.getElementById('form-complete-reg');
+if (completeRegForm) {
+  completeRegForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!state.registeredCandidate) {
+      showAlertModal('Session Expired', 'Please look up your PSN again.', 'warning');
+      return;
+    }
+
+    if (!state.tempPassportBase64) {
+      showAlertModal(
+        'Passport Photo Required',
+        'Please upload or take a live webcam snapshot of your passport photograph before proceeding.',
+        'warning'
+      );
+      return;
+    }
+
+    const amendedName = document.getElementById('reg-amended-name').value.trim();
+    const phone = document.getElementById('reg-input-phone').value.trim();
+    const email = document.getElementById('reg-input-email').value.trim();
+
+    const btn = document.getElementById('btn-save-photocard');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>💾 Generating Official Photocard...</span>`;
+    }
+
+    try {
+      const res = await fetch('/api/candidate/complete-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          psn: state.registeredCandidate.psn,
+          code_1: state.registeredCandidate.code_1,
+          amended_name: amendedName,
+          phone: phone,
+          email: email,
+          passport_photo: state.tempPassportBase64
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Failed to complete registration.');
+      }
+
+      state.registeredCandidate = data.candidate;
+      renderPhotocard(data.candidate);
+      showView('photocard');
+
+    } catch (err) {
+      showAlertModal('Registration Error', err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+  });
+}
+
+function viewDirectPhotocard() {
+  if (state.registeredCandidate) {
+    renderPhotocard(state.registeredCandidate);
+    showView('photocard');
+  }
+}
+
+function renderPhotocard(c) {
+  const target = document.getElementById('photocard-render-target');
+  if (!target) return;
+
+  const displayName = c.amended_name || c.name;
+  const photoSrc = c.passport_photo || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='160' viewBox='0 0 140 160'><rect width='140' height='160' fill='%23f1f5f9'/><circle cx='70' cy='55' r='30' fill='%23cbd5e1'/><path d='M20 145 C20 105 50 95 70 95 C90 95 120 105 120 145 Z' fill='%23cbd5e1'/><text x='70' y='155' text-anchor='middle' font-size='10' fill='%2394a3b8' font-family='sans-serif'>No Photo</text></svg>";
+
+  target.innerHTML = `
+    <div class="photocard-meta-grid">
+      <div class="passport-box">
+        <img src="${photoSrc}" alt="Candidate Passport Photo">
+      </div>
+      <div>
+        <table class="candidate-info-table">
+          <tr>
+            <th>Candidate Name:</th>
+            <td><strong style="font-size: 1.05rem; color: #004d40;">${displayName}</strong></td>
+          </tr>
+          <tr>
+            <th>Public Service No (PSN):</th>
+            <td><code style="font-size: 1rem; font-weight: 800; color: #0f172a;">${c.psn}</code></td>
+          </tr>
+          <tr>
+            <th>Ministry / MDA:</th>
+            <td>${c.mda}</td>
+          </tr>
+          <tr>
+            <th>Present / Proposed Rank:</th>
+            <td>${c.proposed_rank || 'Civil Service Cadre'}</td>
+          </tr>
+          <tr>
+            <th>Proposed Grade Level:</th>
+            <td><span class="badge-cadre">${c.proposed_gl || ''} (${c.group_category || ''})</span></td>
+          </tr>
+          <tr>
+            <th>Examination Subject:</th>
+            <td><strong style="color: #0369a1;">${c.exam_code}</strong> (${c.group_category || ''})</td>
+          </tr>
+          <tr>
+            <th>Registration Code (Code 1):</th>
+            <td><span class="badge-code1">${c.code_1}</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Examination Timetable Allocation -->
+    <div class="schedule-banner-box">
+      <h4>📅 Official Examination Schedule Allocation</h4>
+      <div class="schedule-grid">
+        <div class="schedule-item">
+          Examination Date:
+          <span>${c.exam_date || 'Tuesday, 29th September 2026'}</span>
+        </div>
+        <div class="schedule-item">
+          Session / Batch:
+          <span>${c.batch_session || 'Day 1 - Batch 1'}</span>
+        </div>
+        <div class="schedule-item">
+          Accreditation Time:
+          <span>${c.accreditation_time || '09:00 AM'}</span>
+        </div>
+        <div class="schedule-item">
+          Exam Commencement:
+          <span>${c.batch_time || '10:00 AM'}</span>
+        </div>
+        <div class="schedule-item" style="grid-column: 1 / -1;">
+          Designated Examination Venue:
+          <span>State Computer Based Testing Centre, Ilorin, Kwara State</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidate Regulations -->
+    <div class="photocard-rules">
+      <strong>⚠️ Examination Hall Mandatory Regulations:</strong>
+      <ol>
+        <li>This printed photocard must be presented physically to the invigilator during hall accreditation.</li>
+        <li>Candidates must arrive at the examination venue strictly at the stipulated <strong>Accreditation Time</strong>.</li>
+        <li>Upon accreditation in the CBT hall, you will receive a physical <strong>5-Digit Exam Scratch Card Token</strong> to unlock your workstation test.</li>
+        <li>The examination duration is <strong>strictly 20 Minutes (50 Cadre-Specific Questions)</strong>. The system automatically submits when time expires.</li>
+        <li>Electronic gadgets, mobile phones, and unauthorized materials are strictly prohibited in the exam hall.</li>
+      </ol>
+    </div>
+
+    <div class="photocard-footer">
+      <div>
+        <div><strong>Status:</strong> <span style="color:#059669; font-weight:800;">VERIFIED & ACCREDITED FOR CBT</span></div>
+        <div style="font-size: 0.7rem; margin-top: 2px;">Security Verification Code: ${c.code_1}-${c.psn}</div>
+      </div>
+      <div class="slip-sign-line" style="width: 220px;">
+        Kwara State Civil Service Commission
+      </div>
+    </div>
+  `;
+}
+
+function proceedToExamFromPhotocard() {
+  showView('entry');
+  switchEntryTab('start');
+  if (state.registeredCandidate) {
+    const psnInput = document.getElementById('token-exam-psn');
+    if (psnInput) psnInput.value = state.registeredCandidate.psn;
+    const tokenInput = document.getElementById('token-exam-code');
+    if (tokenInput) tokenInput.focus();
+  }
+}
+
+// -------------------------------------------------------------
+// 1C. Take CBT Examination with 5-Digit Scratch Token
+// -------------------------------------------------------------
+const tokenExamForm = document.getElementById('form-token-exam');
+if (tokenExamForm) {
+  tokenExamForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (state.examStatus === 'closed') {
+      showAlertModal(
+        'Examination Closed',
+        'The CBT Examination is currently closed by the Administrator. Candidate intake and test sessions are suspended.',
+        'error'
+      );
+      return;
+    }
+
+    const psn = document.getElementById('token-exam-psn').value.trim();
+    const tokenCode = document.getElementById('token-exam-code').value.trim();
+
+    if (!psn || !tokenCode) {
+      showAlertModal('Missing Credentials', 'Please provide both your PSN and your 5-digit Exam Scratch Card Token.', 'warning');
+      return;
+    }
+
+    if (tokenCode.length !== 5 || !/^\d{5}$/.test(tokenCode)) {
+      showAlertModal('Invalid Token Format', 'The exam scratch card token must be exactly 5 digits (e.g. 84920).', 'warning');
+      return;
+    }
+
+    const btn = document.getElementById('btn-start-token-exam');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<span>⏳ Validating Token & Unlocking Exam...</span>`;
+    }
+
+    try {
+      const response = await fetch('/api/exam/start-with-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ psn: psn, token_code: tokenCode })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to authenticate examination session.');
+      }
+
+      state.candidate = data.candidate;
+      state.candidateId = data.candidate.psn;
+      state.questions = data.questions;
+      state.currentIndex = 0;
+      state.answers = {};
+      state.flagged.clear();
+      state.isSubmitted = false;
+      state.durationSeconds = (data.duration_minutes || 20) * 60; // Strictly 20 minutes (1200s)
+      state.secondsRemaining = state.durationSeconds;
+
+      // Update candidate details in exam header
+      document.getElementById('exam-candidate-name').textContent = state.candidate.name;
+      document.getElementById('exam-candidate-psn').textContent = `PSN: ${state.candidate.psn} | Paper: ${state.candidate.paper_code || data.paper_code || 'Cadre Evaluation'}`;
+      document.getElementById('exam-candidate-avatar').textContent = state.candidate.name.charAt(0).toUpperCase();
+
+      buildPalette();
+      renderQuestion(0);
+      startTimer();
+      showView('exam');
+
+    } catch (err) {
+      state.candidate = null;
+      state.candidateId = null;
+      state.questions = [];
+      state.answers = {};
+      state.flagged.clear();
+
+      const isAlreadyTaken = err.message.toLowerCase().includes('already been completed') || err.message.toLowerCase().includes('retakes are restricted');
+      showAlertModal(
+        'Access Denied',
+        err.message,
+        'error',
+        isAlreadyTaken ? { showResultBtn: true, psn: psn } : null
+      );
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+  });
 }
 
 // Result Retrieval by PSN
@@ -287,102 +768,6 @@ if (retrieveForm) {
       return;
     }
     await retrieveResultByPsn(psn);
-  });
-}
-
-// Candidate Entry & Exam Initialization
-const entryForm = document.getElementById('form-entry');
-if (entryForm) {
-  entryForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    if (state.examStatus === 'closed') {
-      showAlertModal(
-        'Examination Closed',
-        'The CBT Examination is currently closed by the Administrator. Candidate registration and test attempts are suspended.',
-        'error'
-      );
-      return;
-    }
-
-    const name = document.getElementById('input-name').value.trim();
-    const psn = document.getElementById('input-psn').value.trim();
-    const email = document.getElementById('input-email').value.trim();
-    const gradeLevel = document.getElementById('select-grade').value;
-    const mda = document.getElementById('input-mda').value.trim() || 'Kwara State Civil Service';
-
-    if (!name || !psn || !email) {
-      showAlertModal(
-        'Required Information Missing',
-        'Please enter your Full Name, PSN (Public Service Number), and Email Address to commence.',
-        'warning'
-      );
-      return;
-    }
-
-    const btn = document.getElementById('btn-start-exam');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = `<span>⏳ Preparing Exam Questions...</span>`;
-
-    try {
-      const response = await fetch('/api/start-exam', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, psn, email, grade_level: gradeLevel, mda })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to start examination.');
-      }
-
-      state.candidate = data.candidate;
-      state.candidateId = data.candidate_id;
-      state.questions = data.questions;
-      state.currentIndex = 0;
-      state.answers = {};
-      state.flagged.clear();
-      state.isSubmitted = false;
-      state.durationSeconds = (data.duration_minutes || 20) * 60;
-      state.secondsRemaining = state.durationSeconds;
-
-      // Update candidate details in exam header
-      document.getElementById('exam-candidate-name').textContent = state.candidate.name;
-      document.getElementById('exam-candidate-psn').textContent = `PSN: ${state.candidate.psn} | ${state.candidate.grade_level}`;
-      document.getElementById('exam-candidate-avatar').textContent = state.candidate.name.charAt(0).toUpperCase();
-
-      buildPalette();
-      renderQuestion(0);
-      startTimer();
-      showView('exam');
-    } catch (err) {
-      state.candidate = null;
-      state.candidateId = null;
-      state.questions = [];
-      state.answers = {};
-      state.flagged.clear();
-
-      const qText = document.getElementById('q-text');
-      const optCont = document.getElementById('options-container');
-      const palNum = document.getElementById('palette-numbers');
-      if (qText) qText.textContent = '';
-      if (optCont) optCont.innerHTML = '';
-      if (palNum) palNum.innerHTML = '';
-
-      showView('entry');
-
-      const isAlreadyTaken = err.message.toLowerCase().includes('already taken') || err.message.toLowerCase().includes('cannot take');
-      showAlertModal(
-        'Examination Closed',
-        err.message,
-        'error',
-        isAlreadyTaken ? { showResultBtn: true, psn: psn } : null
-      );
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-    }
   });
 }
 
@@ -598,6 +983,7 @@ async function submitExam(isAuto = false) {
     email: state.candidate.email,
     grade_level: state.candidate.grade_level,
     mda: state.candidate.mda,
+    paper_code: (state.candidate.paper_code || ""),
     answers: state.answers,
     time_taken_seconds: timeTaken
   };
@@ -878,6 +1264,7 @@ async function loadAdminSubmissions() {
     if (btnCsv) btnCsv.href = `/api/results/csv?token=${encodeURIComponent(state.adminToken)}`;
 
     renderAdminTable();
+    loadAdminTokens();
   } catch (err) {
     console.error('Failed to load admin submissions:', err);
   }
@@ -923,6 +1310,166 @@ function renderAdminTable() {
       </tr>
     `;
   }).join('');
+// -------------------------------------------------------------
+// Admin Scratch Card Tokens & Candidate Reset Tools
+// -------------------------------------------------------------
+async function loadAdminTokens() {
+  if (!state.adminToken) return;
+  try {
+    const res = await fetch('/api/admin/tokens', {
+      headers: { 'Authorization': `Bearer ${state.adminToken}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    state.adminTokensSummary = data;
+
+    const totEl = document.getElementById('admin-tok-total');
+    const unEl = document.getElementById('admin-tok-unassigned');
+    const actEl = document.getElementById('admin-tok-active');
+    const compEl = document.getElementById('admin-tok-completed');
+
+    if (totEl) totEl.textContent = Number(data.summary.total_tokens).toLocaleString();
+    if (unEl) unEl.textContent = Number(data.summary.unassigned).toLocaleString();
+    if (actEl) actEl.textContent = Number(data.summary.active).toLocaleString();
+    if (compEl) compEl.textContent = Number(data.summary.completed).toLocaleString();
+  } catch (err) {
+    console.warn('Could not load admin tokens summary:', err);
+  }
+}
+
+async function openAdminTokensModal() {
+  const modal = document.getElementById('admin-tokens-modal');
+  const grid = document.getElementById('admin-tokens-grid');
+  if (!modal) return;
+  modal.classList.add('active');
+
+  if (grid) grid.innerHTML = `<div style="text-align: center; color: #64748b; padding: 24px; grid-column: 1 / -1;">⏳ Loading examination tokens...</div>`;
+
+  try {
+    const res = await fetch('/api/admin/tokens', {
+      headers: { 'Authorization': `Bearer ${state.adminToken}` }
+    });
+    const data = await res.json();
+    const tokens = data.sample_tokens || [];
+
+    if (tokens.length === 0) {
+      grid.innerHTML = `<div style="text-align: center; color: #64748b; padding: 24px; grid-column: 1 / -1;">No unassigned scratch tokens available in pool.</div>`;
+      return;
+    }
+
+    grid.innerHTML = tokens.map((tok, idx) => `
+      <div class="token-slip-item">
+        <div class="tok-mda">Kwara CSC 2026 CBT</div>
+        <div class="tok-num">${tok}</div>
+        <div class="tok-sub">20-Min Promotion Exam Slip #${idx + 1}</div>
+      </div>
+    `).join('');
+  } catch (err) {
+    if (grid) grid.innerHTML = `<div style="text-align: center; color: #dc2626; padding: 24px; grid-column: 1 / -1;">Failed to load tokens: ${err.message}</div>`;
+  }
+}
+
+function closeAdminTokensModal() {
+  const modal = document.getElementById('admin-tokens-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function printTokenSlips() {
+  const grid = document.getElementById('admin-tokens-grid');
+  if (!grid) return;
+  const printWin = window.open('', '', 'width=900,height=650');
+  printWin.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Kwara State CSC 2026 CBT - Exam Scratch Card Tokens</title>
+      <style>
+        body { font-family: monospace, sans-serif; padding: 20px; }
+        h2 { text-align: center; margin-bottom: 4px; font-size: 18px; }
+        p { text-align: center; font-size: 12px; color: #555; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .slip { border: 1.5px dashed #333; padding: 12px 8px; text-align: center; border-radius: 6px; page-break-inside: avoid; }
+        .mda { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #444; }
+        .num { font-size: 26px; font-weight: 900; letter-spacing: 0.18em; margin: 8px 0; color: #000; }
+        .info { font-size: 9px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <h2>KWARA STATE CIVIL SERVICE COMMISSION</h2>
+      <p>2026 PROMOTION EVALUATION CBT - OFFICIAL 5-DIGIT EXAM SCRATCH CARD SLIPS</p>
+      <div class="grid">
+        ${grid.innerHTML}
+      </div>
+    </body>
+    </html>
+  `);
+  printWin.document.close();
+  printWin.focus();
+  setTimeout(() => { printWin.print(); }, 400);
+}
+
+function openAdminResetModal() {
+  const modal = document.getElementById('admin-reset-modal');
+  const msg = document.getElementById('admin-reset-msg');
+  if (msg) msg.style.display = 'none';
+  if (modal) modal.classList.add('active');
+}
+
+function closeAdminResetModal() {
+  const modal = document.getElementById('admin-reset-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function executeAdminCandidateReset() {
+  const psnInput = document.getElementById('admin-reset-psn');
+  const reasonInput = document.getElementById('admin-reset-reason');
+  const msg = document.getElementById('admin-reset-msg');
+
+  const psn = (psnInput ? psnInput.value : '').trim();
+  const reason = (reasonInput ? reasonInput.value : '').trim();
+
+  if (!psn) {
+    showAlertModal('PSN Required', 'Please enter candidate PSN to reset.', 'warning');
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to archive previous submissions and unlock PSN ${psn} for a retake?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/reset-candidate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.adminToken}`
+      },
+      body: JSON.stringify({ psn, reason })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Reset failed.');
+    }
+
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.background = '#dcfce7';
+      msg.style.color = '#166534';
+      msg.textContent = `✅ Success: PSN ${psn} has been unlocked and archived for retake.`;
+    }
+
+    loadAdminSubmissions();
+    loadAdminTokens();
+    setTimeout(() => { closeAdminResetModal(); }, 1600);
+  } catch (err) {
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.background = '#fee2e2';
+      msg.style.color = '#991b1b';
+      msg.textContent = `❌ Error: ${err.message}`;
+    }
+  }
 }
 
 // -------------------------------------------------------------
