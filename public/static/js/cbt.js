@@ -677,8 +677,17 @@ if (tokenExamForm) {
       return;
     }
 
+    if (tokenCode.includes('-') || /[A-Za-z]/.test(tokenCode)) {
+      showAlertModal(
+        'Registration Code Entered',
+        'You entered a Registration Clearance Code (' + tokenCode + '). Registration codes are used on Tab 1 ("🪪 Verification & Photocard") to generate your photocard.<br><br>To take the examination here on Tab 2, please enter your <strong>5-digit numeric hall scratch card token</strong> (e.g. <strong>65547</strong>).',
+        'warning'
+      );
+      return;
+    }
+
     if (tokenCode.length !== 5 || !/^\d{5}$/.test(tokenCode)) {
-      showAlertModal('Invalid Token Format', 'The exam scratch card token must be exactly 5 digits (e.g. 84920).', 'warning');
+      showAlertModal('Invalid Token Format', 'The exam scratch card token must be exactly 5 digits (e.g. 65547).', 'warning');
       return;
     }
 
