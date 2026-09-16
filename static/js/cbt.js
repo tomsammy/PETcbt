@@ -484,7 +484,7 @@ if (completeRegForm) {
 
       state.registeredCandidate = data.candidate;
       renderPhotocard(data.candidate);
-      showView('photocard');
+      openInstructionsModal();
 
     } catch (err) {
       showAlertModal('Registration Error', err.message, 'error');
@@ -497,10 +497,45 @@ if (completeRegForm) {
   });
 }
 
+function openInstructionsModal() {
+  const modal = document.getElementById('photocard-instructions-modal');
+  const chk = document.getElementById('chk-acknowledge-rules');
+  const btn = document.getElementById('btn-ack-rules');
+  if (chk) chk.checked = false;
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  }
+  if (modal) modal.classList.add('active');
+}
+
+function toggleAckButton() {
+  const chk = document.getElementById('chk-acknowledge-rules');
+  const btn = document.getElementById('btn-ack-rules');
+  if (!chk || !btn) return;
+  if (chk.checked) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
+function closeInstructionsModalAndShowPhotocard() {
+  const modal = document.getElementById('photocard-instructions-modal');
+  if (modal) modal.classList.remove('active');
+  showView('photocard');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function viewDirectPhotocard() {
   if (state.registeredCandidate) {
     renderPhotocard(state.registeredCandidate);
-    showView('photocard');
+    openInstructionsModal();
   }
 }
 
@@ -570,22 +605,27 @@ function renderPhotocard(c) {
           Exam Commencement:
           <span>${c.batch_time || '10:00 AM'}</span>
         </div>
-        <div class="schedule-item" style="grid-column: 1 / -1;">
-          Designated Examination Venue:
-          <span>State Computer Based Testing Centre, Ilorin, Kwara State</span>
+        <div class="schedule-item" style="grid-column: 1 / -1; background: #f0fdf4; border: 1.5px solid #86efac;">
+          <strong style="color: #166534; font-size: 0.8rem; text-transform: uppercase;">📍 Designated Examination Venue:</strong>
+          <span style="font-weight: 900; color: #004d40; font-size: 0.95rem; display: block; margin-top: 3px; line-height: 1.35;">
+            Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State, Nigeria
+          </span>
         </div>
       </div>
     </div>
 
     <!-- Candidate Regulations -->
-    <div class="photocard-rules">
-      <strong>⚠️ Examination Hall Mandatory Regulations:</strong>
-      <ol>
-        <li>This printed photocard must be presented physically to the invigilator during hall accreditation.</li>
-        <li>Candidates must arrive at the examination venue strictly at the stipulated <strong>Accreditation Time</strong>.</li>
-        <li>Upon accreditation in the CBT hall, you will receive a physical <strong>5-Digit Exam Scratch Card Token</strong> to unlock your workstation test.</li>
-        <li>The examination duration is <strong>strictly 20 Minutes (50 Cadre-Specific Questions)</strong>. The system automatically submits when time expires.</li>
-        <li>Electronic gadgets, mobile phones, and unauthorized materials are strictly prohibited in the exam hall.</li>
+    <div class="photocard-rules" style="background: #fffbeb; border: 1.5px solid #fde68a; border-left: 5px solid #d97706; padding: 14px 16px; border-radius: 8px; margin: 16px 0;">
+      <div style="font-weight: 900; color: #92400e; font-size: 0.88rem; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+        <span>⚠️ MANDATORY EXAMINATION REGULATIONS & VENUE INSTRUCTIONS:</span>
+      </div>
+      <ol style="margin-left: 18px; font-size: 0.82rem; color: #78350f; line-height: 1.6; display: flex; flex-direction: column; gap: 5px;">
+        <li><strong>Designated Venue:</strong> Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State, Nigeria.</li>
+        <li><strong>Strict Punctuality & Zero-Loitering Policy:</strong> Candidates must come to the venue at the stipulated accreditation time only (arrival is permitted at most <strong>20 minutes earlier</strong>). <strong>Loitering, crowding, or parading around the vicinity will NOT be tolerated</strong> under any circumstances.</li>
+        <li><strong>Mandatory Smart Mobile Device:</strong> Candidates <strong>MUST come to the venue with their smartphone</strong> (Android, iPhone, or any smart mobile device). The device <strong>MUST have a functional, working web browser installed</strong> (Google Chrome, Safari, etc.) and active.</li>
+        <li><strong>Physical Photocard Required:</strong> This printed physical photocard must be presented physically to the invigilator during hall accreditation.</li>
+        <li><strong>Hall Scratch Card Token:</strong> Upon physical accreditation in the CBT hall, you will receive your single-use <strong>5-Digit Exam Scratch Card Token</strong> to unlock your workstation test.</li>
+        <li><strong>Exam Duration:</strong> Strictly <strong>20 Minutes</strong> (50 cadre-specific multiple choice questions). The test automatically submits when the countdown timer expires.</li>
       </ol>
     </div>
 

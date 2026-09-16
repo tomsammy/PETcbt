@@ -711,6 +711,85 @@
     </div>
 
     <!-- ======================================================== -->
+    <!-- VIEW: Mandatory Candidate Examination Instructions Modal-->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="photocard-instructions-modal">
+      <div class="modal-card" style="max-width: 560px; text-align: left; padding: 26px 24px; position: relative;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 2px solid #004d40; padding-bottom: 12px;">
+          <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;">
+            ⚠️
+          </div>
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 800; color: #004d40; margin: 0; line-height: 1.25;">
+              Kwara State Civil Service Commission
+            </h3>
+            <p style="font-size: 0.8rem; font-weight: 700; color: #b45309; margin: 2px 0 0 0; text-transform: uppercase;">
+              Mandatory Examination Venue Rules & Instructions
+            </p>
+          </div>
+        </div>
+
+        <div style="font-size: 0.88rem; color: #1e293b; line-height: 1.55; display: flex; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; padding-right: 4px;">
+          
+          <!-- Venue Highlight -->
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 12px 14px;">
+            <div style="font-weight: 800; color: #166534; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span>📍 Designated Examination Venue</span>
+            </div>
+            <div style="font-weight: 900; color: #004d40; font-size: 0.96rem; line-height: 1.35;">
+              Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State, Nigeria
+            </div>
+          </div>
+
+          <!-- Strict Arrival & Zero Loitering Policy -->
+          <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 14px;">
+            <div style="font-weight: 800; color: #92400e; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span>⏱️ Strict Punctuality & Zero-Loitering Policy</span>
+            </div>
+            <p style="margin: 0; font-size: 0.86rem; color: #78350f; line-height: 1.5;">
+              Candidates <strong>must come to the venue at their stipulated accreditation time only</strong> (arrival is permitted at most <strong>20 minutes earlier</strong>). <strong>Loitering, crowding, or parading around the vicinity will NOT be tolerated under any circumstances.</strong>
+            </p>
+          </div>
+
+          <!-- Mandatory Smartphone Requirement -->
+          <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 14px;">
+            <div style="font-weight: 800; color: #1e40af; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span>📱 Mandatory Smart Mobile Device Requirement</span>
+            </div>
+            <p style="margin: 0; font-size: 0.86rem; color: #1e3a8a; line-height: 1.5;">
+              Candidates <strong>MUST come to the venue with their smartphone</strong> (Android, iPhone, or any smart mobile device). The device <strong>MUST have a functional, updated web browser installed</strong> (e.g. Google Chrome, Safari, etc.) and active.
+            </p>
+          </div>
+
+          <!-- Physical Photocard & Token -->
+          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
+            <div style="font-weight: 800; color: #334155; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span>🪪 Physical Photocard & Scratch Token</span>
+            </div>
+            <p style="margin: 0; font-size: 0.86rem; color: #475569; line-height: 1.5;">
+              You must present your <strong>printed physical CBT Photocard</strong> at accreditation. In the examination hall, you will receive your physical <strong>5-digit scratch card token</strong> to unlock your 20-minute test.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Mandatory Acknowledgment Checkbox -->
+        <div style="margin-top: 16px; padding: 12px 14px; background: #f8fafc; border-radius: 8px; border: 1.5px solid #cbd5e1;">
+          <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 0.86rem; font-weight: 700; color: #0f172a; line-height: 1.45;">
+            <input type="checkbox" id="chk-acknowledge-rules" style="margin-top: 3px; width: 19px; height: 19px; cursor: pointer;" onchange="toggleAckButton()">
+            <span>I have carefully read, understood, and agree to strictly abide by these examination instructions, venue guidelines, arrival schedule, and smartphone requirements.</span>
+          </label>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <button type="button" id="btn-ack-rules" class="btn-primary-large" style="padding: 13px; font-size: 0.95rem; width: 100%; opacity: 0.5; cursor: not-allowed;" disabled onclick="closeInstructionsModalAndShowPhotocard()">
+            <span>✅ I Acknowledge & View My Official Photocard</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
     <!-- VIEW 7: Beautiful Custom Alert / Notice Modal            -->
     <!-- ======================================================== -->
     <div class="modal-overlay" id="custom-alert-modal">
