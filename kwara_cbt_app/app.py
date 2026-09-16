@@ -1052,4 +1052,65 @@ def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)
         raise HTTPException(status_code=404, detail="Submission not found.")
     return {"success": True, "message": "Candidate record reset successfully."}
 
+@router.get("/admin/roster/excel")
+@router.get("/api/admin/roster/excel")
+def download_candidate_roster_excel(auth: bool = Depends(verify_admin_auth)):
+    possible_paths = [
+        os.path.join(STATIC_DIR, "Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx") if STATIC_DIR else "",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx"),
+        "Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx"
+    ]
+    for p in possible_paths:
+        if p and os.path.exists(p):
+            with open(p, "rb") as f:
+                content = f.read()
+            return Response(
+                content=content,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": 'attachment; filename="Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx"'}
+            )
+            
+    # Fallback directly from DB
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT psn, name, code_1, proposed_rank, proposed_gl, mda,
+               group_category, exam_code, exam_date, batch_session, batch_time, accreditation_time
+        FROM candidate_roster
+        ORDER BY id ASC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Registration Codes"
+    ws.append(["S/N", "PSN", "Officer Full Name", "Registration Clearance Code (Code 1)", "Proposed Rank", "Grade Level", "MDA", "Group", "Exam Code", "Exam Date", "Batch Session", "Exam Time", "Accreditation Time"])
+    for idx, r in enumerate(rows, 1):
+        ws.append([idx, r["psn"], r["name"], r["code_1"], r["proposed_rank"], r["proposed_gl"], r["mda"], r["group_category"], r["exam_code"], r["exam_date"], r["batch_session"], r["batch_time"], r["accreditation_time"]])
+        
+    out = io.BytesIO()
+    wb.save(out)
+    return Response(
+        content=out.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx"'}
+    )
+
+@router.get("/admin/roster/slips")
+@router.get("/api/admin/roster/slips")
+def view_candidate_registration_slips(auth: bool = Depends(verify_admin_auth)):
+    possible_paths = [
+        os.path.join(STATIC_DIR, "slips.html") if STATIC_DIR else "",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "candidate_registration_slips.html"),
+        "candidate_registration_slips.html"
+    ]
+    for p in possible_paths:
+        if p and os.path.exists(p):
+            with open(p, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+    return HTMLResponse(content="<h1>Registration Slips not found. Please contact Administrator.</h1>", status_code=404)
+
 app.include_router(router)
+

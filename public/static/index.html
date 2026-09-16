@@ -552,9 +552,15 @@
             <p style="color: #64748b; font-size: 0.875rem;">Real-time candidate submissions, scoring analytics, and portal control</p>
           </div>
 
-          <div class="export-btns" style="align-items:center;">
+          <div class="export-btns" style="align-items:center; flex-wrap:wrap; gap:8px;">
+            <a href="/api/admin/roster/excel" id="btn-download-roster" class="btn-excel" style="background:#047857; color:#fff;" title="Download full candidate list with Code 1 registration clearance codes">
+              <span>📥 Download Candidate Codes & Roster (Excel)</span>
+            </a>
+            <a href="/static/slips.html" target="_blank" id="btn-view-slips" class="btn-csv" style="background:#b45309; border-color:#d97706; color:#fff;" title="Print or save candidate registration slips as PDF (4 per A4 sheet)">
+              <span>🖨️ Batch Print Registration Slips (PDF)</span>
+            </a>
             <a href="#" id="btn-download-excel" class="btn-excel">
-              <span>📊 Download Results (Excel .xlsx)</span>
+              <span>📊 Download Results (Excel)</span>
             </a>
             <a href="#" id="btn-download-csv" class="btn-csv">
               <span>📄 Download Results (CSV)</span>

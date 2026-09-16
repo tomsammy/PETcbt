@@ -1153,8 +1153,10 @@ async function loadAdminSubmissions() {
     // Update download URLs with admin token
     const btnExcel = document.getElementById('btn-download-excel');
     const btnCsv = document.getElementById('btn-download-csv');
+    const btnRoster = document.getElementById('btn-download-roster');
     if (btnExcel) btnExcel.href = `/api/results/excel?token=${encodeURIComponent(state.adminToken)}`;
     if (btnCsv) btnCsv.href = `/api/results/csv?token=${encodeURIComponent(state.adminToken)}`;
+    if (btnRoster) btnRoster.href = `/api/admin/roster/excel?token=${encodeURIComponent(state.adminToken)}`;
 
     renderAdminTable();
     loadAdminTokens();
