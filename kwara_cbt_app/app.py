@@ -478,25 +478,7 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
     conn.commit()
     conn.close()
 
-    # Automatically dispatch official result email in background
-    if background_tasks is not None:
-        background_tasks.add_task(
-            send_result_email,
-            candidate_email=data.email.strip().lower(),
-            candidate_name=data.name.strip(),
-            psn=data.psn.strip(),
-            grade_level=data.grade_level.strip(),
-            mda=(data.mda or "State Civil Service").strip(),
-            score_percentage=score_percentage,
-            total_marks=correct_count * 2,
-            max_marks=total_questions * 2,
-            correct_count=correct_count,
-            total_questions=total_questions,
-            grade_remark=grade_remark,
-            time_taken_seconds=data.time_taken_seconds or 0,
-            submitted_at=submitted_at,
-            submission_id=submission_id
-        )
+    # Note: Background score email dispatch has been disabled per Civil Service Commission confidentiality policy
     
     return {
         "success": True,
@@ -506,19 +488,12 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
             "psn": data.psn.strip(),
             "email": data.email.strip().lower(),
             "grade_level": data.grade_level.strip(),
-            "mda": (data.mda or "State Civil Service").strip()
-        },
-        "score": {
-            "correct_count": correct_count,
-            "total_questions": total_questions,
-            "score_percentage": score_percentage,
-            "total_marks": correct_count * 2,
-            "max_marks": total_questions * 2,
-            "grade_remark": grade_remark
+            "mda": (data.mda or "State Civil Service").strip(),
+            "paper_code": getattr(data, 'paper_code', '') or ""
         },
         "time_taken_seconds": data.time_taken_seconds or 0,
         "submitted_at": submitted_at,
-        "email_dispatched": True
+        "message": "Examination answers successfully submitted and recorded."
     }
 
 @router.post("/candidate/lookup")
@@ -798,104 +773,18 @@ def retrieve_result(
     psn: Optional[str] = None,
     data: Optional[RetrieveResultRequest] = None
 ):
-    query_psn = (psn or (data.psn if data else "")).strip()
-    if not query_psn:
-        raise HTTPException(status_code=400, detail="Public Service Number (PSN) is required.")
-        
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, candidate_id, candidate_name, psn, email, grade_level, mda,
-               total_questions, correct_count, score_percentage, grade_remark,
-               time_taken_seconds, submitted_at
-        FROM submissions
-        WHERE psn = ?
-        ORDER BY id DESC
-        LIMIT 1
-    """, (query_psn,))
-    row = cursor.fetchone()
-    conn.close()
-    
-    if not row:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No examination result found for PSN: {query_psn}. Please confirm the PSN or verify that the evaluation was submitted."
-        )
-        
-    return {
-        "success": True,
-        "submission_id": row["id"],
-        "candidate": {
-            "name": row["candidate_name"],
-            "psn": row["psn"],
-            "email": row["email"],
-            "grade_level": row["grade_level"],
-            "mda": row["mda"]
-        },
-        "score": {
-            "correct_count": row["correct_count"],
-            "total_questions": row["total_questions"],
-            "score_percentage": row["score_percentage"],
-            "total_marks": row["correct_count"] * 2,
-            "max_marks": row["total_questions"] * 2,
-            "grade_remark": row["grade_remark"]
-        },
-        "time_taken_seconds": row["time_taken_seconds"],
-        "submitted_at": row["submitted_at"]
-    }
+    raise HTTPException(
+        status_code=403,
+        detail="Candidate examination result checking is disabled. In accordance with Kwara State Civil Service Commission regulations, examination scores are confidential and will be communicated through official Ministry / Department / Agency channels."
+    )
 
 @router.post("/send-result-email")
 @router.post("/api/send-result-email")
 def send_result_email_endpoint(data: SendResultEmailRequest, background_tasks: BackgroundTasks = BackgroundTasks()):
-    query_psn = data.psn.strip()
-    if not query_psn:
-        raise HTTPException(status_code=400, detail="Public Service Number (PSN) is required.")
-        
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, candidate_id, candidate_name, psn, email, grade_level, mda,
-               total_questions, correct_count, score_percentage, grade_remark,
-               time_taken_seconds, submitted_at
-        FROM submissions
-        WHERE psn = ?
-        ORDER BY id DESC
-        LIMIT 1
-    """, (query_psn,))
-    row = cursor.fetchone()
-    conn.close()
-    
-    if not row:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No examination record found for PSN: {query_psn}."
-        )
-        
-    target_email = (data.email or row["email"]).strip().lower()
-    
-    send_res = send_result_email(
-        candidate_email=target_email,
-        candidate_name=row["candidate_name"],
-        psn=row["psn"],
-        grade_level=row["grade_level"],
-        mda=row["mda"],
-        score_percentage=row["score_percentage"],
-        total_marks=row["correct_count"] * 2,
-        max_marks=row["total_questions"] * 2,
-        correct_count=row["correct_count"],
-        total_questions=row["total_questions"],
-        grade_remark=row["grade_remark"],
-        time_taken_seconds=row["time_taken_seconds"],
-        submitted_at=row["submitted_at"],
-        submission_id=row["id"]
+    raise HTTPException(
+        status_code=403,
+        detail="Examination result emailing is disabled. Official results will be published through designated Commission channels."
     )
-    
-    return {
-        "success": True,
-        "email": target_email,
-        "message": f"Official result slip has been dispatched to {target_email}.",
-        "provider_result": send_res
-    }
 
 @router.get("/admin/submissions")
 @router.get("/api/admin/submissions")

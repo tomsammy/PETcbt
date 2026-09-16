@@ -32,14 +32,13 @@ const views = {
   admin: document.getElementById('view-admin')
 };
 
-// Custom Alert Modal System with Optional Action Buttons
-function showAlertModal(title, message, type = 'warning', actionConfig = null) {
+// Custom Alert Modal System
+function showAlertModal(title, message, type = 'warning') {
   const modal = document.getElementById('custom-alert-modal');
   const titleEl = document.getElementById('alert-modal-title');
   const msgEl = document.getElementById('alert-modal-msg');
   const iconEl = document.getElementById('alert-modal-icon');
   const okBtn = document.getElementById('alert-modal-ok-btn');
-  const viewResBtn = document.getElementById('alert-modal-view-res-btn');
 
   if (!modal) return;
 
@@ -66,19 +65,6 @@ function showAlertModal(title, message, type = 'warning', actionConfig = null) {
     iconEl.textContent = '⚠️';
     iconEl.style.background = '#fef3c7';
     iconEl.style.color = '#b45309';
-  }
-
-  if (viewResBtn) {
-    if (actionConfig && actionConfig.showResultBtn && actionConfig.psn) {
-      viewResBtn.style.display = 'block';
-      viewResBtn.onclick = () => {
-        closeAlertModal();
-        retrieveResultByPsn(actionConfig.psn);
-      };
-    } else {
-      viewResBtn.style.display = 'none';
-      viewResBtn.onclick = null;
-    }
   }
 
   modal.classList.add('active');
@@ -113,8 +99,6 @@ function closeExamSession() {
 
   const entryForm = document.getElementById('form-entry');
   if (entryForm) entryForm.reset();
-  const retrieveForm = document.getElementById('form-retrieve-result');
-  if (retrieveForm) retrieveForm.reset();
 
   window.history.pushState({}, '', '/');
   showView('entry');
@@ -126,11 +110,11 @@ function closeExamSession() {
   );
 }
 
-// Return to Portal Home from Result View
+// Return to Portal Home from Acknowledgement View
 function returnToPortalHome() {
   window.history.pushState({}, '', '/');
   showView('entry');
-  switchEntryTab('retrieve');
+  switchEntryTab('start');
 }
 
 // Switch Views
@@ -223,45 +207,37 @@ function navigateToExam() {
 }
 
 // -------------------------------------------------------------
-// 1. Candidate Entry Navigation: Registration vs Exam vs Result
+// 1. Candidate Entry Navigation: Registration vs Exam
 // -------------------------------------------------------------
 function switchEntryTab(tab) {
+  const targetTab = (tab === 'start') ? 'start' : 'register';
   const btnRegister = document.getElementById('tab-btn-register');
   const btnStart = document.getElementById('tab-btn-start');
-  const btnRetrieve = document.getElementById('tab-btn-retrieve');
 
   const contentRegister = document.getElementById('tab-content-register');
   const contentStart = document.getElementById('tab-content-start');
-  const contentRetrieve = document.getElementById('tab-content-retrieve');
 
   const title = document.getElementById('entry-card-title');
   const subtitle = document.getElementById('entry-card-subtitle');
 
   // Reset active classes on tabs
-  if (btnRegister) btnRegister.classList.toggle('active', tab === 'register');
-  if (btnStart) btnStart.classList.toggle('active', tab === 'start');
-  if (btnRetrieve) btnRetrieve.classList.toggle('active', tab === 'retrieve');
+  if (btnRegister) btnRegister.classList.toggle('active', targetTab === 'register');
+  if (btnStart) btnStart.classList.toggle('active', targetTab === 'start');
 
   // Switch content visibility
-  if (contentRegister) contentRegister.style.display = (tab === 'register') ? 'block' : 'none';
-  if (contentStart) contentStart.style.display = (tab === 'start') ? 'block' : 'none';
-  if (contentRetrieve) contentRetrieve.style.display = (tab === 'retrieve') ? 'block' : 'none';
+  if (contentRegister) contentRegister.style.display = (targetTab === 'register') ? 'block' : 'none';
+  if (contentStart) contentStart.style.display = (targetTab === 'start') ? 'block' : 'none';
 
-  if (tab === 'register') {
+  if (targetTab === 'register') {
     if (title) title.textContent = 'Candidate Verification & Photocard';
     if (subtitle) subtitle.textContent = 'Verify your promotion candidate record, upload passport photo, and generate your official CBT photocard';
     const inputRegPsn = document.getElementById('reg-input-psn');
     if (inputRegPsn) inputRegPsn.focus();
-  } else if (tab === 'start') {
+  } else {
     if (title) title.textContent = 'Take CBT Examination';
     if (subtitle) subtitle.textContent = 'Enter your Public Service Number (PSN) and 5-digit Exam Scratch Card Token issued in the examination hall';
     const inputTokenPsn = document.getElementById('token-exam-psn');
     if (inputTokenPsn) inputTokenPsn.focus();
-  } else if (tab === 'retrieve') {
-    if (title) title.textContent = 'Retrieve Official Result Slip';
-    if (subtitle) subtitle.textContent = 'Enter your Public Service Number (PSN) to view, verify, and reprint your official result slip anytime';
-    const inputPsn = document.getElementById('input-retrieve-psn');
-    if (inputPsn) inputPsn.focus();
   }
 }
 
@@ -712,12 +688,10 @@ if (tokenExamForm) {
       state.answers = {};
       state.flagged.clear();
 
-      const isAlreadyTaken = err.message.toLowerCase().includes('already been completed') || err.message.toLowerCase().includes('retakes are restricted');
       showAlertModal(
         'Access Denied',
         err.message,
-        'error',
-        isAlreadyTaken ? { showResultBtn: true, psn: psn } : null
+        'error'
       );
     } finally {
       if (btn) {
@@ -725,49 +699,6 @@ if (tokenExamForm) {
         btn.innerHTML = originalText;
       }
     }
-  });
-}
-
-// Result Retrieval by PSN
-async function retrieveResultByPsn(psn) {
-  const btn = document.getElementById('btn-retrieve-result');
-  const originalText = btn ? btn.innerHTML : '';
-  if (btn) {
-    btn.disabled = true;
-    btn.innerHTML = `<span>⏳ Searching Examination Records...</span>`;
-  }
-
-  try {
-    const res = await fetch(`/api/result/${encodeURIComponent(psn)}`);
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.detail || `No examination result found for PSN: ${psn}`);
-    }
-
-    renderResultSlip(data);
-    showView('result');
-    closeAlertModal();
-  } catch (err) {
-    showAlertModal('Result Not Found', err.message, 'error');
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = originalText;
-    }
-  }
-}
-
-// Retrieve Result Form Event Listener
-const retrieveForm = document.getElementById('form-retrieve-result');
-if (retrieveForm) {
-  retrieveForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const psn = document.getElementById('input-retrieve-psn').value.trim();
-    if (!psn) {
-      showAlertModal('PSN Required', 'Please enter your Public Service Number (PSN) to retrieve your result slip.', 'warning');
-      return;
-    }
-    await retrieveResultByPsn(psn);
   });
 }
 
@@ -1012,81 +943,43 @@ async function submitExam(isAuto = false) {
 }
 
 function renderResultSlip(res) {
-  const candidate = res.candidate;
-  const score = res.score;
+  const candidate = res.candidate || {};
 
-  document.getElementById('res-name').textContent = candidate.name;
-  document.getElementById('res-psn').textContent = candidate.psn;
-  document.getElementById('res-email').textContent = candidate.email;
-  document.getElementById('res-grade').textContent = candidate.grade_level;
-  document.getElementById('res-mda').textContent = candidate.mda;
-  document.getElementById('res-date').textContent = res.submitted_at;
+  const nameEl = document.getElementById('res-name');
+  if (nameEl) nameEl.textContent = candidate.name || '-';
 
-  const mins = Math.floor(res.time_taken_seconds / 60);
-  const secs = res.time_taken_seconds % 60;
-  document.getElementById('res-time').textContent = `${mins}m ${secs}s`;
+  const psnEl = document.getElementById('res-psn');
+  if (psnEl) psnEl.textContent = candidate.psn || '-';
 
-  document.getElementById('res-pct').textContent = `${score.score_percentage}%`;
-  document.getElementById('res-marks').textContent = `Total Score: ${score.total_marks} / ${score.max_marks} marks (${score.correct_count} of ${score.total_questions} questions correct)`;
+  const emailEl = document.getElementById('res-email');
+  if (emailEl) emailEl.textContent = candidate.email || '-';
 
-  const remarkEl = document.getElementById('res-remark');
-  remarkEl.textContent = score.grade_remark;
+  const gradeEl = document.getElementById('res-grade');
+  if (gradeEl) gradeEl.textContent = candidate.grade_level || '-';
 
-  remarkEl.className = 'remark-pill';
-  if (score.score_percentage >= 75) {
-    remarkEl.classList.add('distinction');
-  } else if (score.score_percentage >= 60) {
-    remarkEl.classList.add('credit');
-  } else if (score.score_percentage >= 50) {
-    remarkEl.classList.add('pass');
-  } else {
-    remarkEl.classList.add('fail');
+  const mdaEl = document.getElementById('res-mda');
+  if (mdaEl) mdaEl.textContent = candidate.mda || '-';
+
+  const paperEl = document.getElementById('res-paper');
+  if (paperEl) {
+    paperEl.textContent = candidate.paper_code || (state.candidate ? state.candidate.paper_code : '') || 'Promotion CBT Evaluation';
   }
 
-  const refCode = `KWS-HOS-${res.submission_id.toString().padStart(5, '0')}-${candidate.psn}`;
-  document.getElementById('res-ref-code').textContent = `Ref: ${refCode}`;
+  const dateEl = document.getElementById('res-date');
+  if (dateEl) dateEl.textContent = res.submitted_at || new Date().toLocaleString();
+
+  const totalSecs = res.time_taken_seconds || 0;
+  const mins = Math.floor(totalSecs / 60);
+  const secs = totalSecs % 60;
+  const timeEl = document.getElementById('res-time');
+  if (timeEl) timeEl.textContent = `${mins}m ${secs}s`;
+
+  const subId = (res.submission_id || '00000').toString().padStart(5, '0');
+  const refCode = `KWS-CSC-SUB-${subId}-${candidate.psn || '000000'}`;
+  const refEl = document.getElementById('res-ref-code');
+  if (refEl) refEl.textContent = `Ref: ${refCode}`;
 
   state.lastResult = res;
-}
-
-// Resend / Email Result Slip on Demand
-async function emailCurrentResultSlip() {
-  if (!state.lastResult || !state.lastResult.candidate) {
-    showAlertModal('No Result Loaded', 'Please complete or retrieve an examination result first.', 'warning');
-    return;
-  }
-
-  const psn = state.lastResult.candidate.psn;
-  const email = state.lastResult.candidate.email;
-  const btn = document.getElementById('btn-email-slip');
-  const btnText = document.getElementById('btn-email-slip-text');
-
-  if (btn) btn.disabled = true;
-  if (btnText) btnText.textContent = '⏳ Sending Email...';
-
-  try {
-    const response = await fetch('/api/send-result-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ psn, email })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.detail || 'Failed to dispatch result email.');
-    }
-
-    showAlertModal(
-      'Result Slip Dispatched',
-      `Your official CBT evaluation result slip has been emailed to ${email}.`,
-      'success'
-    );
-  } catch (err) {
-    showAlertModal('Email Error', err.message, 'error');
-  } finally {
-    if (btn) btn.disabled = false;
-    if (btnText) btnText.textContent = '📧 Email Result Slip';
-  }
 }
 
 // -------------------------------------------------------------

@@ -44,9 +44,6 @@
           <button type="button" class="entry-tab-btn" id="tab-btn-start" onclick="switchEntryTab('start')">
             <span>📝 Take CBT Exam</span>
           </button>
-          <button type="button" class="entry-tab-btn" id="tab-btn-retrieve" onclick="switchEntryTab('retrieve')">
-            <span>🔍 Check & Print Result</span>
-          </button>
         </div>
 
         <!-- Closed Banner (Dynamically shown when admin closes exam) -->
@@ -240,27 +237,7 @@
           </div>
 
 
-          <!-- TAB 2: Retrieve / Check Result Form -->
-          <div id="tab-content-retrieve" style="display:none;">
-            <div style="background: #e0f2fe; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 16px 18px; margin-bottom: 24px; color: #0369a1; font-size: 0.9rem; line-height: 1.55;">
-              <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-                <span>ℹ️ Official Result Verification & Reprint</span>
-              </div>
-              Candidates who have completed their evaluation can retrieve, review, and print their official result slip anytime by entering their registered PSN.
-            </div>
 
-            <form id="form-retrieve-result">
-              <div class="form-group">
-                <label for="input-retrieve-psn">Enter Your Public Service Number (PSN) <span class="req">*</span></label>
-                <input type="text" id="input-retrieve-psn" class="form-control" placeholder="e.g. 849201" required autocomplete="off" style="font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em;">
-                <p style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Enter the exact PSN used during your examination session</p>
-              </div>
-
-              <button type="submit" id="btn-retrieve-result" class="btn-primary-large" style="margin-top: 8px;">
-                <span id="btn-retrieve-result-text">🔍 Retrieve Official Result Slip</span>
-              </button>
-            </form>
-          </div>
 
         </div>
       </div>
@@ -463,7 +440,7 @@
     </section>
 
     <!-- ======================================================== -->
-    <!-- VIEW 4: Instant Official Result Slip                     -->
+    <!-- VIEW 4: Official Submission Acknowledgement Slip        -->
     <!-- ======================================================== -->
     <section id="view-result" class="view-section">
       <div class="result-container">
@@ -471,17 +448,17 @@
           <div class="slip-header">
             <img src="/static/images/logo.png" alt="Kwara State Seal" class="slip-header-logo" onerror="this.style.display='none'">
             <h2>KWARA STATE CIVIL SERVICE COMMISSION</h2>
-            <p>2026 Promotion Evaluation Examination - Official Result Slip</p>
+            <p>2026 Promotion Evaluation Examination - Submission Acknowledgement</p>
           </div>
 
           <div class="slip-body">
-            <!-- Score Hero -->
-            <div class="slip-score-hero">
-              <div class="score-pct" id="res-pct">0%</div>
-              <div class="score-marks" id="res-marks">Total Marks: 0 / 100 marks (0 of 50 correct)</div>
-              <div>
-                <span class="remark-pill distinction" id="res-remark">Evaluation Complete</span>
-              </div>
+            <!-- Submission Confirmation Hero (Zero scores shown) -->
+            <div style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); color: #ffffff; padding: 24px 20px; border-radius: 12px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 14px rgba(0, 77, 64, 0.2);">
+              <div style="font-size: 2.6rem; margin-bottom: 8px;">✅</div>
+              <h3 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 6px; color: #ffffff; letter-spacing: -0.01em;">Examination Successfully Submitted</h3>
+              <p style="font-size: 0.92rem; color: #e0f2f1; margin: 0; font-weight: 500;">
+                Your CBT examination answers have been securely received and recorded in the Civil Service Commission database.
+              </p>
             </div>
 
             <!-- Candidate Details -->
@@ -499,7 +476,7 @@
                 <div class="val" id="res-email">-</div>
               </div>
               <div class="slip-detail-row">
-                <div class="lbl">Cadre / Grade Level</div>
+                <div class="lbl">Cadre / Proposed Grade Level</div>
                 <div class="val" id="res-grade">-</div>
               </div>
               <div class="slip-detail-row">
@@ -507,8 +484,16 @@
                 <div class="val" id="res-mda">-</div>
               </div>
               <div class="slip-detail-row">
+                <div class="lbl">Examination Paper Code</div>
+                <div class="val" id="res-paper">-</div>
+              </div>
+              <div class="slip-detail-row">
                 <div class="lbl">Time Spent</div>
                 <div class="val" id="res-time">-</div>
+              </div>
+              <div class="slip-detail-row">
+                <div class="lbl">Submission Status</div>
+                <div class="val" style="color: #059669; font-weight: 700;">Recorded & Locked</div>
               </div>
               <div class="slip-detail-row" style="grid-column: span 2;">
                 <div class="lbl">Submission Date & Time</div>
@@ -516,30 +501,35 @@
               </div>
             </div>
 
+            <!-- Official Result Confidentiality Policy Notice Banner -->
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-left: 5px solid #004d40; border-radius: 8px; padding: 16px 18px; margin-bottom: 22px; font-size: 0.88rem; color: #334155; line-height: 1.6;">
+              <div style="font-weight: 800; color: #004d40; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                <span>🔒 Official Result Confidentiality Policy</span>
+              </div>
+              In accordance with Kwara State Civil Service Commission regulations, examination scores are not displayed on candidate workstations. Official results, promotional recommendations, and final scores will be processed and communicated through designated Ministry, Department, and Agency (MDA) channels.
+            </div>
+
             <!-- Single Attempt Notice Banner -->
-            <div style="background: #f1f5f9; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.85rem; color: #475569; text-align: center; border: 1px solid #e2e8f0;">
-              ℹ️ <strong>Evaluation Completed</strong>: This is your final result. Retakes or additional attempts are not permitted. Please print or save a copy of this result slip for your records.
+            <div style="background: #fffbeb; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 0.85rem; color: #92400e; text-align: center; border: 1px solid #fde68a;">
+              ℹ️ <strong>Evaluation Session Concluded</strong>: Retakes or additional test attempts are strictly prohibited. Please print or save this Acknowledgement Slip for your records.
             </div>
 
             <!-- Footer & Signature -->
             <div class="slip-footer">
               <div>
-                <div id="res-ref-code" style="font-weight: 700; color: #004d40;">Ref: KWS-HOS-00000</div>
-                <div style="font-size: 0.75rem; margin-top: 2px;">Electronically verified & recorded by Kwara State Office of the Head of Service CBT Portal</div>
+                <div id="res-ref-code" style="font-weight: 700; color: #004d40;">Ref: KWS-CSC-SUB-00000</div>
+                <div style="font-size: 0.75rem; margin-top: 2px;">Electronically verified & recorded by Kwara State Civil Service Commission CBT Portal</div>
               </div>
               <div class="slip-sign-line">
-                Office of the Head of Service
+                Civil Service Commission
               </div>
             </div>
           </div>
         </div>
 
         <div class="result-actions" style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
-          <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 28px; font-size: 1rem;">
-            <span>🖨️ Print / Save Result Slip (PDF)</span>
-          </button>
-          <button type="button" class="btn-ctrl" id="btn-email-slip" style="padding: 12px 24px; font-size: 1rem; border-color: #0284c7; color: #0369a1; background: #f0f9ff;" onclick="emailCurrentResultSlip()">
-            <span id="btn-email-slip-text">📧 Email Result Slip</span>
+          <button type="button" class="btn-ctrl btn-submit" id="btn-print-slip" style="padding: 12px 28px; font-size: 1rem;" onclick="window.print()">
+            <span>🖨️ Print Acknowledgement Slip (PDF)</span>
           </button>
           <button type="button" class="btn-ctrl" id="btn-return-home" style="padding: 12px 24px; font-size: 1rem; border-color: #cbd5e1; background: #fff;" onclick="returnToPortalHome()">
             <span>🏠 Return to Portal Home</span>
@@ -729,9 +719,6 @@
           Alert message content goes here.
         </div>
         <div id="alert-modal-actions" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-          <button type="button" class="btn-primary-large" id="alert-modal-view-res-btn" style="display:none; padding: 12px; font-size: 0.95rem; width: 100%;">
-            <span>📄 View & Print My Result Slip</span>
-          </button>
           <button type="button" class="btn-primary-large" id="alert-modal-ok-btn" style="padding: 12px; font-size: 0.95rem; width: 100%;" onclick="closeAlertModal()">
             <span>Understood</span>
           </button>
