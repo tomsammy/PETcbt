@@ -79,7 +79,27 @@ function closeAlertModal() {
 // Exit Exam Confirmation Modal
 function openExitModal() {
   const modal = document.getElementById('exit-exam-modal');
-  if (modal) modal.classList.add('active');
+  if (!modal) return;
+  const total = state.questions.length;
+  const answeredCount = Object.keys(state.answers).length;
+  const exitSubmitBtn = document.getElementById('btn-exit-submit-now');
+  const exitDesc = document.getElementById('exit-modal-desc');
+
+  if (exitSubmitBtn) {
+    if (answeredCount < total) {
+      exitSubmitBtn.style.display = 'none';
+      if (exitDesc) {
+        const remaining = total - answeredCount;
+        exitDesc.innerHTML = `You have answered <strong>${answeredCount} of ${total}</strong> questions (<span style="color:#b45309; font-weight:700;">${remaining} unanswered remaining</span>).<br><br>Under Kwara State Civil Service Commission regulations, manual early submission is disabled until all questions are answered.<br><br>You may return to continue your test. When the 20-minute countdown concludes, all your answers will automatically be submitted.`;
+      }
+    } else {
+      exitSubmitBtn.style.display = 'block';
+      if (exitDesc) {
+        exitDesc.innerHTML = `You have answered all <strong>${total} questions</strong>. Are you sure you want to finish and submit your CBT examination now?`;
+      }
+    }
+  }
+  modal.classList.add('active');
 }
 
 function closeExitModal() {
@@ -884,6 +904,60 @@ function renderQuestion(index) {
   }
 
   updatePaletteState();
+  updateSubmitButtonState();
+}
+
+function updateSubmitButtonState() {
+  const total = state.questions.length;
+  const answeredCount = Object.keys(state.answers).length;
+  const isComplete = (total > 0 && answeredCount >= total);
+
+  // Update card submit button
+  const submitBtn = document.getElementById('btn-submit-exam');
+  const submitIcon = document.getElementById('btn-submit-icon');
+  const submitText = document.getElementById('btn-submit-text');
+  const submitHint = document.getElementById('submit-requirement-hint');
+
+  // Sidebar submit button
+  const sidebarSubmitBtn = document.getElementById('btn-sidebar-submit');
+  const sidebarSubmitText = document.getElementById('sidebar-submit-text');
+
+  if (submitBtn) {
+    if (isComplete) {
+      submitBtn.classList.remove('btn-submit-locked');
+      submitBtn.classList.add('btn-submit-ready');
+      if (submitIcon) submitIcon.textContent = '✅';
+      if (submitText) submitText.textContent = `Finalize & Submit Exam (All ${total} Answered)`;
+      if (submitHint) {
+        submitHint.innerHTML = `<span style="color:#059669; font-weight:700;">✅ Excellent! All ${total} questions answered. You may now submit your examination.</span>`;
+      }
+    } else {
+      submitBtn.classList.add('btn-submit-locked');
+      submitBtn.classList.remove('btn-submit-ready');
+      if (submitIcon) submitIcon.textContent = '🔒';
+      const remaining = total - answeredCount;
+      if (submitText) submitText.textContent = `Submit Exam (${answeredCount}/${total} Answered)`;
+      if (submitHint) {
+        submitHint.innerHTML = `<span style="color:#b45309;">⚠️ ${remaining} question${remaining > 1 ? 's' : ''} left. All ${total} questions must be answered before manual submission.</span>`;
+      }
+    }
+  }
+
+  if (sidebarSubmitBtn) {
+    if (isComplete) {
+      sidebarSubmitBtn.classList.remove('btn-submit-locked');
+      sidebarSubmitBtn.classList.add('btn-submit-ready');
+      if (sidebarSubmitText) {
+        sidebarSubmitText.textContent = `✅ Finalize & Submit (${total}/${total})`;
+      }
+    } else {
+      sidebarSubmitBtn.classList.add('btn-submit-locked');
+      sidebarSubmitBtn.classList.remove('btn-submit-ready');
+      if (sidebarSubmitText) {
+        sidebarSubmitText.textContent = `🔒 Submit (${answeredCount}/${total} Answered)`;
+      }
+    }
+  }
 }
 
 function selectOption(letter) {
@@ -935,24 +1009,89 @@ function openSubmitModal() {
   const unansweredCount = total - answeredCount;
   const flaggedCount = state.flagged.size;
 
-  document.getElementById('modal-ans-count').textContent = answeredCount;
-  document.getElementById('modal-unans-count').textContent = unansweredCount;
-  document.getElementById('modal-flag-count').textContent = flaggedCount;
+  if (total > 0 && answeredCount < total) {
+    showUnansweredWarningModal(answeredCount, total, unansweredCount);
+    return;
+  }
 
-  document.getElementById('submit-modal').classList.add('active');
+  const ansEl = document.getElementById('modal-ans-count');
+  const unansEl = document.getElementById('modal-unans-count');
+  const flagEl = document.getElementById('modal-flag-count');
+
+  if (ansEl) ansEl.textContent = answeredCount;
+  if (unansEl) unansEl.textContent = unansweredCount;
+  if (flagEl) flagEl.textContent = flaggedCount;
+
+  const modal = document.getElementById('submit-modal');
+  if (modal) modal.classList.add('active');
 }
 
 function closeSubmitModal() {
-  document.getElementById('submit-modal').classList.remove('active');
+  const modal = document.getElementById('submit-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function showUnansweredWarningModal(answered, total, unanswered) {
+  const modal = document.getElementById('modal-unanswered-warning');
+  if (!modal) return;
+  const ansEl = document.getElementById('warn-answered-count');
+  const totEl = document.getElementById('warn-total-count');
+  const unansEl = document.getElementById('warn-unanswered-count');
+
+  if (ansEl) ansEl.textContent = answered;
+  if (totEl) totEl.textContent = total;
+  if (unansEl) unansEl.textContent = unanswered;
+
+  modal.classList.add('active');
+}
+
+function closeUnansweredWarningModal() {
+  const modal = document.getElementById('modal-unanswered-warning');
+  if (modal) modal.classList.remove('active');
+}
+
+function jumpToNextUnanswered() {
+  closeUnansweredWarningModal();
+  for (let i = 0; i < state.questions.length; i++) {
+    const q = state.questions[i];
+    if (!state.answers[String(q.number)]) {
+      jumpToQuestion(i);
+      const qCard = document.querySelector('.question-card');
+      if (qCard) {
+        qCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      return;
+    }
+  }
+}
+
+function toggleMobilePalette() {
+  const palette = document.getElementById('exam-palette-sidebar');
+  if (!palette) return;
+  palette.classList.toggle('mobile-open');
+  if (palette.classList.contains('mobile-open')) {
+    palette.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 }
 
 async function submitExam(isAuto = false) {
   if (state.isSubmitted) return;
+
+  const total = state.questions.length;
+  const answeredCount = Object.keys(state.answers).length;
+
+  // Enforce: manual submission requires ALL questions answered; autosubmit on timer bypasses
+  if (!isAuto && total > 0 && answeredCount < total) {
+    showUnansweredWarningModal(answeredCount, total, total - answeredCount);
+    return;
+  }
+
   state.isSubmitted = true;
 
   if (state.timerInterval) clearInterval(state.timerInterval);
   closeSubmitModal();
   closeExitModal();
+  closeUnansweredWarningModal();
 
   const timeTaken = state.durationSeconds - state.secondsRemaining;
 

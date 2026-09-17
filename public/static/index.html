@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <title>Kwara State Office of the Head of Service - CBT Productivity Evaluation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -156,7 +156,7 @@
                 </div>
 
                 <!-- Contact Inputs -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                <div class="reg-contact-grid">
                   <div class="form-group">
                     <label for="reg-input-phone">Mobile Phone Number <span class="req">*</span></label>
                     <input type="tel" id="reg-input-phone" class="form-control" placeholder="e.g. 08031234567" required autocomplete="tel">
@@ -291,31 +291,44 @@
 
           <!-- Question Controls -->
           <div class="exam-controls">
-            <div class="btn-group-nav">
-              <button type="button" class="btn-ctrl" id="btn-prev" onclick="prevQuestion()">
+            <!-- Row 1: Primary Navigation Bar (Previous vs Next Question) -->
+            <div class="nav-actions-bar">
+              <button type="button" class="btn-nav-prev" id="btn-prev" onclick="prevQuestion()">
                 <span>⬅️ Previous</span>
               </button>
-              <button type="button" class="btn-ctrl" id="btn-next" onclick="nextQuestion()">
-                <span>Next ➡️</span>
+              <button type="button" class="btn-nav-next" id="btn-next" onclick="nextQuestion()">
+                <span>Next Question ➔</span>
               </button>
             </div>
 
-            <div class="btn-group-nav">
-              <button type="button" class="btn-ctrl btn-flag" id="btn-flag" onclick="toggleCurrentFlag()">
+            <!-- Row 2: Secondary Review Tools (Flag, Clear, Mobile Grid Toggle) -->
+            <div class="tools-actions-bar">
+              <button type="button" class="btn-tool-ctrl" id="btn-flag" onclick="toggleCurrentFlag()">
                 <span>🏳️ Flag for Review</span>
               </button>
-              <button type="button" class="btn-ctrl" id="btn-clear" onclick="clearCurrentAnswer()">
-                <span>🔄 Clear</span>
+              <button type="button" class="btn-tool-ctrl" id="btn-clear" onclick="clearCurrentAnswer()">
+                <span>🔄 Clear Choice</span>
               </button>
-              <button type="button" class="btn-ctrl btn-submit" onclick="openSubmitModal()">
-                <span>✅ Submit Exam</span>
+              <button type="button" class="btn-tool-ctrl btn-mobile-palette-toggle" id="btn-toggle-palette" onclick="toggleMobilePalette()">
+                <span>📋 Question Grid (50)</span>
               </button>
+            </div>
+
+            <!-- Row 3: Dedicated Finalize & Submit Section (Spatially Separated & Highly Distinct) -->
+            <div class="exam-submit-section">
+              <button type="button" class="btn-exam-submit btn-submit-locked" id="btn-submit-exam" onclick="openSubmitModal()">
+                <span id="btn-submit-icon">🔒</span>
+                <span id="btn-submit-text">Submit Exam (0 of 50 Answered)</span>
+              </button>
+              <p class="submit-requirement-hint" id="submit-requirement-hint">
+                <span>⚠️ All 50 questions must be answered before manual submission can be completed.</span>
+              </p>
             </div>
           </div>
         </div>
 
         <!-- Question Palette Sidebar -->
-        <aside class="palette-card">
+        <aside class="palette-card" id="exam-palette-sidebar">
           <div class="palette-header">
             <span>Question Palette</span>
             <span style="font-size: 0.8rem; color: #64748b;">(1 - 50)</span>
@@ -338,8 +351,8 @@
             <!-- 50 question buttons populated by JS -->
           </div>
 
-          <button type="button" class="btn-primary-large" style="padding: 11px;" onclick="openSubmitModal()">
-            <span>Finalize & Submit Test</span>
+          <button type="button" class="btn-primary-large btn-submit-locked" id="btn-sidebar-submit" style="padding: 12px;" onclick="openSubmitModal()">
+            <span id="sidebar-submit-text">🔒 Submit (0/50 Answered)</span>
           </button>
         </aside>
       </div>
@@ -351,20 +364,20 @@
     <div class="modal-overlay" id="submit-modal">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>Confirm Test Submission</h3>
+          <h3 style="display:flex; align-items:center; gap:8px;"><span>✅</span> Confirm Test Submission</h3>
         </div>
         <div class="modal-body">
-          <p style="font-size: 0.95rem; color: #334155; line-height: 1.5;">
-            Are you sure you want to submit your examination? Once submitted, your answers will be graded immediately and your score recorded.
+          <p style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin-bottom: 14px;">
+            Are you sure you want to submit your CBT examination now? All questions have been answered. Once submitted, your answers will be securely recorded and locked.
           </p>
 
           <div class="modal-stats-grid">
             <div class="modal-stat-box">
-              <div class="num" style="color: #10b981;" id="modal-ans-count">0</div>
+              <div class="num" style="color: #10b981;" id="modal-ans-count">50</div>
               <div class="lbl">Answered</div>
             </div>
             <div class="modal-stat-box">
-              <div class="num" style="color: #64748b;" id="modal-unans-count">50</div>
+              <div class="num" style="color: #64748b;" id="modal-unans-count">0</div>
               <div class="lbl">Unanswered</div>
             </div>
             <div class="modal-stat-box">
@@ -375,17 +388,49 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-ctrl" onclick="closeSubmitModal()">
-            <span>Return to Test</span>
+            <span>↩️ Return to Review</span>
           </button>
-          <button type="button" class="btn-ctrl btn-submit" onclick="submitExam()">
-            <span>Yes, Submit Now</span>
+          <button type="button" class="btn-ctrl btn-submit-ready" onclick="submitExam(false)" style="padding: 10px 22px; font-weight: 700;">
+            <span>✅ Yes, Submit Exam Now</span>
           </button>
         </div>
       </div>
     </div>
 
     <!-- ======================================================== -->
-    <!-- VIEW 3B: Exit Exam Confirmation Modal                    -->
+    <!-- VIEW 3B: Incomplete Questions Warning Modal               -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="modal-unanswered-warning">
+      <div class="modal-card" style="max-width: 460px; text-align: center; padding: 24px;">
+        <div style="width: 58px; height: 58px; border-radius: 50%; background: #fef3c7; color: #b45309; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 14px auto;">
+          ⚠️
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Incomplete Examination Questions</h3>
+        <p style="font-size: 0.92rem; color: #475569; line-height: 1.55; margin-bottom: 16px;">
+          You have answered <strong id="warn-answered-count" style="color: #059669;">0</strong> of <strong id="warn-total-count">50</strong> questions.<br>
+          Kwara State Civil Service Commission CBT regulations require candidates to <strong>answer all questions</strong> before manual submission.
+        </p>
+        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px; font-size: 0.92rem; color: #92400e; text-align: left;">
+          <div style="font-weight: 800; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+            <span>⏳</span> <span id="warn-unanswered-count">50</span> Unanswered Questions Remaining
+          </div>
+          <div style="font-size: 0.8rem; color: #78350f; line-height: 1.45;">
+            Please complete the remaining questions. When the 20-minute timer finishes, your exam will be automatically submitted.
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button type="button" class="btn-primary-large" style="padding: 13px; font-size: 0.95rem; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: none;" onclick="jumpToNextUnanswered()">
+            <span>🔍 Jump to Next Unanswered Question</span>
+          </button>
+          <button type="button" class="btn-ctrl" style="padding: 11px; font-size: 0.9rem; justify-content: center;" onclick="closeUnansweredWarningModal()">
+            <span>↩️ Continue Reviewing Current Question</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 3C: Exit Exam Confirmation Modal                    -->
     <!-- ======================================================== -->
     <div class="modal-overlay" id="exit-exam-modal">
       <div class="modal-card" style="max-width: 440px; text-align: center; padding: 24px;">
@@ -393,14 +438,14 @@
           🚪
         </div>
         <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Exit CBT Examination?</h3>
-        <p style="font-size: 0.9rem; color: #475569; line-height: 1.5; margin-bottom: 20px;">
-          Are you sure you want to exit your test session? You can submit your answered questions now for scoring, or return to continue your test.
+        <p id="exit-modal-desc" style="font-size: 0.9rem; color: #475569; line-height: 1.5; margin-bottom: 20px;">
+          Are you sure you want to exit your test session? You can return to continue your test.
         </p>
         <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button type="button" class="btn-primary-large" style="padding: 11px; font-size: 0.95rem;" onclick="submitExam(false)">
-            <span>✅ Submit & Grade Progress Now</span>
+          <button type="button" id="btn-exit-submit-now" class="btn-primary-large" style="padding: 11px; font-size: 0.95rem; background: #059669; display: none;" onclick="submitExam(false)">
+            <span>✅ Submit & Finish Examination Now</span>
           </button>
-          <button type="button" class="btn-ctrl" style="padding: 10px; font-size: 0.9rem; border-color: #cbd5e1;" onclick="closeExitModal()">
+          <button type="button" class="btn-ctrl" style="padding: 10px; font-size: 0.9rem; border-color: #cbd5e1; justify-content: center;" onclick="closeExitModal()">
             <span>↩️ Return to Test</span>
           </button>
         </div>
