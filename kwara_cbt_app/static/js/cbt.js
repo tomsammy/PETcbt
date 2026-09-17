@@ -1,5 +1,5 @@
 /**
- * Kwara State Office of the Head of Service CBT Testing Engine
+ * Kwara State Civil Service Commission - 2026 Promotion Evaluation CBT Examination
  */
 
 // Application State

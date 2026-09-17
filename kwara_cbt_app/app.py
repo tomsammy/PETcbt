@@ -21,7 +21,7 @@ from openpyxl.utils import get_column_letter
 from database import get_db_connection, init_db, get_setting, set_setting
 from email_service import send_result_email
 
-app = FastAPI(title="Kwara State Office of Head of Service CBT Evaluation API")
+app = FastAPI(title="KWARA STATE CIVIL SERVICE COMMISSION - 2026 Promotion Evaluation CBT Examination")
 
 app.add_middleware(
     CORSMiddleware,
@@ -171,8 +171,8 @@ def read_index():
         if os.path.exists(c):
             with open(c, "r", encoding="utf-8") as f:
                 return f.read()
-    return "<h1>Kwara State Office of Head of Service CBT Portal</h1>"
-
+    return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - 2026 Promotion Evaluation CBT Examination</h1>"
+ 
 # Router for all CBT Endpoints (supports both /api/* and /* paths)
 router = APIRouter()
 
@@ -234,7 +234,7 @@ def get_exam_info():
     status = get_setting("exam_status", "open")
     
     return {
-        "title": "Kwara State Office of Head of Service - Productivity Enhancement Evaluation",
+        "title": "KWARA STATE CIVIL SERVICE COMMISSION - 2026 Promotion Evaluation CBT Examination",
         "grade_levels": levels if levels else ["GL 06-07", "GL 08", "GL 09"],
         "default_duration_minutes": 20,
         "questions_per_exam": 50,
@@ -250,7 +250,7 @@ def start_exam(data: StartExamRequest):
     if exam_status == "closed":
         raise HTTPException(
             status_code=403,
-            detail="The CBT Examination has been closed by the Administrator (Office of the Head of Service). Candidate registration and test attempts are suspended. You cannot take the examination."
+            detail="The CBT Examination has been closed by the Administrator (Civil Service Commission). Candidate registration and test attempts are suspended. You cannot take the examination."
         )
 
     name = data.name.strip()
@@ -895,14 +895,14 @@ def export_results_excel(auth: bool = Depends(verify_admin_auth)):
     
     # Title Block
     ws.merge_cells("A1:L1")
-    ws["A1"] = "KWARA STATE OFFICE OF THE HEAD OF SERVICE"
+    ws["A1"] = "KWARA STATE CIVIL SERVICE COMMISSION"
     ws["A1"].font = Font(name="Arial", size=16, bold=True, color="FFFFFF")
     ws["A1"].fill = PatternFill(start_color=primary_green, end_color=primary_green, fill_type="solid")
     ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
     ws.row_dimensions[1].height = 32
     
     ws.merge_cells("A2:L2")
-    ws["A2"] = "Productivity Enhancement Evaluation - Computer Based Test (CBT) Official Results Roster"
+    ws["A2"] = "2026 Promotion Evaluation CBT Examination - Official Results Roster"
     ws["A2"].font = Font(name="Arial", size=12, bold=True, color="FFFFFF")
     ws["A2"].fill = PatternFill(start_color="00796B", end_color="00796B", fill_type="solid")
     ws["A2"].alignment = Alignment(horizontal="center", vertical="center")
