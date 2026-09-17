@@ -623,15 +623,16 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
         conn.close()
         raise HTTPException(status_code=403, detail="The CBT Examination portal is currently closed by Administrator.")
         
-    # 2. Check single attempt protection in submissions
-    cursor.execute("SELECT id, submitted_at, score_percentage FROM submissions WHERE psn = ?", (psn,))
-    sub = cursor.fetchone()
-    if sub:
-        conn.close()
-        raise HTTPException(
-            status_code=400,
-            detail=f"This examination has already been completed for PSN {psn} on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
-        )
+    # 2. Check single attempt protection in submissions (Sandbox bypass for 999xxx test accounts)
+    if not psn.startswith("999"):
+        cursor.execute("SELECT id, submitted_at, score_percentage FROM submissions WHERE psn = ?", (psn,))
+        sub = cursor.fetchone()
+        if sub:
+            conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail=f"This examination has already been completed for PSN {psn} on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
+            )
         
     # 3. Validate Token
     cursor.execute("SELECT id, token_code, status, assigned_to_psn FROM exam_tokens WHERE token_code = ?", (token_code,))
@@ -640,20 +641,20 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
         conn.close()
         raise HTTPException(status_code=404, detail=f"Invalid Exam Access Token '{token_code}'. Please check your token slip.")
         
-    # Check if assigned to another PSN
-    if tok["assigned_to_psn"] and tok["assigned_to_psn"] != psn:
+    # Check if assigned to another PSN (Sandbox test accounts can re-use test tokens)
+    if tok["assigned_to_psn"] and tok["assigned_to_psn"] != psn and not psn.startswith("999"):
         conn.close()
         raise HTTPException(
             status_code=403,
             detail=f"Access Denied: This 5-digit token ({token_code}) has already been activated by another officer."
         )
         
-    # If unassigned, bind atomically to this PSN
-    if not tok["assigned_to_psn"]:
+    # If unassigned, bind atomically to this PSN (or re-bind if test account)
+    if not tok["assigned_to_psn"] or psn.startswith("999"):
         cursor.execute("""
             UPDATE exam_tokens
             SET assigned_to_psn = ?, status = 'active', activated_at = CURRENT_TIMESTAMP
-            WHERE token_code = ? AND assigned_to_psn IS NULL
+            WHERE token_code = ?
         """, (psn, token_code))
         
     # 4. Fetch candidate details from candidate_roster
