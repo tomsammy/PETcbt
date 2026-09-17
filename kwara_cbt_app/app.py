@@ -1112,5 +1112,41 @@ def view_candidate_registration_slips(auth: bool = Depends(verify_admin_auth)):
                 return HTMLResponse(content=f.read())
     return HTMLResponse(content="<h1>Registration Slips not found. Please contact Administrator.</h1>", status_code=404)
 
+@router.get("/admin/tokens/excel")
+@router.get("/api/admin/tokens/excel")
+def download_tokens_inventory_excel(auth: bool = Depends(verify_admin_auth)):
+    possible_paths = [
+        os.path.join(STATIC_DIR, "scratch_cards", "Kwara_CSC_2026_CBT_Scratch_Cards_Master_Inventory.xlsx") if STATIC_DIR else "",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Kwara_CSC_2026_CBT_Scratch_Cards", "Kwara_CSC_2026_CBT_Scratch_Cards_Master_Inventory.xlsx")
+    ]
+    for p in possible_paths:
+        if p and os.path.exists(p):
+            return FileResponse(
+                path=p,
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                filename="Kwara_CSC_2026_CBT_Scratch_Cards_Master_Inventory.xlsx"
+            )
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, token_code, status, assigned_to_psn FROM exam_tokens ORDER BY id ASC")
+    rows = cursor.fetchall()
+    conn.close()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Tokens Inventory"
+    ws.append(["S/N", "Serial Number", "5-Digit Exam Token (Code 2)", "Token Status", "Assigned PSN"])
+    for idx, r in enumerate(rows, 1):
+        ws.append([idx, f"CSC-2026-{idx:04d}", r["token_code"], r["status"], r.get("assigned_to_psn") or "Unassigned"])
+
+    out = io.BytesIO()
+    wb.save(out)
+    return Response(
+        content=out.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="Kwara_CSC_2026_CBT_Scratch_Cards_Master_Inventory.xlsx"'}
+    )
+
 app.include_router(router)
 

@@ -559,6 +559,9 @@
             <a href="/static/slips_by_mda/00_INDEX.html" target="_blank" id="btn-view-slips" class="btn-csv" style="background:#b45309; border-color:#d97706; color:#fff;" title="View and print candidate registration slips by MDA (10 per A4 sheet)">
               <span>🖨️ Print Registration Slips (By MDA - 10/Page)</span>
             </a>
+            <a href="/static/scratch_cards/00_INDEX.html" target="_blank" id="btn-view-tokens" class="btn-csv" style="background:#0d9488; border-color:#14b8a6; color:#fff;" title="View and print 5-digit examination scratch card tokens by Batch/Session (10 per A4 sheet)">
+              <span>🎟️ Print Exam Scratch Cards (Code 2 - Batches)</span>
+            </a>
             <a href="#" id="btn-download-excel" class="btn-excel">
               <span>📊 Download Results (Excel)</span>
             </a>
@@ -619,10 +622,13 @@
               Completed: <strong id="admin-tok-completed" style="color:#7c3aed;">0</strong>
             </div>
           </div>
-          <div style="display: flex; gap: 10px;">
-            <button type="button" class="btn-ctrl" style="background:#ecfdf5; border-color:#86efac; color:#166534; font-weight:700;" onclick="openAdminTokensModal()">
-              <span>🎟️ Print Token Slips (Batches)</span>
-            </button>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/static/scratch_cards/00_INDEX.html" target="_blank" class="btn-ctrl" style="background:#ecfdf5; border-color:#86efac; color:#166534; font-weight:700; text-decoration:none; display:inline-flex; align-items:center;">
+              <span>🎟️ Print Scratch Cards (Code 2 - Batches)</span>
+            </a>
+            <a href="/api/admin/tokens/excel" class="btn-ctrl" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d; font-weight:700; text-decoration:none; display:inline-flex; align-items:center;">
+              <span>📥 Download Tokens Excel</span>
+            </a>
             <button type="button" class="btn-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#991b1b; font-weight:700;" onclick="openAdminResetModal()">
               <span>🔄 Reset Candidate PSN</span>
             </button>
