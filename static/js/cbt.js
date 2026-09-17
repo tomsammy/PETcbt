@@ -76,6 +76,79 @@ function closeAlertModal() {
   if (modal) modal.classList.remove('active');
 }
 
+// Custom Confirmation Modal System (Promise-based)
+let confirmModalResolver = null;
+
+function showConfirmModal(title, message, options = {}) {
+  const {
+    type = 'danger',
+    confirmText = 'Yes, Proceed',
+    cancelText = 'Cancel',
+    confirmBg = '#dc2626'
+  } = options;
+
+  const modal = document.getElementById('custom-confirm-modal');
+  const titleEl = document.getElementById('confirm-modal-title');
+  const msgEl = document.getElementById('confirm-modal-msg');
+  const iconEl = document.getElementById('confirm-modal-icon');
+  const okBtn = document.getElementById('confirm-modal-ok-btn');
+  const okTextEl = document.getElementById('confirm-modal-ok-text');
+  const cancelBtn = document.getElementById('confirm-modal-cancel-btn');
+
+  if (!modal) {
+    return Promise.resolve(window.confirm(message));
+  }
+
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+  if (okTextEl) okTextEl.textContent = confirmText;
+  if (cancelBtn) {
+    const cancelSpan = cancelBtn.querySelector('span');
+    if (cancelSpan) cancelSpan.textContent = cancelText;
+  }
+
+  if (iconEl) {
+    if (type === 'danger' || type === 'error') {
+      iconEl.textContent = '⚠️';
+      iconEl.style.background = '#fee2e2';
+      iconEl.style.color = '#dc2626';
+    } else if (type === 'success') {
+      iconEl.textContent = '✅';
+      iconEl.style.background = '#d1fae5';
+      iconEl.style.color = '#059669';
+    } else if (type === 'info') {
+      iconEl.textContent = 'ℹ️';
+      iconEl.style.background = '#e0f2fe';
+      iconEl.style.color = '#0284c7';
+    } else {
+      iconEl.textContent = '⚠️';
+      iconEl.style.background = '#fef3c7';
+      iconEl.style.color = '#b45309';
+    }
+  }
+
+  if (okBtn) {
+    okBtn.style.background = confirmBg;
+  }
+
+  modal.classList.add('active');
+  if (okBtn) okBtn.focus();
+
+  return new Promise((resolve) => {
+    confirmModalResolver = resolve;
+  });
+}
+
+function handleConfirmModalChoice(choice) {
+  const modal = document.getElementById('custom-confirm-modal');
+  if (modal) modal.classList.remove('active');
+  if (confirmModalResolver) {
+    const r = confirmModalResolver;
+    confirmModalResolver = null;
+    r(choice);
+  }
+}
+
 // Exit Exam Confirmation Modal
 function openExitModal() {
   const modal = document.getElementById('exit-exam-modal');
@@ -1564,7 +1637,18 @@ async function executeAdminCandidateReset() {
     return;
   }
 
-  if (!confirm(`Are you sure you want to archive previous submissions and unlock PSN ${psn} for a retake?`)) {
+  const confirmed = await showConfirmModal(
+    'Confirm Candidate Retake',
+    `Are you sure you want to archive previous submissions and unlock PSN ${psn} for a retake?`,
+    {
+      type: 'danger',
+      confirmText: 'Yes, Unlock Candidate',
+      cancelText: 'Cancel',
+      confirmBg: '#dc2626'
+    }
+  );
+
+  if (!confirmed) {
     return;
   }
 
@@ -1608,6 +1692,7 @@ async function executeAdminCandidateReset() {
 // -------------------------------------------------------------
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    handleConfirmModalChoice(false);
     closeAlertModal();
     closeSubmitModal();
     closeExitModal();
