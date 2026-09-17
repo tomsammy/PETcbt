@@ -134,7 +134,9 @@ function closeExamSession() {
 function returnToPortalHome() {
   window.history.pushState({}, '', '/');
   showView('entry');
-  switchEntryTab('start');
+  switchEntryTab(state.examStatus === 'closed' ? 'register' : 'start');
+  initPortalStatus();
+
 }
 
 // Switch Views
@@ -175,26 +177,67 @@ async function initPortalStatus() {
 }
 
 function applyExamStatusToUI(status) {
+  const tabBtnStart = document.getElementById('tab-btn-start');
+  const contentStart = document.getElementById('tab-content-start');
   const closedBanner = document.getElementById('exam-closed-banner');
   const startBtn = document.getElementById('btn-start-exam');
   const startBtnText = document.getElementById('btn-start-exam-text');
+  const proceedPhotocardBtn = document.getElementById('btn-proceed-exam-from-photocard');
 
   if (status === 'closed') {
-    if (closedBanner) closedBanner.style.display = 'block';
+    // 1. Remove CBT Exam Tab from the frontend navigation
+    if (tabBtnStart) {
+      tabBtnStart.style.display = 'none';
+    }
+
+    // 2. Hide Exam Taking Content and switch to Verification & Photocard tab
+    if (contentStart) {
+      contentStart.style.display = 'none';
+    }
+    switchEntryTab('register');
+
+    // 3. Hide Proceed to Exam button on photocard view
+    if (proceedPhotocardBtn) {
+      proceedPhotocardBtn.style.display = 'none';
+    }
+
+    // 4. Show closed banner
+    if (closedBanner) {
+      closedBanner.style.display = 'block';
+    }
+
     if (startBtn) {
       startBtn.disabled = true;
       startBtn.style.opacity = '0.6';
       startBtn.style.cursor = 'not-allowed';
     }
-    if (startBtnText) startBtnText.textContent = '🔒 Examination is Currently Closed';
+    if (startBtnText) {
+      startBtnText.textContent = '🔒 Examination is Currently Closed';
+    }
   } else {
-    if (closedBanner) closedBanner.style.display = 'none';
+    // 1. Restore CBT Exam Tab in the frontend navigation
+    if (tabBtnStart) {
+      tabBtnStart.style.display = '';
+    }
+
+    // 2. Restore Proceed to Exam button on photocard view
+    if (proceedPhotocardBtn) {
+      proceedPhotocardBtn.style.display = '';
+    }
+
+    // 3. Hide closed banner
+    if (closedBanner) {
+      closedBanner.style.display = 'none';
+    }
+
     if (startBtn) {
       startBtn.disabled = false;
       startBtn.style.opacity = '1';
       startBtn.style.cursor = 'pointer';
     }
-    if (startBtnText) startBtnText.textContent = '🚀 Login & Commence CBT Examination (20 Mins)';
+    if (startBtnText) {
+      startBtnText.textContent = '🚀 Login & Commence CBT Examination (20 Mins)';
+    }
   }
 }
 
@@ -230,7 +273,17 @@ function navigateToExam() {
 // 1. Candidate Entry Navigation: Registration vs Exam
 // -------------------------------------------------------------
 function switchEntryTab(tab) {
-  const targetTab = (tab === 'start') ? 'start' : 'register';
+  let targetTab = (tab === 'start') ? 'start' : 'register';
+
+  // Guard: if portal is closed at backend, do not permit switching to exam tab
+  if (targetTab === 'start' && state.examStatus === 'closed') {
+    showAlertModal(
+      'CBT Examination Closed',
+      'The CBT Examination portal is currently closed by the Commission Administrator. Examination test sessions are suspended. Candidate verification and photocard generation remain active.',
+      'warning'
+    );
+    targetTab = 'register';
+  }
   const btnRegister = document.getElementById('tab-btn-register');
   const btnStart = document.getElementById('tab-btn-start');
 
@@ -662,6 +715,16 @@ function renderPhotocard(c) {
 }
 
 function proceedToExamFromPhotocard() {
+  if (state.examStatus === 'closed') {
+    showAlertModal(
+      'CBT Examination Closed',
+      'The CBT Examination portal is currently closed by Administrator. You cannot commence the test at this time.',
+      'warning'
+    );
+    showView('entry');
+    switchEntryTab('register');
+    return;
+  }
   showView('entry');
   switchEntryTab('start');
   if (state.registeredCandidate) {
@@ -1616,4 +1679,11 @@ window.addEventListener('popstate', checkRoute);
 
 // Run initial status & route check on load
 initPortalStatus();
+
+// Periodically synchronize portal status with backend (every 30s and on focus)
+if (!window.__portalStatusSyncInstalled) {
+  window.__portalStatusSyncInstalled = true;
+  setInterval(initPortalStatus, 30000);
+  window.addEventListener('focus', initPortalStatus);
+}
 checkRoute();
