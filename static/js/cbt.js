@@ -652,7 +652,7 @@ function renderPhotocard(c) {
     <div class="photocard-footer" style="padding-top: 8px; font-size: 0.72rem;">
       <div>
         <div><strong>Status:</strong> <span style="color:#059669; font-weight:800;">VERIFIED & ACCREDITED FOR CBT</span></div>
-        <div style="font-size: 0.68rem; margin-top: 1px;">Security Verification Code: ${c.code_1}-${c.psn}</div>
+        <div style="font-size: 0.68rem; margin-top: 1px;">Security Verification Code: ${c.code_1}-${c.psn} &bull; Portal: <strong>kwaracsc.ng</strong></div>
       </div>
       <div class="slip-sign-line" style="width: 200px; font-size: 0.74rem;">
         Kwara State Civil Service Commission
@@ -1446,7 +1446,7 @@ async function openAdminTokensModal() {
       <div class="token-slip-item">
         <div class="tok-mda">Kwara CSC 2026 CBT</div>
         <div class="tok-num">${tok}</div>
-        <div class="tok-sub">20-Min Promotion Exam Slip #${idx + 1}</div>
+        <div class="tok-sub">Portal: <strong>kwaracsc.ng</strong> &bull; Slip #${idx + 1}</div>
       </div>
     `).join('');
   } catch (err) {
@@ -1481,7 +1481,7 @@ function printTokenSlips() {
     </head>
     <body>
       <h2>KWARA STATE CIVIL SERVICE COMMISSION</h2>
-      <p>2026 PROMOTION EVALUATION CBT - OFFICIAL 5-DIGIT EXAM SCRATCH CARD SLIPS</p>
+      <p>2026 PROMOTION EVALUATION CBT - OFFICIAL 5-DIGIT EXAM SCRATCH CARD SLIPS<br>Portal: <strong>kwaracsc.ng</strong></p>
       <div class="grid">
         ${grid.innerHTML}
       </div>
