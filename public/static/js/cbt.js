@@ -179,7 +179,6 @@ async function initPortalStatus() {
 function applyExamStatusToUI(status) {
   const tabBtnStart = document.getElementById('tab-btn-start');
   const contentStart = document.getElementById('tab-content-start');
-  const closedBanner = document.getElementById('exam-closed-banner');
   const startBtn = document.getElementById('btn-start-exam');
   const startBtnText = document.getElementById('btn-start-exam-text');
   const proceedPhotocardBtn = document.getElementById('btn-proceed-exam-from-photocard');
@@ -201,10 +200,7 @@ function applyExamStatusToUI(status) {
       proceedPhotocardBtn.style.display = 'none';
     }
 
-    // 4. Show closed banner
-    if (closedBanner) {
-      closedBanner.style.display = 'block';
-    }
+
 
     if (startBtn) {
       startBtn.disabled = true;
@@ -225,10 +221,7 @@ function applyExamStatusToUI(status) {
       proceedPhotocardBtn.style.display = '';
     }
 
-    // 3. Hide closed banner
-    if (closedBanner) {
-      closedBanner.style.display = 'none';
-    }
+
 
     if (startBtn) {
       startBtn.disabled = false;
@@ -277,11 +270,6 @@ function switchEntryTab(tab) {
 
   // Guard: if portal is closed at backend, do not permit switching to exam tab
   if (targetTab === 'start' && state.examStatus === 'closed') {
-    showAlertModal(
-      'CBT Examination Closed',
-      'The CBT Examination portal is currently closed by the Commission Administrator. Examination test sessions are suspended. Candidate verification and photocard generation remain active.',
-      'warning'
-    );
     targetTab = 'register';
   }
   const btnRegister = document.getElementById('tab-btn-register');
@@ -716,11 +704,6 @@ function renderPhotocard(c) {
 
 function proceedToExamFromPhotocard() {
   if (state.examStatus === 'closed') {
-    showAlertModal(
-      'CBT Examination Closed',
-      'The CBT Examination portal is currently closed by Administrator. You cannot commence the test at this time.',
-      'warning'
-    );
     showView('entry');
     switchEntryTab('register');
     return;
