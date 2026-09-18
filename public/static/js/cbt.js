@@ -759,7 +759,7 @@ function renderPhotocard(c) {
         <li><strong>Mandatory Smart Mobile Device:</strong> Candidates <strong>MUST come to the venue with their smartphone</strong> (Android, iPhone, or any smart mobile device) with an active, functional web browser installed, and <strong>MUST HAVE AN ACTIVE INTERNET SUBSCRIPTION (DATA BUNDLE SUBSCRIPTION)</strong> (though internet is going to be provided).</li>
         <li><strong>Physical Photocard Required:</strong> This printed physical photocard must be presented physically to the invigilator during hall accreditation.</li>
         <li><strong>Hall Scratch Card Token:</strong> Upon physical accreditation in the CBT hall, you will receive your single-use <strong>5-Digit Exam Scratch Card Token</strong> to unlock your workstation test.</li>
-        <li><strong>Exam Duration:</strong> Strictly <strong>20 Minutes</strong> (50 cadre-specific multiple choice questions). The test automatically submits when the countdown timer expires.</li>
+        <li><strong>Exam Duration:</strong> Strictly <strong>20 Minutes</strong> (40 cadre-specific multiple choice questions). The test automatically submits when the countdown timer expires.</li>
       </ol>
     </div>
 

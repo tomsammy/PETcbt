@@ -237,8 +237,8 @@ def get_exam_info():
         "title": "KWARA STATE CIVIL SERVICE COMMISSION - 2026 Promotion Evaluation CBT Examination",
         "grade_levels": levels if levels else ["GL 06-07", "GL 08", "GL 09"],
         "default_duration_minutes": 20,
-        "questions_per_exam": 50,
-        "marks_per_question": 2,
+        "questions_per_exam": 40,
+        "marks_per_question": 2.5,
         "total_marks": 100,
         "exam_status": status
     }
@@ -334,14 +334,19 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
     rows = []
     matched_paper = clean_paper
 
-    # 1. Exact paper_code match
+    # 1. Exact paper_code match with normalization variants
     if clean_paper:
+        alt_paper1 = clean_paper.replace("/", "-")
+        alt_paper2 = clean_paper.replace("-", "/")
+        alt_paper3 = clean_paper.replace("&CD", "")
+        alt_paper4 = clean_paper.replace("/AI", "/A1").replace("-AI", "-A1")
         cursor.execute("""
             SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
             FROM cbt_questions
-            WHERE paper_code = ? OR paper_code = ?
+            WHERE paper_code = ? OR paper_code = ? OR paper_code = ? OR paper_code = ? OR paper_code = ?
             ORDER BY question_number ASC
-        """, (clean_paper, clean_paper.replace("/", "-")))
+            LIMIT 40
+        """, (clean_paper, alt_paper1, alt_paper2, alt_paper3, alt_paper4))
         rows = cursor.fetchall()
 
     # 2. Same MDA match
@@ -351,7 +356,7 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
             FROM cbt_questions
             WHERE mda = ?
             ORDER BY question_number ASC
-            LIMIT 50
+            LIMIT 40
         """, (clean_mda,))
         rows = cursor.fetchall()
         if rows:
@@ -364,7 +369,7 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
             FROM cbt_questions
             WHERE mda = 'OHOS' AND group_category = ?
             ORDER BY question_number ASC
-            LIMIT 50
+            LIMIT 40
         """, (clean_group,))
         rows = cursor.fetchall()
         if rows:
@@ -376,28 +381,16 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
             SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
             FROM questions
             ORDER BY question_number ASC
-            LIMIT 50
+            LIMIT 40
         """)
         rows = cursor.fetchall()
         matched_paper = "Civil Service General"
 
     rows = [dict(r) for r in rows]
 
-    # If fewer than 50 questions, pad up to exactly 50 with General Civil Service questions
-    if len(rows) < 50:
-        needed = 50 - len(rows)
-        cursor.execute("""
-            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
-            FROM questions
-            ORDER BY question_number ASC
-            LIMIT ?
-        """, (needed,))
-        pad_rows = [dict(r) for r in cursor.fetchall()]
-        rows.extend(pad_rows)
-
-    # Renumber sequentially 1..50 so palette and scoring are always 1 to 50
+    # Renumber sequentially 1..40 so palette and scoring are always 1 to 40
     renumbered = []
-    for idx, r in enumerate(rows[:50], start=1):
+    for idx, r in enumerate(rows[:40], start=1):
         r["question_number"] = idx
         renumbered.append(r)
 
