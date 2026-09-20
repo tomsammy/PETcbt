@@ -245,6 +245,10 @@
     <section id="view-exam" class="view-section">
       <!-- Exam Info Bar with Live Countdown & Exit Control -->
       <div class="exam-top-bar">
+                <div class="network-status-badge online" id="exam-network-status" title="Real-time network status">
+          <span class="network-dot"></span>
+          <span id="network-status-text">Connected</span>
+        </div>
         <div class="candidate-badge">
           <div class="candidate-avatar" id="exam-candidate-avatar">I</div>
           <div class="candidate-meta">
@@ -970,7 +974,37 @@
       </div>
     </div>
 
-  </main>
+  
+    <!-- ======================================================== -->
+    <!-- VIEW 11: Offline Submission Recovery Modal               -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="offline-submit-modal" style="z-index: 1070; display:none;">
+      <div class="modal-card" style="max-width: 480px; text-align: center; padding: 28px 24px;">
+        <div style="width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 16px auto; background: #fffbeb; color: #b45309; border: 2px solid #fde68a;">
+          📡
+        </div>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin-bottom: 10px;">
+          Internet Connection Interrupted
+        </h3>
+        <div style="background: #f0fdf4; border-radius: 8px; padding: 12px; margin-bottom: 16px; border: 1px solid #bbf7d0; font-size: 0.85rem; color: #166534; text-align: left;">
+          🛡️ <strong>Your answers are 100% safe!</strong><br>
+          All <span id="offline-saved-count" style="font-weight:800;">40</span> answers are securely saved in this device's memory. You will not lose your score or progress.
+        </div>
+        <p id="offline-submit-status" style="font-size: 0.9rem; color: #475569; line-height: 1.5; margin-bottom: 20px;">
+          The system is automatically waiting for the network to restore. Once reconnected, your submission will complete immediately.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+          <button type="button" class="btn-primary-large" id="btn-offline-retry" style="padding: 12px; font-size: 0.95rem; width: 100%; background: #004d40;" onclick="retryOfflineSubmission()">
+            <span>🔄 Tap to Retry Submission Now</span>
+          </button>
+          <button type="button" class="btn-ctrl" style="padding: 10px; font-size: 0.85rem; width: 100%; justify-content: center;" onclick="checkNetworkAndNotify()">
+            <span>📶 Check Network Connection</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    </main>
 
   <script src="/static/js/cbt.js"></script>
 </body>

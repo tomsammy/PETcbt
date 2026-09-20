@@ -32,6 +32,157 @@ const views = {
   admin: document.getElementById('view-admin')
 };
 
+// ============================================================================
+// LOW-BANDWIDTH & OFFLINE-FIRST RESILIENCE ENGINE
+// ============================================================================
+
+let pendingSubmissionPayload = null;
+let offlineSubmitInterval = null;
+
+// Robust Fetch with Auto-Retry and Exponential Backoff for Minimal / Poor Internet
+async function fetchWithRetry(url, options = {}, maxRetries = 3, baseDelayMs = 1200) {
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 16000);
+      const fetchOpts = { ...options, signal: controller.signal };
+      
+      const res = await fetch(url, fetchOpts);
+      clearTimeout(timeoutId);
+      
+      if ([502, 503, 504].includes(res.status) && attempt < maxRetries) {
+        throw new Error(`Server temporarily congested (HTTP ${res.status})`);
+      }
+      
+      removeRetryToast();
+      return res;
+    } catch (err) {
+      attempt++;
+      if (attempt > maxRetries) {
+        removeRetryToast();
+        throw err;
+      }
+      const isTimeout = err.name === 'AbortError';
+      const reason = isTimeout ? 'Slow network response' : (err.message || 'Signal fluctuating');
+      showRetryToast(`⚠️ Weak internet detected (${reason}). Reconnecting automatically (Attempt ${attempt}/${maxRetries})...`);
+      
+      const delay = (baseDelayMs * Math.pow(1.8, attempt - 1)) + (Math.random() * 400);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+}
+
+function showRetryToast(msg) {
+  let toast = document.getElementById('cbt-network-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'cbt-network-toast';
+    toast.className = 'network-retry-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<span class="network-dot" style="background:#f59e0b; width:10px; height:10px; flex-shrink:0;"></span> <span style="line-height:1.4;">${msg}</span>`;
+  toast.style.display = 'flex';
+}
+
+function removeRetryToast() {
+  const toast = document.getElementById('cbt-network-toast');
+  if (toast) toast.style.display = 'none';
+}
+
+// Local Storage Key Helpers
+function getSessionStorageKey(psn) {
+  return `kws_cbt_session_${psn || (state.candidate ? state.candidate.psn : 'current')}`;
+}
+function getPendingSubKey(psn) {
+  return `kws_cbt_pending_sub_${psn || (state.candidate ? state.candidate.psn : 'current')}`;
+}
+
+// Continuous Auto-Save to LocalStorage
+function saveExamProgress() {
+  if (!state.candidate || !state.questions || state.questions.length === 0 || state.isSubmitted) return;
+  try {
+    const key = getSessionStorageKey(state.candidate.psn);
+    const sessionData = {
+      candidate: state.candidate,
+      candidateId: state.candidateId,
+      questions: state.questions,
+      currentIndex: state.currentIndex,
+      answers: state.answers,
+      flagged: Array.from(state.flagged),
+      durationSeconds: state.durationSeconds,
+      secondsRemaining: state.secondsRemaining,
+      lastSavedTimestamp: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(sessionData));
+  } catch (e) {
+    console.warn('localStorage auto-save warning:', e);
+  }
+}
+
+// Clear Storage on Verified Final Submission
+function clearExamProgress(psn) {
+  try {
+    const key = getSessionStorageKey(psn);
+    const subKey = getPendingSubKey(psn);
+    localStorage.removeItem(key);
+    localStorage.removeItem(subKey);
+  } catch (e) {}
+}
+
+// Restore Active Session If Interrupted
+function checkAndRestoreSession(psn) {
+  try {
+    const key = getSessionStorageKey(psn);
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    
+    // Check if within time
+    const elapsedSeconds = Math.floor((Date.now() - (data.lastSavedTimestamp || Date.now())) / 1000);
+    const adjustedRemaining = Math.max(0, data.secondsRemaining - elapsedSeconds);
+    if (adjustedRemaining <= 0) {
+      return null;
+    }
+    data.secondsRemaining = adjustedRemaining;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Network Status Indicator Updates
+function updateNetworkStatusIndicator() {
+  const badge = document.getElementById('exam-network-status');
+  const text = document.getElementById('network-status-text');
+  if (!badge || !text) return;
+  
+  if (navigator.onLine) {
+    badge.className = 'network-status-badge online';
+    text.textContent = 'Connected';
+    badge.title = 'Internet active. Questions and answers sync smoothly.';
+  } else {
+    badge.className = 'network-status-badge offline';
+    text.textContent = 'Offline (Answers Safe)';
+    badge.title = 'Internet interrupted. All answers are 100% saved locally on this device.';
+  }
+}
+
+window.addEventListener('online', () => {
+  updateNetworkStatusIndicator();
+  removeRetryToast();
+  const pendingModal = document.getElementById('offline-submit-modal');
+  if (pendingModal && pendingModal.style.display === 'flex') {
+    retryOfflineSubmission(true);
+  }
+});
+
+window.addEventListener('offline', () => {
+  updateNetworkStatusIndicator();
+  showRetryToast('⚠️ Internet connection disconnected. You may continue answering — your progress is safely stored in local memory.');
+});
+
+
 // Custom Alert Modal System
 function showAlertModal(title, message, type = 'warning') {
   const modal = document.getElementById('custom-alert-modal');
@@ -838,11 +989,38 @@ if (tokenExamForm) {
     }
 
     try {
-      const response = await fetch('/api/exam/start-with-token', {
+      // Check if session can be restored from local storage
+      const restored = checkAndRestoreSession(psn);
+      if (restored) {
+        state.candidate = restored.candidate;
+        state.candidateId = restored.candidateId;
+        state.questions = restored.questions;
+        state.currentIndex = restored.currentIndex || 0;
+        state.answers = restored.answers || {};
+        state.flagged = new Set(restored.flagged || []);
+        state.isSubmitted = false;
+        state.durationSeconds = restored.durationSeconds || 1200;
+        state.secondsRemaining = restored.secondsRemaining;
+        
+        document.getElementById('exam-candidate-name').textContent = state.candidate.name;
+        document.getElementById('exam-candidate-psn').textContent = `PSN: ${state.candidate.psn} | Paper: ${state.candidate.paper_code || 'Cadre Evaluation'}`;
+        document.getElementById('exam-candidate-avatar').textContent = state.candidate.name.charAt(0).toUpperCase();
+        
+        buildPalette();
+        renderQuestion(state.currentIndex);
+        startTimer();
+        updateNetworkStatusIndicator();
+        showView('exam');
+        showRetryToast('✅ Resumed ongoing examination session seamlessly.');
+        if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+        return;
+      }
+
+      const response = await fetchWithRetry('/api/exam/start-with-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ psn: psn, token_code: tokenCode })
-      });
+      }, 3, 1500);
 
       const data = await response.json();
       if (!response.ok) {
@@ -867,6 +1045,8 @@ if (tokenExamForm) {
       buildPalette();
       renderQuestion(0);
       startTimer();
+      updateNetworkStatusIndicator();
+      saveExamProgress();
       showView('exam');
 
     } catch (err) {
@@ -1084,6 +1264,7 @@ function selectOption(letter) {
   const qNumStr = String(currentQ.number);
   state.answers[qNumStr] = letter;
   renderQuestion(state.currentIndex);
+  saveExamProgress();
 }
 
 function clearCurrentAnswer() {
@@ -1091,6 +1272,7 @@ function clearCurrentAnswer() {
   const qNumStr = String(currentQ.number);
   delete state.answers[qNumStr];
   renderQuestion(state.currentIndex);
+  saveExamProgress();
 }
 
 function toggleCurrentFlag() {
@@ -1101,6 +1283,7 @@ function toggleCurrentFlag() {
     state.flagged.add(currentQ.number);
   }
   renderQuestion(state.currentIndex);
+  saveExamProgress();
 }
 
 function nextQuestion() {
@@ -1226,26 +1409,43 @@ async function submitExam(isAuto = false) {
     time_taken_seconds: timeTaken
   };
 
+  pendingSubmissionPayload = payload;
   try {
-    const response = await fetch('/api/submit-exam', {
+    localStorage.setItem(getPendingSubKey(payload.psn), JSON.stringify(payload));
+  } catch(e) {}
+
+  const submitBtn = document.getElementById('btn-submit-exam');
+  const originalSubmitHtml = submitBtn ? submitBtn.innerHTML : '';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>⏳ Submitting & Securing Evaluation...</span>`;
+  }
+
+  try {
+    const response = await fetchWithRetry('/api/submit-exam', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    });
+    }, 3, 1500);
 
     const result = await response.json();
     if (!response.ok) {
-      throw new Error(result.detail || 'Submission failed.');
+      throw new Error(result.detail || 'Submission could not be processed.');
     }
 
+    state.isSubmitted = true;
+    clearExamProgress(payload.psn);
+    closeOfflineSubmitModal();
     renderResultSlip(result);
     showView('result');
   } catch (err) {
-    showAlertModal(
-      'Submission Error',
-      'An error occurred during submission: ' + err.message,
-      'error'
-    );
+    console.warn('Network submission delayed:', err);
+    openOfflineSubmitModal(payload, err.message);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalSubmitHtml;
+    }
   }
 }
 
@@ -1755,3 +1955,95 @@ if (!window.__portalStatusSyncInstalled) {
   window.addEventListener('focus', initPortalStatus);
 }
 checkRoute();
+
+
+function openOfflineSubmitModal(payload, errorMsg) {
+  const modal = document.getElementById('offline-submit-modal');
+  if (!modal) {
+    showAlertModal(
+      'Internet Disconnected',
+      'Your network connection was interrupted. All answers are 100% safely saved on your device. Please reconnect or inform an invigilator.',
+      'warning'
+    );
+    return;
+  }
+  const countEl = document.getElementById('offline-saved-count');
+  if (countEl) countEl.textContent = Object.keys(payload.answers || {}).length;
+  
+  const statusEl = document.getElementById('offline-submit-status');
+  if (statusEl) {
+    statusEl.innerHTML = `⚠️ <em>Weak or disconnected internet</em>.<br><br>The portal is automatically retrying every 3 seconds as soon as network signal is restored. You will not lose any answers.`;
+  }
+  modal.style.display = 'flex';
+  
+  if (offlineSubmitInterval) clearInterval(offlineSubmitInterval);
+  offlineSubmitInterval = setInterval(() => {
+    if (navigator.onLine) {
+      retryOfflineSubmission(true);
+    }
+  }, 3500);
+}
+
+function closeOfflineSubmitModal() {
+  const modal = document.getElementById('offline-submit-modal');
+  if (modal) modal.style.display = 'none';
+  if (offlineSubmitInterval) {
+    clearInterval(offlineSubmitInterval);
+    offlineSubmitInterval = null;
+  }
+}
+
+async function retryOfflineSubmission(isAuto = false) {
+  if (!pendingSubmissionPayload) {
+    try {
+      const psn = state.candidate ? state.candidate.psn : '';
+      const raw = localStorage.getItem(getPendingSubKey(psn));
+      if (raw) pendingSubmissionPayload = JSON.parse(raw);
+    } catch(e) {}
+  }
+  if (!pendingSubmissionPayload) return;
+
+  const retryBtn = document.getElementById('btn-offline-retry');
+  if (retryBtn) {
+    retryBtn.disabled = true;
+    retryBtn.innerHTML = `<span>⏳ Connecting to Server...</span>`;
+  }
+
+  try {
+    const response = await fetchWithRetry('/api/submit-exam', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pendingSubmissionPayload)
+    }, 2, 1200);
+
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.detail || 'Server error on submission.');
+    }
+
+    state.isSubmitted = true;
+    clearExamProgress(pendingSubmissionPayload.psn);
+    closeOfflineSubmitModal();
+    renderResultSlip(result);
+    showView('result');
+  } catch (err) {
+    const statusEl = document.getElementById('offline-submit-status');
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:#b91c1c; font-weight:600;">⚠️ Still waiting for internet connection... Re-testing automatically.</span>`;
+    }
+  } finally {
+    if (retryBtn) {
+      retryBtn.disabled = false;
+      retryBtn.innerHTML = `<span>🔄 Tap to Retry Submission Now</span>`;
+    }
+  }
+}
+
+function checkNetworkAndNotify() {
+  if (navigator.onLine) {
+    showRetryToast('✅ Internet connection is active. Submitting now...');
+    retryOfflineSubmission();
+  } else {
+    showRetryToast('⚠️ Device reports offline. Please verify Wi-Fi or mobile data.');
+  }
+}

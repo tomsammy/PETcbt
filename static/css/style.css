@@ -2206,3 +2206,81 @@ body {
   }
 }
 
+
+
+/* ==========================================================================
+   LOW-BANDWIDTH & OFFLINE RESILIENCE STYLES
+   ========================================================================== */
+.network-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 24px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.network-status-badge.online {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1.5px solid #a7f3d0;
+}
+
+.network-status-badge.offline {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1.5px solid #fde68a;
+  animation: pulseOffline 2s infinite ease-in-out;
+}
+
+.network-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.network-status-badge.online .network-dot {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+}
+
+.network-status-badge.offline .network-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.7);
+}
+
+@keyframes pulseOffline {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.82; transform: scale(0.97); }
+}
+
+/* Floating Network Retry Toast */
+.network-retry-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 12px 20px;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  border-left: 5px solid #f59e0b;
+  animation: slideToastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 90vw;
+}
+
+@keyframes slideToastIn {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
