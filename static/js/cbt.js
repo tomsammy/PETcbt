@@ -1654,7 +1654,7 @@ async function loadAdminSubmissions() {
     applyExamStatusToUI(state.examStatus);
 
     // KPI Cards
-    const totalRoster = data.summary.total_roster || 2499;
+    const totalRoster = data.summary.total_roster || 2505;
     const photocardsCount = data.summary.photocards_printed || 0;
     const photocardsPct = data.summary.photocards_pct || 0;
     
@@ -1706,7 +1706,7 @@ async function loadAdminRegistrations() {
 
     const kpiPhoto = document.getElementById('kpi-photocards');
     const kpiPhotoLbl = document.getElementById('kpi-photocards-lbl');
-    if (kpiPhoto) kpiPhoto.textContent = `${data.total_registered || 0} / ${Number(data.total_candidates || 2499).toLocaleString()}`;
+    if (kpiPhoto) kpiPhoto.textContent = `${data.total_registered || 0} / ${Number(data.total_candidates || 2505).toLocaleString()}`;
     if (kpiPhotoLbl) kpiPhotoLbl.textContent = `Photocards Generated (${data.percentage || 0}%)`;
 
     if (state.adminTableView === 'photocards') {
