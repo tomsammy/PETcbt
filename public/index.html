@@ -598,6 +598,9 @@
           </div>
 
           <div class="export-btns" style="align-items:center; flex-wrap:wrap; gap:8px;">
+            <a href="/api/admin/registrations/excel" id="btn-download-photocards" class="btn-excel" style="background:#0284c7; border-color:#0369a1; color:#fff;" title="Download verified candidates list with uploaded passport photos and registration timestamps">
+              <span>🪪 Download Photocard Registrations (Excel)</span>
+            </a>
             <a href="/api/admin/roster/excel" id="btn-download-roster" class="btn-excel" style="background:#047857; color:#fff;" title="Download full candidate list with Code 1 registration clearance codes">
               <span>📥 Download Candidate Codes & Roster (Excel)</span>
             </a>
@@ -638,9 +641,13 @@
 
         <!-- KPI Metrics -->
         <div class="kpi-grid">
+          <div class="kpi-card" style="border-left: 4px solid #0284c7; background: #f0f9ff;">
+            <div class="kpi-val" id="kpi-photocards" style="color: #0369a1;">0 / 2,499</div>
+            <div class="kpi-lbl" id="kpi-photocards-lbl" style="color: #0284c7; font-weight:700;">Photocards Generated (0%)</div>
+          </div>
           <div class="kpi-card">
             <div class="kpi-val" id="kpi-total">0</div>
-            <div class="kpi-lbl">Total Candidates</div>
+            <div class="kpi-lbl">Exam Submissions</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-val" id="kpi-avg">0.0%</div>
@@ -680,6 +687,16 @@
           </div>
         </div>
 
+        <!-- Table View Switcher Tabs: Submissions vs Photocard Registrations -->
+        <div style="display:flex; gap:10px; margin-bottom:16px; border-bottom:2px solid #e2e8f0; padding-bottom:12px; flex-wrap:wrap;">
+          <button type="button" class="btn-ctrl" id="tab-btn-submissions" style="padding:10px 20px; font-weight:700; border-color:#004d40; color:#004d40; background:#e6f4ea; cursor:pointer;" onclick="switchAdminTableView('submissions')">
+            <span>📝 Exam Submissions (<span id="count-tab-submissions">0</span>)</span>
+          </button>
+          <button type="button" class="btn-ctrl" id="tab-btn-photocards" style="padding:10px 20px; font-weight:700; border-color:#cbd5e1; color:#475569; background:#fff; cursor:pointer;" onclick="switchAdminTableView('photocards')">
+            <span>🪪 Verified Photocard Registrations (<span id="count-tab-photocards">0</span>)</span>
+          </button>
+        </div>
+
         <!-- Filter & Search -->
         <div class="filter-bar">
           <input type="text" id="admin-search" class="form-control" placeholder="🔍 Search candidate by name, PSN, email, or MDA..." style="max-width: 380px;">
@@ -692,7 +709,7 @@
         </div>
 
         <!-- Submissions Table -->
-        <div class="table-responsive">
+        <div class="table-responsive" id="wrap-submissions-table">
           <table class="admin-table">
             <thead>
               <tr>
@@ -711,6 +728,30 @@
             <tbody id="admin-table-body">
               <tr>
                 <td colspan="10" style="text-align:center; padding: 24px; color:#64748b;">Loading candidate submissions...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Photocard Registrations Table -->
+        <div class="table-responsive" id="wrap-photocards-table" style="display: none;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>S/N</th>
+                <th>Candidate Name</th>
+                <th>PSN</th>
+                <th>Phone Number</th>
+                <th>Email Address</th>
+                <th>MDA</th>
+                <th>Proposed Rank &amp; GL</th>
+                <th>Exam Paper</th>
+                <th>Photocard Generated At</th>
+              </tr>
+            </thead>
+            <tbody id="admin-photocards-table-body">
+              <tr>
+                <td colspan="9" style="text-align:center; padding: 24px; color:#64748b;">Loading verified registrations...</td>
               </tr>
             </tbody>
           </table>

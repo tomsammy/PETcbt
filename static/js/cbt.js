@@ -19,6 +19,8 @@ const state = {
   isSubmitted: false,
   adminToken: sessionStorage.getItem('kws_admin_token') || null,
   adminSubmissions: [],
+  adminRegistrations: [],
+  adminTableView: 'submissions',
   adminTokensSummary: null,
   examStatus: 'open'
 };
@@ -1652,6 +1654,20 @@ async function loadAdminSubmissions() {
     applyExamStatusToUI(state.examStatus);
 
     // KPI Cards
+    const totalRoster = data.summary.total_roster || 2499;
+    const photocardsCount = data.summary.photocards_printed || 0;
+    const photocardsPct = data.summary.photocards_pct || 0;
+    
+    const kpiPhoto = document.getElementById('kpi-photocards');
+    const kpiPhotoLbl = document.getElementById('kpi-photocards-lbl');
+    if (kpiPhoto) kpiPhoto.textContent = `${photocardsCount} / ${Number(totalRoster).toLocaleString()}`;
+    if (kpiPhotoLbl) kpiPhotoLbl.textContent = `Photocards Generated (${photocardsPct}%)`;
+
+    const countTabSub = document.getElementById('count-tab-submissions');
+    const countTabPhoto = document.getElementById('count-tab-photocards');
+    if (countTabSub) countTabSub.textContent = data.summary.total_submissions;
+    if (countTabPhoto) countTabPhoto.textContent = photocardsCount;
+
     document.getElementById('kpi-total').textContent = data.summary.total_submissions;
     document.getElementById('kpi-avg').textContent = `${data.summary.average_score}%`;
     document.getElementById('kpi-rate').textContent = `${data.summary.pass_rate}%`;
@@ -1661,19 +1677,82 @@ async function loadAdminSubmissions() {
     const btnExcel = document.getElementById('btn-download-excel');
     const btnCsv = document.getElementById('btn-download-csv');
     const btnRoster = document.getElementById('btn-download-roster');
+    const btnPhotocards = document.getElementById('btn-download-photocards');
     if (btnExcel) btnExcel.href = `/api/results/excel?token=${encodeURIComponent(state.adminToken)}`;
     if (btnCsv) btnCsv.href = `/api/results/csv?token=${encodeURIComponent(state.adminToken)}`;
     if (btnRoster) btnRoster.href = `/api/admin/roster/excel?token=${encodeURIComponent(state.adminToken)}`;
+    if (btnPhotocards) btnPhotocards.href = `/api/admin/registrations/excel?token=${encodeURIComponent(state.adminToken)}`;
 
     renderAdminTable();
     loadAdminTokens();
+    loadAdminRegistrations();
   } catch (err) {
     console.error('Failed to load admin submissions:', err);
   }
 }
 
+async function loadAdminRegistrations() {
+  if (!state.adminToken) return;
+  try {
+    const res = await fetch('/api/admin/registrations', {
+      headers: { 'Authorization': `Bearer ${state.adminToken}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    state.adminRegistrations = data.registrations || [];
+
+    const countTabPhoto = document.getElementById('count-tab-photocards');
+    if (countTabPhoto) countTabPhoto.textContent = data.total_registered || 0;
+
+    const kpiPhoto = document.getElementById('kpi-photocards');
+    const kpiPhotoLbl = document.getElementById('kpi-photocards-lbl');
+    if (kpiPhoto) kpiPhoto.textContent = `${data.total_registered || 0} / ${Number(data.total_candidates || 2499).toLocaleString()}`;
+    if (kpiPhotoLbl) kpiPhotoLbl.textContent = `Photocards Generated (${data.percentage || 0}%)`;
+
+    if (state.adminTableView === 'photocards') {
+      renderAdminPhotocardsTable();
+    }
+  } catch (err) {
+    console.warn('Could not load admin registrations:', err);
+  }
+}
+
+function switchAdminTableView(targetView) {
+  state.adminTableView = targetView;
+  const tabSub = document.getElementById('tab-btn-submissions');
+  const tabPhoto = document.getElementById('tab-btn-photocards');
+  const wrapSub = document.getElementById('wrap-submissions-table');
+  const wrapPhoto = document.getElementById('wrap-photocards-table');
+
+  if (targetView === 'submissions') {
+    if (tabSub) { tabSub.style.borderColor = '#004d40'; tabSub.style.color = '#004d40'; tabSub.style.background = '#e6f4ea'; }
+    if (tabPhoto) { tabPhoto.style.borderColor = '#cbd5e1'; tabPhoto.style.color = '#475569'; tabPhoto.style.background = '#fff'; }
+    if (wrapSub) wrapSub.style.display = 'block';
+    if (wrapPhoto) wrapPhoto.style.display = 'none';
+    renderAdminTable();
+  } else {
+    if (tabPhoto) { tabPhoto.style.borderColor = '#0284c7'; tabPhoto.style.color = '#0369a1'; tabPhoto.style.background = '#f0f9ff'; }
+    if (tabSub) { tabSub.style.borderColor = '#cbd5e1'; tabSub.style.color = '#475569'; tabSub.style.background = '#fff'; }
+    if (wrapSub) wrapSub.style.display = 'none';
+    if (wrapPhoto) wrapPhoto.style.display = 'block';
+    renderAdminPhotocardsTable();
+    if (!state.adminRegistrations || state.adminRegistrations.length === 0) {
+      loadAdminRegistrations();
+    }
+  }
+}
+
+function onAdminFilterChange() {
+  if (state.adminTableView === 'photocards') {
+    renderAdminPhotocardsTable();
+  } else {
+    renderAdminTable();
+  }
+}
+
 function renderAdminTable() {
   const tbody = document.getElementById('admin-table-body');
+  if (!tbody) return;
   const search = (document.getElementById('admin-search').value || '').toLowerCase();
   const gradeFilter = document.getElementById('admin-grade-filter').value;
 
@@ -1709,6 +1788,49 @@ function renderAdminTable() {
         <td style="text-align:center; font-weight:800; font-size:1.05rem; color:#004d40;">${s.score_percentage}%</td>
         <td><span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:700; ${remarkBadge}">${s.grade_remark}</span></td>
         <td style="font-size:0.8rem; color:#64748b;">${s.submitted_at}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAdminPhotocardsTable() {
+  const tbody = document.getElementById('admin-photocards-table-body');
+  if (!tbody) return;
+  const search = (document.getElementById('admin-search').value || '').toLowerCase();
+  const gradeFilter = document.getElementById('admin-grade-filter').value;
+
+  const filtered = (state.adminRegistrations || []).filter(r => {
+    const matchSearch = (r.name || '').toLowerCase().includes(search) ||
+                        (r.amended_name || '').toLowerCase().includes(search) ||
+                        (r.psn || '').toLowerCase().includes(search) ||
+                        (r.email || '').toLowerCase().includes(search) ||
+                        (r.phone || '').toLowerCase().includes(search) ||
+                        (r.mda || '').toLowerCase().includes(search);
+    const matchGrade = (gradeFilter === 'ALL' || (r.proposed_gl && r.proposed_gl.includes(gradeFilter.replace('GL ', ''))));
+    return matchSearch && matchGrade;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 24px; color:#64748b;">No photocard registrations found matching search.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((r, idx) => {
+    const verifiedName = r.amended_name && r.amended_name !== r.name ? 
+      `<strong>${r.amended_name}</strong><br><small style="color:#64748b;">(Roster: ${r.name})</small>` : 
+      `<strong>${r.name}</strong>`;
+
+    return `
+      <tr>
+        <td style="font-weight:700; text-align:center;">${idx + 1}</td>
+        <td>${verifiedName}</td>
+        <td><code>${r.psn}</code></td>
+        <td><a href="tel:${r.phone || ''}" style="color:#0369a1; text-decoration:none; font-weight:600;">${r.phone || 'N/A'}</a></td>
+        <td>${r.email || 'N/A'}</td>
+        <td>${r.mda}</td>
+        <td>${r.proposed_rank || ''} <span class="grade-tag">${r.proposed_gl || ''}</span></td>
+        <td><span class="badge-cadre">${r.exam_code}</span></td>
+        <td style="font-size:0.8rem; color:#065f46; font-weight:600;">✅ ${r.registered_at_str || r.registered_at}</td>
       </tr>
     `;
   }).join('');
@@ -1935,8 +2057,10 @@ if (adminLogoutBtn) {
 }
 
 // Admin Filter Inputs
-document.getElementById('admin-search').addEventListener('input', renderAdminTable);
-document.getElementById('admin-grade-filter').addEventListener('change', renderAdminTable);
+const adminSearchInput = document.getElementById('admin-search');
+if (adminSearchInput) adminSearchInput.addEventListener('input', onAdminFilterChange);
+const adminGradeSelect = document.getElementById('admin-grade-filter');
+if (adminGradeSelect) adminGradeSelect.addEventListener('change', onAdminFilterChange);
 
 // Result Actions
 document.getElementById('btn-print-slip').addEventListener('click', () => {

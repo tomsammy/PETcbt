@@ -794,6 +794,26 @@ def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
         ORDER BY id DESC
     """)
     rows = cursor.fetchall()
+    
+    # Photocard & Roster stats
+    total_roster = 2499
+    photocards_printed = 0
+    try:
+        cursor.execute("SELECT COUNT(*) as cnt FROM candidate_roster")
+        r_row = cursor.fetchone()
+        if r_row:
+            total_roster = r_row["cnt"] if isinstance(r_row, dict) else r_row[0]
+
+        cursor.execute("""
+            SELECT COUNT(*) as cnt FROM candidate_roster 
+            WHERE registration_status IN ('registered', 'tested') OR registered_at IS NOT NULL
+        """)
+        p_row = cursor.fetchone()
+        if p_row:
+            photocards_printed = p_row["cnt"] if isinstance(p_row, dict) else p_row[0]
+    except Exception as e:
+        pass
+
     conn.close()
     
     submissions = [dict(r) for r in rows]
@@ -802,6 +822,7 @@ def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
     avg_score = round(sum(s["score_percentage"] for s in submissions) / total_count, 2) if total_count > 0 else 0.0
     passed_count = sum(1 for s in submissions if s["score_percentage"] >= 50)
     pass_rate = round((passed_count / total_count) * 100, 2) if total_count > 0 else 0.0
+    photocards_pct = round((photocards_printed / total_roster) * 100, 1) if total_roster > 0 else 0.0
     
     return {
         "summary": {
@@ -809,11 +830,186 @@ def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
             "average_score": avg_score,
             "pass_rate": pass_rate,
             "passed_count": passed_count,
-            "failed_count": total_count - passed_count
+            "failed_count": total_count - passed_count,
+            "total_roster": total_roster,
+            "photocards_printed": photocards_printed,
+            "photocards_pct": photocards_pct
         },
         "exam_status": get_setting("exam_status", "open"),
         "submissions": submissions
     }
+
+@router.get("/admin/registrations")
+@router.get("/api/admin/registrations")
+def get_admin_registrations(auth: bool = Depends(verify_admin_auth)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT psn, name, amended_name, mda, proposed_rank, proposed_gl, group_category, exam_code,
+               phone, email, registration_status, registered_at
+        FROM candidate_roster
+        WHERE registration_status IN ('registered', 'tested') OR registered_at IS NOT NULL
+        ORDER BY registered_at DESC
+    """)
+    rows = cursor.fetchall()
+    
+    cursor.execute("SELECT COUNT(*) as cnt FROM candidate_roster")
+    tot_row = cursor.fetchone()
+    total_candidates = tot_row["cnt"] if isinstance(tot_row, dict) else (tot_row[0] if tot_row else 2499)
+    conn.close()
+    
+    registrations = []
+    for r in rows:
+        d = dict(r)
+        if d.get("registered_at") and hasattr(d["registered_at"], "strftime"):
+            d["registered_at_str"] = d["registered_at"].strftime("%d-%b-%Y %I:%M %p")
+        else:
+            d["registered_at_str"] = str(d.get("registered_at") or "N/A")
+        registrations.append(d)
+
+    return {
+        "total_candidates": total_candidates,
+        "total_registered": len(registrations),
+        "percentage": round((len(registrations) / total_candidates) * 100, 2) if total_candidates > 0 else 0.0,
+        "registrations": registrations
+    }
+
+@router.get("/admin/registrations/excel")
+@router.get("/api/admin/registrations/excel")
+def export_photocards_excel(auth: bool = Depends(verify_admin_auth)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT 
+            psn, 
+            name, 
+            amended_name, 
+            mda, 
+            proposed_rank, 
+            proposed_gl, 
+            exam_code,
+            phone, 
+            email, 
+            registration_status, 
+            registered_at
+        FROM candidate_roster
+        WHERE registration_status IN ('registered', 'tested') OR registered_at IS NOT NULL
+        ORDER BY registered_at DESC
+    """)
+    rows = cursor.fetchall()
+
+    cursor.execute("SELECT COUNT(*) as cnt FROM candidate_roster")
+    tot_row = cursor.fetchone()
+    total_candidates = tot_row["cnt"] if isinstance(tot_row, dict) else (tot_row[0] if tot_row else 2499)
+    conn.close()
+
+    total_registered = len(rows)
+    pct = (total_registered / total_candidates * 100) if total_candidates > 0 else 0.0
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Photocards Generated"
+    ws.views.sheetView[0].showGridLines = True
+
+    primary_green = "004D40"
+    light_green = "E0F2F1"
+    border_gray = "CCCCCC"
+    thin_border = Border(
+        left=Side(style='thin', color=border_gray),
+        right=Side(style='thin', color=border_gray),
+        top=Side(style='thin', color=border_gray),
+        bottom=Side(style='thin', color=border_gray)
+    )
+
+    # Title Block
+    ws.merge_cells("A1:K1")
+    ws["A1"] = "KWARA STATE CIVIL SERVICE COMMISSION"
+    ws["A1"].font = Font(name="Arial", size=15, bold=True, color="FFFFFF")
+    ws["A1"].fill = PatternFill(start_color=primary_green, end_color=primary_green, fill_type="solid")
+    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 28
+
+    ws.merge_cells("A2:K2")
+    ws["A2"] = "2026 Promotion CBT Examination - Verified Candidates & Photocard Generation Log"
+    ws["A2"].font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
+    ws["A2"].fill = PatternFill(start_color="00796B", end_color="00796B", fill_type="solid")
+    ws["A2"].alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 22
+
+    ws.merge_cells("A3:K3")
+    ws["A3"] = f"Report Generated: {datetime.now().strftime('%d-%b-%Y %I:%M %p')} | Total Photocards Generated: {total_registered} of {total_candidates} ({pct:.2f}%)"
+    ws["A3"].font = Font(name="Arial", size=10, italic=True, color="333333")
+    ws["A3"].alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[3].height = 20
+
+    headers = [
+        "S/N", "PSN", "Roster Name", "Verified / Amended Name", 
+        "MDA", "Proposed Rank", "GL", "Exam Code", 
+        "Phone Number", "Email Address", "Photocard Generated At"
+    ]
+
+    header_row = 5
+    ws.row_dimensions[header_row].height = 25
+    for col_idx, h in enumerate(headers, 1):
+        cell = ws.cell(row=header_row, column=col_idx, value=h)
+        cell.font = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+        cell.fill = PatternFill(start_color=primary_green, end_color=primary_green, fill_type="solid")
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = thin_border
+
+    for idx, r in enumerate(rows, 1):
+        curr_row = header_row + idx
+        ws.row_dimensions[curr_row].height = 20
+        reg_time_str = r["registered_at"].strftime("%d-%b-%Y %I:%M:%S %p") if r.get("registered_at") and hasattr(r["registered_at"], "strftime") else str(r.get("registered_at") or "N/A")
+        row_vals = [
+            idx,
+            r["psn"],
+            r["name"],
+            r["amended_name"] or r["name"],
+            r["mda"],
+            r["proposed_rank"],
+            r["proposed_gl"],
+            r["exam_code"],
+            r["phone"] or "N/A",
+            r["email"] or "N/A",
+            reg_time_str
+        ]
+        is_even = (idx % 2 == 0)
+        row_fill = PatternFill(start_color=light_green if is_even else "FFFFFF", fill_type="solid")
+
+        for c_idx, val in enumerate(row_vals, 1):
+            cell = ws.cell(row=curr_row, column=c_idx, value=val)
+            cell.font = Font(name="Arial", size=9)
+            cell.fill = row_fill
+            cell.border = thin_border
+            if c_idx in [1, 2, 7, 8, 11]:
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            if cell.row < 4:
+                continue
+            v = str(cell.value or "")
+            if len(v) > max_len:
+                max_len = len(v)
+        ws.column_dimensions[col_letter].width = max(max_len + 3, 11)
+
+    out = io.BytesIO()
+    wb.save(out)
+    excel_content = out.getvalue()
+    
+    filename = f"Kwara_CSC_2026_Photocard_Registrations_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+    return Response(
+        content=excel_content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
 
 @router.post("/admin/reset-candidate")
 @router.post("/api/admin/reset-candidate")
