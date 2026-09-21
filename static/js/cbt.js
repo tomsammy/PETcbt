@@ -944,6 +944,24 @@ function proceedToExamFromPhotocard() {
   }
 }
 
+function renderCandidateAvatar(candidate) {
+  const avatarEl = document.getElementById('exam-candidate-avatar');
+  if (!avatarEl) return;
+  
+  if (candidate && candidate.passport_photo && (candidate.passport_photo.startsWith('data:image') || candidate.passport_photo.startsWith('http') || candidate.passport_photo.startsWith('/'))) {
+    const officerName = candidate.name || 'Candidate';
+    const fallbackInitial = officerName.trim().charAt(0).toUpperCase() || 'C';
+    avatarEl.innerHTML = `<img src="${candidate.passport_photo}" alt="${officerName}" onerror="this.onerror=null; this.parentElement.textContent='${fallbackInitial}';" />`;
+    avatarEl.style.padding = '0';
+    avatarEl.title = `${officerName} (Verified Officer)`;
+  } else {
+    const initial = (candidate && candidate.name) ? candidate.name.trim().charAt(0).toUpperCase() : 'C';
+    avatarEl.textContent = initial;
+    avatarEl.style.padding = '';
+    avatarEl.title = (candidate && candidate.name) ? candidate.name : 'Candidate';
+  }
+}
+
 // -------------------------------------------------------------
 // 1C. Take CBT Examination with 5-Digit Scratch Token
 // -------------------------------------------------------------
@@ -965,7 +983,11 @@ if (tokenExamForm) {
     const tokenCode = document.getElementById('token-exam-code').value.trim();
 
     if (!psn || !tokenCode) {
-      showAlertModal('Missing Credentials', 'Please provide both your PSN and your 5-digit Exam Scratch Card Token.', 'warning');
+      showAlertModal(
+        'Missing Credentials',
+        'Please enter both your Public Service Number (PSN) and your 5-digit Exam Scratch Card Token.',
+        'warning'
+      );
       return;
     }
 
@@ -1006,7 +1028,7 @@ if (tokenExamForm) {
         
         document.getElementById('exam-candidate-name').textContent = state.candidate.name;
         document.getElementById('exam-candidate-psn').textContent = `PSN: ${state.candidate.psn} | Paper: ${state.candidate.paper_code || 'Cadre Evaluation'}`;
-        document.getElementById('exam-candidate-avatar').textContent = state.candidate.name.charAt(0).toUpperCase();
+        renderCandidateAvatar(state.candidate);
         
         buildPalette();
         renderQuestion(state.currentIndex);
@@ -1042,7 +1064,7 @@ if (tokenExamForm) {
       // Update candidate details in exam header
       document.getElementById('exam-candidate-name').textContent = state.candidate.name;
       document.getElementById('exam-candidate-psn').textContent = `PSN: ${state.candidate.psn} | Paper: ${state.candidate.paper_code || data.paper_code || 'Cadre Evaluation'}`;
-      document.getElementById('exam-candidate-avatar').textContent = state.candidate.name.charAt(0).toUpperCase();
+      renderCandidateAvatar(state.candidate);
 
       buildPalette();
       renderQuestion(0);

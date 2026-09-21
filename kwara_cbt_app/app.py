@@ -652,7 +652,7 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
         
     # 4. Fetch candidate details from candidate_roster
     cursor.execute("""
-        SELECT id, psn, name, amended_name, mda, exam_code, proposed_rank, proposed_gl, group_category, email
+        SELECT id, psn, name, amended_name, mda, exam_code, proposed_rank, proposed_gl, group_category, email, passport_photo
         FROM candidate_roster
         WHERE psn = ?
     """, (psn,))
@@ -673,7 +673,8 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
                 "proposed_rank": "Officer",
                 "proposed_gl": c_old["grade_level"],
                 "group_category": "C",
-                "email": c_old["email"]
+                "email": c_old["email"],
+                "passport_photo": None
             }
         else:
             conn.close()
@@ -717,7 +718,8 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
             "email": cand.get("email") or f"{psn}@cbt.kw.gov.ng",
             "grade_level": cand.get("proposed_gl") or "10",
             "mda": cand["mda"],
-            "paper_code": loaded_paper
+            "paper_code": loaded_paper,
+            "passport_photo": cand.get("passport_photo") or None
         },
         "paper_code": loaded_paper,
         "total_questions": len(questions),
