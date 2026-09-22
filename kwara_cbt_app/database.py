@@ -107,8 +107,16 @@ def get_db_connection():
     if IS_POSTGRES:
         import psycopg2
         import psycopg2.extras
-        conn = psycopg2.connect(DATABASE_URL, sslmode="require")
-        return PostgresConnectionWrapper(conn)
+        import time
+        last_err = None
+        for attempt in range(4):
+            try:
+                conn = psycopg2.connect(DATABASE_URL, sslmode="require", connect_timeout=15)
+                return PostgresConnectionWrapper(conn)
+            except Exception as e:
+                last_err = e
+                time.sleep(1.2 * (attempt + 1))
+        raise last_err
     else:
         import sqlite3
         conn = sqlite3.connect(SQLITE_PATH)
