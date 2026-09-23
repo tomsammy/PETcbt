@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import sqlite3
 import io
@@ -127,6 +128,7 @@ class CompleteRegistrationRequest(BaseModel):
     amended_name: Optional[str] = None
     amended_psn: Optional[str] = None
     amended_rank: Optional[str] = None
+    amended_gl: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     passport_photo: str
@@ -491,6 +493,132 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
         "message": "Examination answers successfully submitted and recorded."
     }
 
+def calculate_candidate_allocation(
+    mda: str,
+    original_exam_code: str,
+    new_gl: str,
+    original_group: str = "",
+    current_batch: str = "",
+    current_time: str = "",
+    current_accred: str = ""
+):
+    clean_gl = re.sub(r'[^0-9]', '', str(new_gl).strip())
+    gl_num = int(clean_gl) if clean_gl else 12
+
+    # 1. Determine Group Category & Group Letter
+    if gl_num >= 17:
+        new_group = "GL 17"
+        group_letter = "GL 17"
+    elif gl_num in [14, 15, 16]:
+        new_group = "GROUP A"
+        group_letter = "A"
+    elif gl_num in [12, 13]:
+        new_group = "GROUP B"
+        group_letter = "B"
+    elif gl_num in [9, 10]:
+        new_group = "GROUP C"
+        group_letter = "C"
+    else:  # <= 8
+        new_group = "GROUP D"
+        group_letter = "D"
+
+    # 2. Determine Examination Subject Code & Paper
+    clean_mda = (mda or "").strip()
+    clean_orig_code = (original_exam_code or "").strip()
+
+    if new_group == "GL 17":
+        new_exam_code = "DIRECTOR/GL 17"
+    else:
+        # Determine MDA prefix
+        mda_prefix = clean_mda
+        if "/" in clean_orig_code:
+            code_prefix = clean_orig_code.split("/")[0].strip()
+            if code_prefix and code_prefix not in ["DIRECTOR"]:
+                mda_prefix = code_prefix
+
+        # Determine suffix number if any (e.g. from HMB/B4 -> suffix '4', from OHOS/A2 -> suffix '2')
+        suffix = "1"
+        match = re.search(r'[/-][A-Da-d](\d+)', clean_orig_code)
+        if match:
+            suffix = match.group(1)
+
+        cand_code_spec = f"{mda_prefix}/{group_letter}{suffix}"
+        cand_code_base = f"{mda_prefix}/{group_letter}1"
+        cand_code_fallback = f"OHOS/{group_letter}1"
+
+        # Check known papers cache
+        known = getattr(calculate_candidate_allocation, "_known_papers", None)
+        if known is None:
+            try:
+                conn_tmp = get_db_connection()
+                cur_tmp = conn_tmp.cursor()
+                cur_tmp.execute("SELECT DISTINCT paper_code FROM cbt_questions")
+                known = set([
+                    (r["paper_code"] if isinstance(r, dict) else r[0]).strip()
+                    for r in cur_tmp.fetchall()
+                    if (isinstance(r, dict) and r.get("paper_code")) or (not isinstance(r, dict) and r[0])
+                ])
+                conn_tmp.close()
+                calculate_candidate_allocation._known_papers = known
+            except Exception:
+                known = set()
+
+        if cand_code_spec in known:
+            new_exam_code = cand_code_spec
+        elif cand_code_base in known:
+            new_exam_code = cand_code_base
+        else:
+            alt = [p for p in known if p.startswith(f"{mda_prefix}/{group_letter}")]
+            if alt:
+                new_exam_code = sorted(alt)[0]
+            else:
+                new_exam_code = cand_code_fallback
+
+    # 3. Determine Examination Schedule Allocation
+    orig_grp_clean = (original_group or "").replace("GROUP ", "").strip()
+    new_grp_clean = new_group.replace("GROUP ", "").strip()
+
+    if orig_grp_clean == new_grp_clean and current_batch:
+        exam_date = "Tuesday, 29th September 2026" if new_group in ["GROUP A", "GROUP B"] else "Wednesday, 30th September 2026"
+        batch_session = current_batch
+        batch_time = current_time
+        accreditation_time = current_accred
+    else:
+        if new_group == "GROUP A":
+            exam_date = "Tuesday, 29th September 2026"
+            batch_session = "Session 1"
+            batch_time = "10:00 AM - 11:00 AM"
+            accreditation_time = "09:30 AM"
+        elif new_group == "GROUP B":
+            exam_date = "Tuesday, 29th September 2026"
+            batch_session = "Session 4"
+            batch_time = "01:00 PM - 02:00 PM"
+            accreditation_time = "12:30 PM"
+        elif new_group == "GROUP C":
+            exam_date = "Wednesday, 30th September 2026"
+            batch_session = "Session 1"
+            batch_time = "10:00 AM - 11:00 AM"
+            accreditation_time = "09:30 AM"
+        elif new_group == "GROUP D":
+            exam_date = "Wednesday, 30th September 2026"
+            batch_session = "Session 3"
+            batch_time = "12:00 PM - 01:00 PM"
+            accreditation_time = "11:30 AM"
+        else:  # GL 17
+            exam_date = "Wednesday, 30th September 2026"
+            batch_session = "Session 3"
+            batch_time = "12:00 PM - 01:00 PM"
+            accreditation_time = "11:30 AM"
+
+    return {
+        "group_category": new_group,
+        "exam_code": new_exam_code,
+        "exam_date": exam_date,
+        "batch_session": batch_session,
+        "batch_time": batch_time,
+        "accreditation_time": accreditation_time
+    }
+
 @router.post("/candidate/lookup")
 @router.post("/api/candidate/lookup")
 def candidate_lookup(data: CandidateLookupRequest):
@@ -504,8 +632,8 @@ def candidate_lookup(data: CandidateLookupRequest):
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
-               proposed_rank, amended_rank, proposed_gl, group_category,
+        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code, amended_exam_code,
+               proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status
         FROM candidate_roster
@@ -535,12 +663,19 @@ def complete_candidate_registration(data: CompleteRegistrationRequest):
     if amended_psn and amended_psn == psn:
         amended_psn = None
     amended_rank = (data.amended_rank or "").strip() or None
+    amended_gl = (data.amended_gl or "").strip() or None
+    if amended_gl:
+        gl_digits = re.sub(r'[^0-9]', '', amended_gl)
+        if gl_digits:
+            amended_gl = gl_digits if len(gl_digits) >= 2 else f"0{gl_digits}"
 
     conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, psn, code_1 FROM candidate_roster 
+        SELECT id, psn, code_1, mda, exam_code, proposed_rank, proposed_gl, group_category,
+               exam_date, batch_session, batch_time, accreditation_time
+        FROM candidate_roster 
         WHERE (psn = ? OR amended_psn = ?) AND UPPER(code_1) = ?
     """, (psn, psn, code_1))
     existing = cursor.fetchone()
@@ -562,24 +697,66 @@ def complete_candidate_registration(data: CompleteRegistrationRequest):
                 detail=f"PSN '{amended_psn}' is already allocated to another officer on the roster. Please verify."
             )
 
-    cursor.execute("""
-        UPDATE candidate_roster
-        SET amended_name = ?, amended_psn = ?, amended_rank = ?, phone = ?, email = ?, passport_photo = ?,
-            registration_status = 'registered', registered_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    """, (
-        (data.amended_name or "").strip(),
-        amended_psn,
-        amended_rank,
-        (data.phone or "").strip(),
-        (data.email or "").strip().lower(),
-        data.passport_photo,
-        existing["id"]
-    ))
+    new_alloc = None
+    if amended_gl:
+        new_alloc = calculate_candidate_allocation(
+            mda=existing["mda"],
+            original_exam_code=existing["exam_code"],
+            new_gl=amended_gl,
+            original_group=existing.get("group_category") or "",
+            current_batch=existing.get("batch_session") or "",
+            current_time=existing.get("batch_time") or "",
+            current_accred=existing.get("accreditation_time") or ""
+        )
+
+    if new_alloc:
+        cursor.execute("""
+            UPDATE candidate_roster
+            SET amended_name = ?, amended_psn = ?, amended_rank = ?, amended_gl = ?,
+                amended_group = ?, amended_exam_code = ?,
+                proposed_gl = ?, group_category = ?, exam_code = ?,
+                exam_date = ?, batch_session = ?, batch_time = ?, accreditation_time = ?,
+                phone = ?, email = ?, passport_photo = ?,
+                registration_status = 'registered', registered_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (
+            (data.amended_name or "").strip(),
+            amended_psn,
+            amended_rank,
+            amended_gl,
+            new_alloc["group_category"],
+            new_alloc["exam_code"],
+            amended_gl,
+            new_alloc["group_category"],
+            new_alloc["exam_code"],
+            new_alloc["exam_date"],
+            new_alloc["batch_session"],
+            new_alloc["batch_time"],
+            new_alloc["accreditation_time"],
+            (data.phone or "").strip(),
+            (data.email or "").strip().lower(),
+            data.passport_photo,
+            existing["id"]
+        ))
+    else:
+        cursor.execute("""
+            UPDATE candidate_roster
+            SET amended_name = ?, amended_psn = ?, amended_rank = ?, phone = ?, email = ?, passport_photo = ?,
+                registration_status = 'registered', registered_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (
+            (data.amended_name or "").strip(),
+            amended_psn,
+            amended_rank,
+            (data.phone or "").strip(),
+            (data.email or "").strip().lower(),
+            data.passport_photo,
+            existing["id"]
+        ))
     
     cursor.execute("""
-        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
-               proposed_rank, amended_rank, proposed_gl, group_category,
+        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code, amended_exam_code,
+               proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status, registered_at
         FROM candidate_roster
@@ -604,8 +781,8 @@ def get_candidate_photocard(psn: str):
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
-               proposed_rank, amended_rank, proposed_gl, group_category,
+        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code, amended_exam_code,
+               proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status, registered_at
         FROM candidate_roster
@@ -872,7 +1049,8 @@ def get_admin_registrations(auth: bool = Depends(verify_admin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT psn, amended_psn, name, amended_name, mda, proposed_rank, amended_rank, proposed_gl, group_category, exam_code,
+        SELECT psn, amended_psn, name, amended_name, mda, proposed_rank, amended_rank,
+               proposed_gl, amended_gl, group_category, amended_group, exam_code, amended_exam_code,
                phone, email, registration_status, registered_at
         FROM candidate_roster
         WHERE registration_status IN ('registered', 'tested') OR registered_at IS NOT NULL
@@ -910,12 +1088,16 @@ def export_photocards_excel(auth: bool = Depends(verify_admin_auth)):
     cursor.execute("""
         SELECT 
             psn, 
+            amended_psn,
             name, 
             amended_name, 
             mda, 
             proposed_rank, 
+            amended_rank,
             proposed_gl, 
+            amended_gl,
             exam_code,
+            amended_exam_code,
             phone, 
             email, 
             registration_status, 
@@ -989,15 +1171,21 @@ def export_photocards_excel(auth: bool = Depends(verify_admin_auth)):
         curr_row = header_row + idx
         ws.row_dimensions[curr_row].height = 20
         reg_time_str = r["registered_at"].strftime("%d-%b-%Y %I:%M:%S %p") if r.get("registered_at") and hasattr(r["registered_at"], "strftime") else str(r.get("registered_at") or "N/A")
+        
+        display_psn = r.get("amended_psn") or r["psn"]
+        display_rank = r.get("amended_rank") or r["proposed_rank"]
+        display_gl = r.get("amended_gl") or r["proposed_gl"]
+        display_code = r.get("amended_exam_code") or r["exam_code"]
+
         row_vals = [
             idx,
-            r["psn"],
+            display_psn,
             r["name"],
             r["amended_name"] or r["name"],
             r["mda"],
-            r["proposed_rank"],
-            r["proposed_gl"],
-            r["exam_code"],
+            display_rank,
+            display_gl,
+            display_code,
             r["phone"] or "N/A",
             r["email"] or "N/A",
             reg_time_str

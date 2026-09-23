@@ -598,8 +598,16 @@ if (lookupForm) {
         rankInput.value = cand.amended_rank || cand.proposed_rank || 'Civil Service Cadre';
         rankInput.readOnly = false;
       }
-      document.getElementById('reg-disp-gl').value = `${cand.proposed_gl || ''} (${cand.group_category || ''})`;
-      document.getElementById('reg-disp-paper').value = `${cand.exam_code} - ${cand.group_category}`;
+      const origGlLbl = document.getElementById('reg-orig-gl-lbl');
+      if (origGlLbl) origGlLbl.textContent = cand.proposed_gl || '-';
+      const glSelect = document.getElementById('reg-amended-gl');
+      if (glSelect) {
+        const rawGl = (cand.amended_gl || cand.proposed_gl || "12").toString().replace(/[^0-9]/g, '');
+        const normGl = rawGl.length === 1 ? `0${rawGl}` : rawGl;
+        glSelect.value = normGl;
+      }
+      document.getElementById('reg-disp-gl').value = `GL ${cand.amended_gl || cand.proposed_gl || ''} (${cand.amended_group || cand.group_category || ''})`;
+      document.getElementById('reg-disp-paper').value = `${cand.amended_exam_code || cand.exam_code} - ${cand.amended_group || cand.group_category}`;
 
       document.getElementById('reg-disp-date').textContent = cand.exam_date || 'Tuesday, 29th September 2026';
       document.getElementById('reg-disp-batch').textContent = cand.batch_session || 'Batch 1';
@@ -635,6 +643,111 @@ if (lookupForm) {
       }
     }
   });
+}
+
+// Dynamically handle candidate Grade Level changes in real-time
+function handleGradeLevelChange() {
+  const glSelect = document.getElementById('reg-amended-gl');
+  if (!glSelect || !state.registeredCandidate) return;
+
+  const selectedGl = glSelect.value;
+  const cand = state.registeredCandidate;
+  const glNum = parseInt(selectedGl, 10) || 12;
+
+  // 1. Compute Group Category & Group Letter
+  let newGroup = "GROUP B";
+  let groupLetter = "B";
+  if (glNum >= 17) {
+    newGroup = "GL 17";
+    groupLetter = "GL 17";
+  } else if (glNum >= 14) {
+    newGroup = "GROUP A";
+    groupLetter = "A";
+  } else if (glNum >= 12) {
+    newGroup = "GROUP B";
+    groupLetter = "B";
+  } else if (glNum >= 9) {
+    newGroup = "GROUP C";
+    groupLetter = "C";
+  } else {
+    newGroup = "GROUP D";
+    groupLetter = "D";
+  }
+
+  // 2. Compute Examination Subject Code & Paper
+  let newExamCode = "DIRECTOR/GL 17";
+  if (newGroup !== "GL 17") {
+    let mdaPrefix = (cand.mda || "OHOS").trim();
+    const origCode = (cand.exam_code || "").trim();
+    if (origCode.includes("/") && !origCode.startsWith("DIRECTOR")) {
+      mdaPrefix = origCode.split("/")[0].trim();
+    }
+
+    let suffix = "1";
+    const match = origCode.match(/[/-][A-Da-d](\d+)/);
+    if (match) {
+      suffix = match[1];
+    }
+
+    newExamCode = `${mdaPrefix}/${groupLetter}${suffix}`;
+  }
+
+  // 3. Compute Schedule Allocation
+  let examDate = "Tuesday, 29th September 2026";
+  let batchSession = "Session 1";
+  let batchTime = "10:00 AM - 11:00 AM";
+  let accredTime = "09:30 AM";
+
+  const origGrpClean = (cand.group_category || "").replace("GROUP ", "").trim();
+  const newGrpClean = newGroup.replace("GROUP ", "").trim();
+
+  if (origGrpClean === newGrpClean && cand.batch_session) {
+    examDate = cand.exam_date || (newGroup === "GROUP A" || newGroup === "GROUP B" ? "Tuesday, 29th September 2026" : "Wednesday, 30th September 2026");
+    batchSession = cand.batch_session;
+    batchTime = cand.batch_time;
+    accredTime = cand.accreditation_time;
+  } else {
+    if (newGroup === "GROUP A") {
+      examDate = "Tuesday, 29th September 2026";
+      batchSession = "Session 1";
+      batchTime = "10:00 AM - 11:00 AM";
+      accredTime = "09:30 AM";
+    } else if (newGroup === "GROUP B") {
+      examDate = "Tuesday, 29th September 2026";
+      batchSession = "Session 4";
+      batchTime = "01:00 PM - 02:00 PM";
+      accredTime = "12:30 PM";
+    } else if (newGroup === "GROUP C") {
+      examDate = "Wednesday, 30th September 2026";
+      batchSession = "Session 1";
+      batchTime = "10:00 AM - 11:00 AM";
+      accredTime = "09:30 AM";
+    } else if (newGroup === "GROUP D" || newGroup === "GL 17") {
+      examDate = "Wednesday, 30th September 2026";
+      batchSession = "Session 3";
+      batchTime = "12:00 PM - 01:00 PM";
+      accredTime = "11:30 AM";
+    }
+  }
+
+  // Update Display Fields
+  const dispGl = document.getElementById('reg-disp-gl');
+  if (dispGl) dispGl.value = `GL ${selectedGl} (${newGroup})`;
+
+  const dispPaper = document.getElementById('reg-disp-paper');
+  if (dispPaper) dispPaper.value = `${newExamCode} - ${newGroup}`;
+
+  const dispDate = document.getElementById('reg-disp-date');
+  if (dispDate) dispDate.textContent = examDate;
+
+  const dispBatch = document.getElementById('reg-disp-batch');
+  if (dispBatch) dispBatch.textContent = batchSession;
+
+  const dispAccred = document.getElementById('reg-disp-accred');
+  if (dispAccred) dispAccred.textContent = accredTime;
+
+  const dispTime = document.getElementById('reg-disp-examtime');
+  if (dispTime) dispTime.textContent = batchTime;
 }
 
 // Handle Passport File Upload
@@ -757,6 +870,8 @@ if (completeRegForm) {
     }
 
     const amendedName = document.getElementById('reg-amended-name').value.trim();
+    const glSelect = document.getElementById('reg-amended-gl');
+    const amendedGl = glSelect ? glSelect.value : null;
     const phone = document.getElementById('reg-input-phone').value.trim();
     const email = document.getElementById('reg-input-email').value.trim();
 
@@ -777,6 +892,7 @@ if (completeRegForm) {
           amended_name: amendedName,
           amended_psn: amendedPsn,
           amended_rank: amendedRank,
+          amended_gl: amendedGl,
           phone: phone,
           email: email,
           passport_photo: state.tempPassportBase64
@@ -883,11 +999,16 @@ function renderPhotocard(c) {
           </tr>
           <tr>
             <th style="padding: 3px 6px;">Proposed Grade Level:</th>
-            <td style="padding: 3px 6px;"><span class="badge-cadre" style="padding: 2px 6px; font-size: 0.78rem;">${c.proposed_gl || ''} (${c.group_category || ''})</span></td>
+            <td style="padding: 3px 6px;">
+              <span class="badge-cadre" style="padding: 2px 6px; font-size: 0.78rem;">${c.amended_gl || c.proposed_gl || ''} (${c.group_category || ''})</span>
+              ${c.amended_gl && c.amended_gl !== c.proposed_gl ? `<small style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">(Roster GL: ${c.proposed_gl})</small>` : ''}
+            </td>
           </tr>
           <tr>
             <th style="padding: 3px 6px;">Examination Subject:</th>
-            <td style="padding: 3px 6px;"><strong style="color: #0369a1;">${c.exam_code}</strong> (${c.group_category || ''})</td>
+            <td style="padding: 3px 6px;">
+              <strong style="color: #0369a1;">${c.exam_code}</strong> (${c.group_category || ''})
+            </td>
           </tr>
           <tr>
             <th style="padding: 3px 6px;">Registration Code (Code 1):</th>

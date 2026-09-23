@@ -201,10 +201,13 @@ def init_db():
         try:
             cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_psn VARCHAR(50)")
             cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_rank VARCHAR(255)")
+            cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_gl VARCHAR(10)")
+            cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_group VARCHAR(50)")
+            cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_exam_code VARCHAR(100)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_roster_amended_psn ON candidate_roster(amended_psn)")
             conn.commit()
         except Exception as e:
-            logger.warning(f"Could not auto-add amended_psn to Postgres candidate_roster: {e}")
+            logger.warning(f"Could not auto-add amended columns to Postgres candidate_roster: {e}")
 
         cursor.execute("SELECT COUNT(*) AS cnt FROM questions")
         row = cursor.fetchone()
@@ -284,9 +287,15 @@ def init_db():
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_roster_amended_psn ON candidate_roster(amended_psn)")
             if "amended_rank" not in cols:
                 cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_rank TEXT")
+            if "amended_gl" not in cols:
+                cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_gl TEXT")
+            if "amended_group" not in cols:
+                cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_group TEXT")
+            if "amended_exam_code" not in cols:
+                cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_exam_code TEXT")
             conn.commit()
         except Exception as e:
-            logger.warning(f"Could not auto-add amended_psn to SQLite candidate_roster: {e}")
+            logger.warning(f"Could not auto-add amended columns to SQLite candidate_roster: {e}")
 
         conn.commit()
 

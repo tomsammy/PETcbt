@@ -131,8 +131,26 @@
                   </div>
 
                   <div class="form-group">
-                    <label>Proposed Grade Level / Group</label>
-                    <input type="text" id="reg-disp-gl" class="form-control" readonly style="background: #f1f5f9; font-weight: 700;">
+                    <label for="reg-amended-gl">Proposed Grade Level <span class="req">*</span></label>
+                    <select id="reg-amended-gl" class="form-control" style="font-weight: 700; color: #004d40; background: #ffffff;" onchange="handleGradeLevelChange()">
+                      <option value="06">GL 06 (Group D)</option>
+                      <option value="07">GL 07 (Group D)</option>
+                      <option value="08">GL 08 (Group D)</option>
+                      <option value="09">GL 09 (Group C)</option>
+                      <option value="10">GL 10 (Group C)</option>
+                      <option value="12">GL 12 (Group B)</option>
+                      <option value="13">GL 13 (Group B)</option>
+                      <option value="14">GL 14 (Group A)</option>
+                      <option value="15">GL 15 (Group A)</option>
+                      <option value="16">GL 16 (Group A)</option>
+                      <option value="17">GL 17 (Directorate / GL 17)</option>
+                    </select>
+                    <small style="font-size: 0.75rem; color: #64748b;">Roster Grade Level: <span id="reg-orig-gl-lbl" style="font-weight: 600;">-</span> (Select to change level & paper)</small>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Allocated Grade Level & Group</label>
+                    <input type="text" id="reg-disp-gl" class="form-control" readonly style="background: #f1f5f9; font-weight: 700; color: #0f172a;">
                   </div>
 
                   <div class="form-group">
