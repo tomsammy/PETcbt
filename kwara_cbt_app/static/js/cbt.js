@@ -2193,3 +2193,32 @@ function checkNetworkAndNotify() {
     showRetryToast('⚠️ Device reports offline. Please verify Wi-Fi or mobile data.');
   }
 }
+
+// ============================================================================
+// HOMEPAGE MANDATORY EXAMINATION INSTRUCTIONS MODAL
+// ============================================================================
+function openHomepageInstructionsModal() {
+  const modal = document.getElementById('homepage-instructions-modal');
+  const entryView = document.getElementById('view-entry');
+  // Open if modal exists and candidate is on the homepage/entry view
+  if (modal && (!entryView || entryView.classList.contains('active'))) {
+    modal.classList.add('active');
+  }
+}
+
+function closeHomepageInstructionsModal() {
+  const modal = document.getElementById('homepage-instructions-modal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+}
+
+// Automatically display instructions modal as homepage loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    openHomepageInstructionsModal();
+  });
+} else {
+  // If DOM is already interactive or complete
+  setTimeout(openHomepageInstructionsModal, 150);
+}

@@ -34,6 +34,17 @@
     <!-- VIEW 1: Candidate Accreditation, Exam & Result Portal    -->
     <!-- ======================================================== -->
     <section id="view-entry" class="view-section active">
+      <!-- Prominent Examination Day Notice Banner -->
+      <div class="homepage-exam-alert" onclick="openHomepageInstructionsModal()" role="button" tabindex="0" title="Click to view full mandatory instructions">
+        <div class="alert-icon">📢</div>
+        <div class="alert-text">
+          <div class="alert-title">IMPORTANT NOTICE: MANDATORY EXAMINATION DAY DIRECTIVES</div>
+          <div class="alert-desc">
+            All candidates must arrive with their <strong>fully charged smartphone (Android or iOS)</strong>, <strong>active data subscription</strong>, <strong>updated web browser</strong> (Chrome, Opera Mini, Firefox, Safari, Edge, etc.), and <strong>printed photocard only</strong>. <strong>Strictly no loitering</strong> within the venue.
+          </div>
+          <div class="alert-cta">👉 Click here to read the full examination directives & venue rules</div>
+        </div>
+      </div>
       <div class="card-entry" style="max-width: 680px;">
         <div class="card-entry-header">
           <img src="/static/images/logo.png" alt="Kwara State Seal" class="hero-logo" onerror="this.style.display='none'">
@@ -803,6 +814,103 @@
     </div>
 
     <!-- ======================================================== -->
+    <!-- VIEW: Mandatory Homepage Examination Instructions Modal   -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="homepage-instructions-modal" style="z-index: 1080;" onclick="if (event.target === this) closeHomepageInstructionsModal()">
+      <div class="modal-card" style="max-width: 620px; max-height: 90vh; display: flex; flex-direction: column; text-align: left; padding: 0; position: relative; border: 2px solid #004d40;">
+        
+        <!-- Modal Header -->
+        <div style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); color: #fff; padding: 20px 24px; border-bottom: 3.5px solid #ffb300; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; border: 1.5px solid rgba(255, 255, 255, 0.4);">
+              📢
+            </div>
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.25; letter-spacing: -0.01em;">
+                KWARA STATE CIVIL SERVICE COMMISSION
+              </h3>
+              <p style="font-size: 0.8rem; font-weight: 700; color: #fde68a; margin: 3px 0 0 0; text-transform: uppercase; letter-spacing: 0.04em;">
+                2026 Promotion Evaluation CBT Examination
+              </p>
+            </div>
+          </div>
+          <button type="button" onclick="closeHomepageInstructionsModal()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 1.4rem; line-height: 1; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" title="Close Notice">&times;</button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div style="padding: 22px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px;">
+          
+          <!-- Alert Header Banner -->
+          <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 8px; padding: 10px 14px; color: #991b1b; font-weight: 800; font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
+            <span>⚠️</span>
+            <span>CRITICAL INSTRUCTIONS FOR ALL PROMOTION CANDIDATES</span>
+          </div>
+
+          <!-- 1. Mobile Phone & Internet Data Requirement -->
+          <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 14px 16px;">
+            <div style="font-weight: 800; color: #1e40af; font-size: 0.84rem; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>📱 Mandatory Mobile Phone & Browser Requirement</span>
+            </div>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #1e3a8a; line-height: 1.55;">
+              <li>All candidates are to come with their <strong>mobile phones (Android or iOS)</strong>.</li>
+              <li>Your device <strong>MUST have an up-to-date web browser</strong> installed (any modern browser: <strong>Google Chrome, Opera Mini, Mozilla Firefox, Safari, Microsoft Edge</strong>, etc.).</li>
+              <li>Your device <strong>MUST HAVE AN ACTIVE INTERNET SUBSCRIPTION (DATA BUNDLE)</strong>.</li>
+              <li>Your phone <strong>MUST BE FULLY CHARGED</strong> prior to your arrival at the venue.</li>
+            </ul>
+          </div>
+
+          <!-- 2. Printed Photocard Requirement (Strictly No Screenshots) -->
+          <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 10px; padding: 14px 16px;">
+            <div style="font-weight: 800; color: #991b1b; font-size: 0.84rem; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>🖨️ Mandatory Printed Photocard (No Screenshots Allowed)</span>
+            </div>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #7f1d1d; line-height: 1.55;">
+              <li><strong>MAKE SURE YOU PRINT YOUR PHOTOCARD</strong> in advance before proceeding to the examination venue.</li>
+              <li><strong>NO PRINTING IS ALLOWED AT THE VENUE</strong> under any circumstance.</li>
+              <li><strong>NO SCREENSHOT OF THE PHOTOCARD IS ALLOWED</strong> on phones. <strong>ONLY A PHYSICAL PRINTED HARD COPY</strong> will be accepted for accreditation.</li>
+            </ul>
+          </div>
+
+          <!-- 3. Strict Arrival & Zero-Loitering Policy -->
+          <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 14px 16px;">
+            <div style="font-weight: 800; color: #92400e; font-size: 0.84rem; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>⏱️ Strict Punctuality & Absolute Zero-Loitering Policy</span>
+            </div>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #78350f; line-height: 1.55;">
+              <li>Candidates <strong>ARE NOT TO COME AND BE LOITERING AROUND WITHIN THE VENUE</strong>.</li>
+              <li><strong>COME STRICTLY AT THE SCHEDULED TIME ON YOUR PHOTOCARD.</strong></li>
+              <li><strong>NO LOITERING AROUND THE VICINITY WILL BE TOLERATED.</strong> Only candidates whose batch is active will be permitted into the accreditation perimeter.</li>
+            </ul>
+          </div>
+
+          <!-- 4. Examination Venue Location -->
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px 16px;">
+            <div style="font-weight: 800; color: #166534; font-size: 0.82rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span>📍 Designated Examination Venue</span>
+            </div>
+            <div style="font-weight: 800; color: #004d40; font-size: 0.94rem;">
+              Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State
+            </div>
+          </div>
+
+          <!-- Strict Adherence Note -->
+          <div style="background: #f8fafc; border: 2px dashed #004d40; border-radius: 8px; padding: 12px 14px; text-align: center; font-weight: 800; color: #004d40; font-size: 0.88rem; line-height: 1.5;">
+            🛡️ PLEASE ADHERE STRICTLY WITH THESE INSTRUCTIONS FOR A SEAMLESS EXAMINATION EXPERIENCE.
+          </div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+          <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; font-weight: 800; background: #004d40; border-color: #00332c;" onclick="closeHomepageInstructionsModal()">
+            <span>✅ I Understand & Proceed to Portal</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
     <!-- VIEW: Mandatory Candidate Examination Instructions Modal-->
     <!-- ======================================================== -->
     <div class="modal-overlay" id="photocard-instructions-modal">
@@ -846,20 +954,20 @@
           <!-- Mandatory Smartphone Requirement -->
           <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 14px;">
             <div style="font-weight: 800; color: #1e40af; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>📱 Mandatory Smart Mobile Device Requirement</span>
+              <span>📱 Mandatory Smart Mobile Device & Browser Requirement</span>
             </div>
             <p style="margin: 0; font-size: 0.86rem; color: #1e3a8a; line-height: 1.5;">
-              Candidates <strong>MUST come to the venue with their smartphone</strong> (Android, iPhone, or any smart mobile device). The device <strong>MUST have a functional, updated web browser installed</strong> (e.g. Google Chrome, Safari, etc.), and candidates <strong>MUST HAVE AN ACTIVE INTERNET SUBSCRIPTION (DATA BUNDLE SUBSCRIPTION)</strong> (though internet is going to be provided).
+              Candidates <strong>MUST come to the venue with their mobile phone</strong> (Android or iOS). The device <strong>MUST have an up-to-date web browser installed</strong> (Chrome, Opera Mini, Firefox, Safari, Edge, etc.), <strong>MUST HAVE AN ACTIVE INTERNET SUBSCRIPTION (DATA BUNDLE)</strong>, and <strong>MUST BE FULLY CHARGED</strong>.
             </p>
           </div>
 
           <!-- Physical Photocard & Token -->
-          <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
-            <div style="font-weight: 800; color: #334155; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>🪪 Physical Photocard & Scratch Token</span>
+          <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 12px 14px;">
+            <div style="font-weight: 800; color: #991b1b; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+              <span>🖨️ Mandatory Printed Photocard (No Screenshots Allowed)</span>
             </div>
-            <p style="margin: 0; font-size: 0.86rem; color: #475569; line-height: 1.5;">
-              You must present your <strong>printed physical CBT Photocard</strong> at accreditation. In the examination hall, you will receive your physical <strong>5-digit scratch card token</strong> to unlock your 20-minute test.
+            <p style="margin: 0; font-size: 0.86rem; color: #7f1d1d; line-height: 1.5;">
+              <strong>MAKE SURE YOU PRINT YOUR PHOTOCARD.</strong> <strong>NO PRINTING IS ALLOWED AT THE VENUE.</strong> <strong>NO SCREENSHOT OF THE PHOTOCARD IS ALLOWED</strong> &mdash; ONLY A PHYSICAL PRINTED COPY. In the CBT hall, you will receive your physical 5-digit scratch token.
             </p>
           </div>
 
