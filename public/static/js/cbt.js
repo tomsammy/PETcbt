@@ -591,7 +591,13 @@ if (lookupForm) {
         psnInput.readOnly = false;
       }
       document.getElementById('reg-disp-mda').value = cand.mda;
-      document.getElementById('reg-disp-rank').value = cand.proposed_rank || 'Civil Service Cadre';
+      const origRankLbl = document.getElementById('reg-orig-rank-lbl');
+      if (origRankLbl) origRankLbl.textContent = cand.proposed_rank || 'Civil Service Cadre';
+      const rankInput = document.getElementById('reg-amended-rank') || document.getElementById('reg-disp-rank');
+      if (rankInput) {
+        rankInput.value = cand.amended_rank || cand.proposed_rank || 'Civil Service Cadre';
+        rankInput.readOnly = false;
+      }
       document.getElementById('reg-disp-gl').value = `${cand.proposed_gl || ''} (${cand.group_category || ''})`;
       document.getElementById('reg-disp-paper').value = `${cand.exam_code} - ${cand.group_category}`;
 
@@ -770,6 +776,7 @@ if (completeRegForm) {
           code_1: state.registeredCandidate.code_1,
           amended_name: amendedName,
           amended_psn: amendedPsn,
+          amended_rank: amendedRank,
           phone: phone,
           email: email,
           passport_photo: state.tempPassportBase64
@@ -869,7 +876,10 @@ function renderPhotocard(c) {
           </tr>
           <tr>
             <th style="padding: 3px 6px;">Present / Proposed Rank:</th>
-            <td style="padding: 3px 6px;">${c.proposed_rank || 'Civil Service Cadre'}</td>
+            <td style="padding: 3px 6px;">
+              <strong>${c.amended_rank || c.proposed_rank || 'Civil Service Cadre'}</strong>
+              ${c.amended_rank && c.amended_rank !== c.proposed_rank ? `<small style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">(Roster Rank: ${c.proposed_rank})</small>` : ''}
+            </td>
           </tr>
           <tr>
             <th style="padding: 3px 6px;">Proposed Grade Level:</th>

@@ -126,6 +126,7 @@ class CompleteRegistrationRequest(BaseModel):
     code_1: str
     amended_name: Optional[str] = None
     amended_psn: Optional[str] = None
+    amended_rank: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     passport_photo: str
@@ -504,7 +505,7 @@ def candidate_lookup(data: CandidateLookupRequest):
     
     cursor.execute("""
         SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
-               proposed_rank, proposed_gl, group_category,
+               proposed_rank, amended_rank, proposed_gl, group_category,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status
         FROM candidate_roster
@@ -533,6 +534,7 @@ def complete_candidate_registration(data: CompleteRegistrationRequest):
     amended_psn = (data.amended_psn or "").strip() or None
     if amended_psn and amended_psn == psn:
         amended_psn = None
+    amended_rank = (data.amended_rank or "").strip() or None
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -562,12 +564,13 @@ def complete_candidate_registration(data: CompleteRegistrationRequest):
 
     cursor.execute("""
         UPDATE candidate_roster
-        SET amended_name = ?, amended_psn = ?, phone = ?, email = ?, passport_photo = ?,
+        SET amended_name = ?, amended_psn = ?, amended_rank = ?, phone = ?, email = ?, passport_photo = ?,
             registration_status = 'registered', registered_at = CURRENT_TIMESTAMP
         WHERE id = ?
     """, (
         (data.amended_name or "").strip(),
         amended_psn,
+        amended_rank,
         (data.phone or "").strip(),
         (data.email or "").strip().lower(),
         data.passport_photo,
@@ -576,7 +579,7 @@ def complete_candidate_registration(data: CompleteRegistrationRequest):
     
     cursor.execute("""
         SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
-               proposed_rank, proposed_gl, group_category,
+               proposed_rank, amended_rank, proposed_gl, group_category,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status, registered_at
         FROM candidate_roster
@@ -602,7 +605,7 @@ def get_candidate_photocard(psn: str):
     
     cursor.execute("""
         SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
-               proposed_rank, proposed_gl, group_category,
+               proposed_rank, amended_rank, proposed_gl, group_category,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status, registered_at
         FROM candidate_roster
@@ -674,7 +677,7 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
         
     # 4. Fetch candidate details from candidate_roster
     cursor.execute("""
-        SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, proposed_rank, proposed_gl, group_category, email, passport_photo
+        SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, proposed_rank, amended_rank, proposed_gl, group_category, email, passport_photo
         FROM candidate_roster
         WHERE psn = ? OR amended_psn = ?
     """, (psn, psn))
@@ -869,7 +872,7 @@ def get_admin_registrations(auth: bool = Depends(verify_admin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT psn, amended_psn, name, amended_name, mda, proposed_rank, proposed_gl, group_category, exam_code,
+        SELECT psn, amended_psn, name, amended_name, mda, proposed_rank, amended_rank, proposed_gl, group_category, exam_code,
                phone, email, registration_status, registered_at
         FROM candidate_roster
         WHERE registration_status IN ('registered', 'tested') OR registered_at IS NOT NULL

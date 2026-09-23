@@ -200,6 +200,7 @@ def init_db():
         # Ensure candidate_roster has amended_psn column
         try:
             cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_psn VARCHAR(50)")
+            cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_rank VARCHAR(255)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_roster_amended_psn ON candidate_roster(amended_psn)")
             conn.commit()
         except Exception as e:
@@ -281,7 +282,9 @@ def init_db():
             if "amended_psn" not in cols:
                 cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_psn TEXT")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_roster_amended_psn ON candidate_roster(amended_psn)")
-                conn.commit()
+            if "amended_rank" not in cols:
+                cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_rank TEXT")
+            conn.commit()
         except Exception as e:
             logger.warning(f"Could not auto-add amended_psn to SQLite candidate_roster: {e}")
 
