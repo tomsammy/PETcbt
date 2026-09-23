@@ -837,92 +837,58 @@
     <!-- VIEW: Mandatory Homepage Examination Instructions Modal   -->
     <!-- ======================================================== -->
     <div class="modal-overlay" id="homepage-instructions-modal" style="z-index: 1080;" onclick="if (event.target === this) closeHomepageInstructionsModal()">
-      <div class="modal-card" style="max-width: 620px; max-height: 90vh; display: flex; flex-direction: column; text-align: left; padding: 0; position: relative; border: 2px solid #004d40;">
+      <div class="modal-card" style="max-width: 440px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; text-align: left; padding: 0; position: relative; border: 2px solid #004d40; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
         
         <!-- Modal Header -->
-        <div style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); color: #fff; padding: 20px 24px; border-bottom: 3.5px solid #ffb300; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; border: 1.5px solid rgba(255, 255, 255, 0.4);">
+        <div style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); color: #fff; padding: 10px 14px; border-bottom: 2.5px solid #ffb300; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0;">
               📢
             </div>
             <div>
-              <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.25; letter-spacing: -0.01em;">
-                KWARA STATE CIVIL SERVICE COMMISSION
+              <h3 style="font-size: 0.88rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.15;">
+                Kwara State Civil Service Commission
               </h3>
-              <p style="font-size: 0.8rem; font-weight: 700; color: #fde68a; margin: 3px 0 0 0; text-transform: uppercase; letter-spacing: 0.04em;">
-                2026 Promotion Evaluation CBT Examination
+              <p style="font-size: 0.65rem; font-weight: 700; color: #fde68a; margin: 1px 0 0 0; text-transform: uppercase;">
+                2026 Promotion CBT Notice
               </p>
             </div>
           </div>
-          <button type="button" onclick="closeHomepageInstructionsModal()" style="background: rgba(255, 255, 255, 0.15); border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 1.4rem; line-height: 1; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" title="Close Notice">&times;</button>
+          <button type="button" onclick="closeHomepageInstructionsModal()" style="background: rgba(255, 255, 255, 0.2); border: none; width: 26px; height: 26px; border-radius: 50%; font-size: 1.1rem; line-height: 1; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Close Notice">&times;</button>
         </div>
 
         <!-- Modal Body (Scrollable) -->
-        <div style="padding: 22px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px;">
+        <div style="padding: 10px 14px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 0.77rem; line-height: 1.35;">
           
-          <!-- Alert Header Banner -->
-          <div style="background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 8px; padding: 10px 14px; color: #991b1b; font-weight: 800; font-size: 0.88rem; display: flex; align-items: center; gap: 8px;">
-            <span>⚠️</span>
-            <span>CRITICAL INSTRUCTIONS FOR ALL PROMOTION CANDIDATES</span>
+          <!-- Venue -->
+          <div style="background: #f0fdf4; border-left: 3.5px solid #16a34a; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #166534; font-size: 0.68rem; text-transform: uppercase;">📍 Examination Venue</div>
+            <div style="font-weight: 800; color: #004d40; font-size: 0.8rem;">Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin</div>
           </div>
 
-          <!-- 1. Mobile Phone & Internet Data Requirement -->
-          <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 10px; padding: 14px 16px;">
-            <div style="font-weight: 800; color: #1e40af; font-size: 0.84rem; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-              <span>📱 Mandatory Mobile Phone & Browser Requirement</span>
-            </div>
-            <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #1e3a8a; line-height: 1.55;">
-              <li>All candidates are to come with their <strong>mobile phones (Android or iOS)</strong>.</li>
-              <li>Your device <strong>MUST have an up-to-date web browser</strong> installed (any modern browser: <strong>Google Chrome, Opera Mini, Mozilla Firefox, Safari, Microsoft Edge</strong>, etc.).</li>
-              <li>Your device <strong>MUST HAVE AN ACTIVE INTERNET SUBSCRIPTION (DATA BUNDLE)</strong>.</li>
-              <li>Your phone <strong>MUST BE FULLY CHARGED</strong> prior to your arrival at the venue.</li>
-            </ul>
+          <!-- Phone & Browser -->
+          <div style="background: #eff6ff; border-left: 3.5px solid #2563eb; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #1e40af; font-size: 0.68rem; text-transform: uppercase;">📱 Smartphone & Data Bundle</div>
+            <p style="margin: 1px 0 0 0; color: #1e3a8a; font-size: 0.76rem;">Bring a <strong>fully charged phone</strong> (Android or iOS) with an <strong>active internet data subscription</strong> and updated browser.</p>
           </div>
 
-          <!-- 2. Printed Photocard Requirement (Strictly No Screenshots) -->
-          <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 10px; padding: 14px 16px;">
-            <div style="font-weight: 800; color: #991b1b; font-size: 0.84rem; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-              <span>🖨️ Mandatory Printed Photocard (No Screenshots Allowed)</span>
-            </div>
-            <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #7f1d1d; line-height: 1.55;">
-              <li><strong>MAKE SURE YOU PRINT YOUR PHOTOCARD</strong> in advance before proceeding to the examination venue.</li>
-              <li><strong>NO PRINTING IS ALLOWED AT THE VENUE</strong> under any circumstance.</li>
-              <li><strong>NO SCREENSHOT OF THE PHOTOCARD IS ALLOWED</strong> on phones. <strong>ONLY A PHYSICAL PRINTED HARD COPY</strong> will be accepted for accreditation.</li>
-            </ul>
+          <!-- Printed Photocard -->
+          <div style="background: #fef2f2; border-left: 3.5px solid #dc2626; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #991b1b; font-size: 0.68rem; text-transform: uppercase;">🖨️ Mandatory Printed Photocard</div>
+            <p style="margin: 1px 0 0 0; color: #7f1d1d; font-size: 0.76rem;"><strong>PRINT YOUR PHOTOCARD IN ADVANCE.</strong> No printing at venue. Screenshots are strictly disallowed.</p>
           </div>
 
-          <!-- 3. Strict Arrival & Zero-Loitering Policy -->
-          <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 10px; padding: 14px 16px;">
-            <div style="font-weight: 800; color: #92400e; font-size: 0.84rem; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
-              <span>⏱️ Strict Punctuality & Absolute Zero-Loitering Policy</span>
-            </div>
-            <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem; color: #78350f; line-height: 1.55;">
-              <li>Candidates <strong>ARE NOT TO COME AND BE LOITERING AROUND WITHIN THE VENUE</strong>.</li>
-              <li><strong>COME STRICTLY AT THE SCHEDULED TIME ON YOUR PHOTOCARD.</strong></li>
-              <li><strong>NO LOITERING AROUND THE VICINITY WILL BE TOLERATED.</strong> Only candidates whose batch is active will be permitted into the accreditation perimeter.</li>
-            </ul>
-          </div>
-
-          <!-- 4. Examination Venue Location -->
-          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px 16px;">
-            <div style="font-weight: 800; color: #166534; font-size: 0.82rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>📍 Designated Examination Venue</span>
-            </div>
-            <div style="font-weight: 800; color: #004d40; font-size: 0.94rem;">
-              Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State
-            </div>
-          </div>
-
-          <!-- Strict Adherence Note -->
-          <div style="background: #f8fafc; border: 2px dashed #004d40; border-radius: 8px; padding: 12px 14px; text-align: center; font-weight: 800; color: #004d40; font-size: 0.88rem; line-height: 1.5;">
-            🛡️ PLEASE ADHERE STRICTLY WITH THESE INSTRUCTIONS FOR A SEAMLESS EXAMINATION EXPERIENCE.
+          <!-- Zero Loitering -->
+          <div style="background: #fffbeb; border-left: 3.5px solid #d97706; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #92400e; font-size: 0.68rem; text-transform: uppercase;">⏱️ Punctuality & Zero Loitering</div>
+            <p style="margin: 1px 0 0 0; color: #78350f; font-size: 0.76rem;">Arrive at your scheduled accreditation time (max 20 mins early). <strong>No loitering around the vicinity.</strong></p>
           </div>
 
         </div>
 
         <!-- Modal Footer -->
-        <div style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
-          <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; font-weight: 800; background: #004d40; border-color: #00332c;" onclick="closeHomepageInstructionsModal()">
+        <div style="padding: 8px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+          <button type="button" class="btn-primary-large" style="padding: 8px 12px; font-size: 0.84rem; width: 100%; font-weight: 800; border-radius: 6px;" onclick="closeHomepageInstructionsModal()">
             <span>✅ I Understand & Proceed to Portal</span>
           </button>
         </div>
@@ -934,78 +900,69 @@
     <!-- VIEW: Mandatory Candidate Examination Instructions Modal-->
     <!-- ======================================================== -->
     <div class="modal-overlay" id="photocard-instructions-modal">
-      <div class="modal-card" style="max-width: 560px; text-align: left; padding: 26px 24px; position: relative;">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; border-bottom: 2px solid #004d40; padding-bottom: 12px;">
-          <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;">
-            ⚠️
-          </div>
-          <div>
-            <h3 style="font-size: 1.15rem; font-weight: 800; color: #004d40; margin: 0; line-height: 1.25;">
-              Kwara State Civil Service Commission
-            </h3>
-            <p style="font-size: 0.8rem; font-weight: 700; color: #b45309; margin: 2px 0 0 0; text-transform: uppercase;">
-              Mandatory Examination Venue Rules & Instructions
-            </p>
+      <div class="modal-card" style="max-width: 440px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; text-align: left; padding: 0; position: relative; border: 2px solid #004d40; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);">
+        
+        <!-- Modal Header -->
+        <div style="background: linear-gradient(135deg, #004d40 0%, #00796b 100%); color: #fff; padding: 10px 14px; border-bottom: 2.5px solid #ffb300; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0;">
+              ⚠️
+            </div>
+            <div>
+              <h3 style="font-size: 0.88rem; font-weight: 800; color: #fff; margin: 0; line-height: 1.15;">
+                Kwara State Civil Service Commission
+              </h3>
+              <p style="font-size: 0.65rem; font-weight: 700; color: #fde68a; margin: 1px 0 0 0; text-transform: uppercase;">
+                Mandatory Venue Rules & Instructions
+              </p>
+            </div>
           </div>
         </div>
 
-        <div style="font-size: 0.88rem; color: #1e293b; line-height: 1.55; display: flex; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; padding-right: 4px;">
+        <!-- Modal Body (Scrollable) -->
+        <div style="padding: 10px 14px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 0.77rem; line-height: 1.35;">
           
-          <!-- Venue Highlight -->
-          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 12px 14px;">
-            <div style="font-weight: 800; color: #166534; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>📍 Designated Examination Venue</span>
-            </div>
-            <div style="font-weight: 900; color: #004d40; font-size: 0.96rem; line-height: 1.35;">
-              Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin, Kwara State, Nigeria
-            </div>
+          <!-- Venue -->
+          <div style="background: #f0fdf4; border-left: 3.5px solid #16a34a; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #166534; font-size: 0.68rem; text-transform: uppercase;">📍 Examination Venue</div>
+            <div style="font-weight: 800; color: #004d40; font-size: 0.8rem;">Ilorin Innovation Hub, Ahmadu Bello Way, GRA, Ilorin</div>
           </div>
 
-          <!-- Strict Arrival & Zero Loitering Policy -->
-          <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 12px 14px;">
-            <div style="font-weight: 800; color: #92400e; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>⏱️ Strict Punctuality & Zero-Loitering Policy</span>
-            </div>
-            <p style="margin: 0; font-size: 0.86rem; color: #78350f; line-height: 1.5;">
-              Candidates <strong>must come to the venue at their stipulated accreditation time only</strong> (arrival is permitted at most <strong>20 minutes earlier</strong>). <strong>Loitering, crowding, or parading around the vicinity will NOT be tolerated under any circumstances.</strong>
-            </p>
+          <!-- Phone & Browser -->
+          <div style="background: #eff6ff; border-left: 3.5px solid #2563eb; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #1e40af; font-size: 0.68rem; text-transform: uppercase;">📱 Smartphone & Data Bundle</div>
+            <p style="margin: 1px 0 0 0; color: #1e3a8a; font-size: 0.76rem;">Bring a <strong>fully charged phone</strong> (Android or iOS) with an <strong>active internet data subscription</strong> and updated browser.</p>
           </div>
 
-          <!-- Mandatory Smartphone Requirement -->
-          <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 8px; padding: 12px 14px;">
-            <div style="font-weight: 800; color: #1e40af; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>📱 Mandatory Smart Mobile Device & Browser Requirement</span>
-            </div>
-            <p style="margin: 0; font-size: 0.86rem; color: #1e3a8a; line-height: 1.5;">
-              Candidates <strong>MUST come to the venue with their mobile phone</strong> (Android or iOS). The device <strong>MUST have an up-to-date web browser installed</strong> (Chrome, Opera Mini, Firefox, Safari, Edge, etc.), <strong>MUST HAVE AN ACTIVE INTERNET SUBSCRIPTION (DATA BUNDLE)</strong>, and <strong>MUST BE FULLY CHARGED</strong>.
-            </p>
+          <!-- Printed Photocard -->
+          <div style="background: #fef2f2; border-left: 3.5px solid #dc2626; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #991b1b; font-size: 0.68rem; text-transform: uppercase;">🖨️ Mandatory Printed Photocard</div>
+            <p style="margin: 1px 0 0 0; color: #7f1d1d; font-size: 0.76rem;"><strong>PRINT YOUR PHOTOCARD IN ADVANCE.</strong> No printing at venue. Screenshots are strictly disallowed.</p>
           </div>
 
-          <!-- Physical Photocard & Token -->
-          <div style="background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 8px; padding: 12px 14px;">
-            <div style="font-weight: 800; color: #991b1b; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
-              <span>🖨️ Mandatory Printed Photocard (No Screenshots Allowed)</span>
-            </div>
-            <p style="margin: 0; font-size: 0.86rem; color: #7f1d1d; line-height: 1.5;">
-              <strong>MAKE SURE YOU PRINT YOUR PHOTOCARD.</strong> <strong>NO PRINTING IS ALLOWED AT THE VENUE.</strong> <strong>NO SCREENSHOT OF THE PHOTOCARD IS ALLOWED</strong> &mdash; ONLY A PHYSICAL PRINTED COPY. In the CBT hall, you will receive your physical 5-digit scratch token.
-            </p>
+          <!-- Zero Loitering -->
+          <div style="background: #fffbeb; border-left: 3.5px solid #d97706; border-radius: 5px; padding: 5px 8px;">
+            <div style="font-weight: 800; color: #92400e; font-size: 0.68rem; text-transform: uppercase;">⏱️ Punctuality & Zero Loitering</div>
+            <p style="margin: 1px 0 0 0; color: #78350f; font-size: 0.76rem;">Arrive at your scheduled accreditation time (max 20 mins early). <strong>No loitering around the vicinity.</strong></p>
+          </div>
+
+          <!-- Mandatory Acknowledgment Checkbox -->
+          <div style="margin-top: 2px; padding: 6px 8px; background: #f8fafc; border-radius: 6px; border: 1.5px solid #cbd5e1;">
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 0.74rem; font-weight: 700; color: #0f172a; line-height: 1.3;">
+              <input type="checkbox" id="chk-acknowledge-rules" style="margin-top: 2px; width: 17px; height: 17px; cursor: pointer; flex-shrink: 0;" onchange="toggleAckButton()">
+              <span>I have read, understood, and agree to strictly abide by all examination venue rules, arrival time, and smartphone directives.</span>
+            </label>
           </div>
 
         </div>
 
-        <!-- Mandatory Acknowledgment Checkbox -->
-        <div style="margin-top: 16px; padding: 12px 14px; background: #f8fafc; border-radius: 8px; border: 1.5px solid #cbd5e1;">
-          <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 0.86rem; font-weight: 700; color: #0f172a; line-height: 1.45;">
-            <input type="checkbox" id="chk-acknowledge-rules" style="margin-top: 3px; width: 19px; height: 19px; cursor: pointer;" onchange="toggleAckButton()">
-            <span>I have carefully read, understood, and agree to strictly abide by these examination instructions, venue guidelines, arrival schedule, and smartphone requirements.</span>
-          </label>
-        </div>
-
-        <div style="margin-top: 16px;">
-          <button type="button" id="btn-ack-rules" class="btn-primary-large" style="padding: 13px; font-size: 0.95rem; width: 100%; opacity: 0.5; cursor: not-allowed;" disabled onclick="closeInstructionsModalAndShowPhotocard()">
-            <span>✅ I Acknowledge & View My Official Photocard</span>
+        <!-- Modal Footer -->
+        <div style="padding: 8px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+          <button type="button" id="btn-ack-rules" class="btn-primary-large" style="padding: 8px 12px; font-size: 0.84rem; width: 100%; font-weight: 800; border-radius: 6px; opacity: 0.5; cursor: not-allowed;" disabled onclick="closeInstructionsModalAndShowPhotocard()">
+            <span>✅ I Acknowledge & View My Photocard</span>
           </button>
         </div>
+
       </div>
     </div>
 
