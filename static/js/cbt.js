@@ -870,10 +870,23 @@ if (completeRegForm) {
     }
 
     const amendedName = document.getElementById('reg-amended-name').value.trim();
+    const psnInput = document.getElementById('reg-amended-psn') || document.getElementById('reg-disp-psn');
+    const amendedPsn = psnInput ? psnInput.value.trim() : state.registeredCandidate.psn;
+    const rankInput = document.getElementById('reg-amended-rank') || document.getElementById('reg-disp-rank');
+    const amendedRank = rankInput ? rankInput.value.trim() : (state.registeredCandidate.proposed_rank || '');
     const glSelect = document.getElementById('reg-amended-gl');
-    const amendedGl = glSelect ? glSelect.value : null;
+    const amendedGl = glSelect ? glSelect.value : (state.registeredCandidate.proposed_gl || '');
     const phone = document.getElementById('reg-input-phone').value.trim();
     const email = document.getElementById('reg-input-email').value.trim();
+
+    if (!amendedPsn) {
+      showAlertModal('Information Required', 'Please provide a valid Public Service Number (PSN).', 'warning');
+      return;
+    }
+    if (!amendedRank) {
+      showAlertModal('Information Required', 'Please provide your Cadre / Proposed Rank.', 'warning');
+      return;
+    }
 
     const btn = document.getElementById('btn-save-photocard');
     const originalText = btn ? btn.innerHTML : '';
