@@ -100,7 +100,7 @@
                   <div style="font-size: 0.85rem; color: #15803d; margin-top: 2px;">Review details, amend spelling if necessary, upload passport photo, and generate photocard.</div>
                 </div>
                 <button type="button" class="btn-ctrl" style="padding: 6px 12px; font-size: 0.8rem;" onclick="resetCandidateLookup()">
-                  <span>🔄 Change PSN</span>
+                  <span>🔄 Look Up Another PSN</span>
                 </button>
               </div>
 
@@ -114,8 +114,9 @@
                   </div>
 
                   <div class="form-group">
-                    <label>Public Service Number (PSN)</label>
-                    <input type="text" id="reg-disp-psn" class="form-control" readonly style="background: #f1f5f9; font-weight: 700; color: #004d40;">
+                    <label for="reg-amended-psn">Public Service Number (PSN) <span class="req">*</span></label>
+                    <input type="text" id="reg-amended-psn" class="form-control" required placeholder="e.g. 128439" style="font-weight: 700; color: #004d40;">
+                    <small style="font-size: 0.75rem; color: #64748b;">Roster PSN: <span id="reg-orig-psn-lbl" style="font-weight: 600;">-</span> (Amend above if incorrect or changed)</small>
                   </div>
 
                   <div class="form-group">

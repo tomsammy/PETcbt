@@ -109,13 +109,20 @@ def get_db_connection():
         import psycopg2.extras
         import time
         last_err = None
-        for attempt in range(4):
+        for attempt in range(3):
             try:
-                conn = psycopg2.connect(DATABASE_URL, sslmode="require", connect_timeout=15)
+                conn = psycopg2.connect(DATABASE_URL, sslmode="require", connect_timeout=10)
                 return PostgresConnectionWrapper(conn)
             except Exception as e:
                 last_err = e
-                time.sleep(1.2 * (attempt + 1))
+                time.sleep(1.0 * (attempt + 1))
+        # If not running on Vercel and local SQLite database exists, gracefully fallback
+        if not os.environ.get("VERCEL") and os.path.exists(SQLITE_PATH):
+            import sqlite3
+            logger.warning(f"Postgres connection timed out ({last_err}), falling back to local SQLite.")
+            conn = sqlite3.connect(SQLITE_PATH)
+            conn.row_factory = sqlite3.Row
+            return conn
         raise last_err
     else:
         import sqlite3
@@ -190,6 +197,14 @@ def init_db():
         conn.commit()
 
         # Seed questions if empty
+        # Ensure candidate_roster has amended_psn column
+        try:
+            cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_psn VARCHAR(50)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_roster_amended_psn ON candidate_roster(amended_psn)")
+            conn.commit()
+        except Exception as e:
+            logger.warning(f"Could not auto-add amended_psn to Postgres candidate_roster: {e}")
+
         cursor.execute("SELECT COUNT(*) AS cnt FROM questions")
         row = cursor.fetchone()
         cnt = row["cnt"] if isinstance(row, dict) else row[0]
@@ -258,6 +273,17 @@ def init_db():
         INSERT OR IGNORE INTO system_settings (setting_key, setting_value)
         VALUES ('exam_status', 'open')
         """)
+
+        # Ensure candidate_roster has amended_psn column
+        try:
+            cursor.execute("PRAGMA table_info(candidate_roster)")
+            cols = [r[1] for r in cursor.fetchall()]
+            if "amended_psn" not in cols:
+                cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_psn TEXT")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_roster_amended_psn ON candidate_roster(amended_psn)")
+                conn.commit()
+        except Exception as e:
+            logger.warning(f"Could not auto-add amended_psn to SQLite candidate_roster: {e}")
 
         conn.commit()
 

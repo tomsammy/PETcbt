@@ -125,6 +125,7 @@ class CompleteRegistrationRequest(BaseModel):
     psn: str
     code_1: str
     amended_name: Optional[str] = None
+    amended_psn: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     passport_photo: str
@@ -463,8 +464,8 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
 
     # Mark exam token and candidate roster as completed/tested
     try:
-        cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE assigned_to_psn = ?", (data.psn.strip(),))
-        cursor.execute("UPDATE candidate_roster SET registration_status = 'tested' WHERE psn = ?", (data.psn.strip(),))
+        cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE assigned_to_psn = ? OR assigned_to_psn IN (SELECT psn FROM candidate_roster WHERE amended_psn = ?)", (data.psn.strip(), data.psn.strip()))
+        cursor.execute("UPDATE candidate_roster SET registration_status = 'tested' WHERE psn = ? OR amended_psn = ?", (data.psn.strip(), data.psn.strip()))
     except Exception:
         pass
     
@@ -502,13 +503,13 @@ def candidate_lookup(data: CandidateLookupRequest):
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, psn, name, amended_name, code_1, mda, exam_code,
+        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
                proposed_rank, proposed_gl, group_category,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status
         FROM candidate_roster
-        WHERE psn = ? AND UPPER(code_1) = ?
-    """, (psn, code_1))
+        WHERE (psn = ? OR amended_psn = ?) AND UPPER(code_1) = ?
+    """, (psn, psn, code_1))
     
     row = cursor.fetchone()
     conn.close()
@@ -529,37 +530,58 @@ def candidate_lookup(data: CandidateLookupRequest):
 def complete_candidate_registration(data: CompleteRegistrationRequest):
     psn = data.psn.strip()
     code_1 = data.code_1.strip().upper()
-    
+    amended_psn = (data.amended_psn or "").strip() or None
+    if amended_psn and amended_psn == psn:
+        amended_psn = None
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id FROM candidate_roster WHERE psn = ? AND UPPER(code_1) = ?", (psn, code_1))
+    cursor.execute("""
+        SELECT id, psn, code_1 FROM candidate_roster 
+        WHERE (psn = ? OR amended_psn = ?) AND UPPER(code_1) = ?
+    """, (psn, psn, code_1))
     existing = cursor.fetchone()
     if not existing:
         conn.close()
         raise HTTPException(status_code=401, detail="Authentication Failed: Invalid PSN or Registration Code.")
-        
+
+    # Check if newly amended PSN conflicts with another candidate's original roster PSN
+    if amended_psn:
+        cursor.execute("""
+            SELECT id FROM candidate_roster 
+            WHERE psn = ? AND id != ?
+        """, (amended_psn, existing["id"]))
+        conflict = cursor.fetchone()
+        if conflict:
+            conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail=f"PSN '{amended_psn}' is already allocated to another officer on the roster. Please verify."
+            )
+
     cursor.execute("""
         UPDATE candidate_roster
-        SET amended_name = ?, phone = ?, email = ?, passport_photo = ?,
+        SET amended_name = ?, amended_psn = ?, phone = ?, email = ?, passport_photo = ?,
             registration_status = 'registered', registered_at = CURRENT_TIMESTAMP
-        WHERE psn = ?
+        WHERE id = ?
     """, (
         (data.amended_name or "").strip(),
+        amended_psn,
         (data.phone or "").strip(),
         (data.email or "").strip().lower(),
         data.passport_photo,
-        psn
+        existing["id"]
     ))
     
     cursor.execute("""
-        SELECT id, psn, name, amended_name, code_1, mda, exam_code,
+        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
                proposed_rank, proposed_gl, group_category,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status, registered_at
         FROM candidate_roster
-        WHERE psn = ?
-    """, (psn,))
+        WHERE id = ?
+    """, (existing["id"],))
     
     updated_row = cursor.fetchone()
     conn.commit()
@@ -579,13 +601,13 @@ def get_candidate_photocard(psn: str):
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, psn, name, amended_name, code_1, mda, exam_code,
+        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code,
                proposed_rank, proposed_gl, group_category,
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status, registered_at
         FROM candidate_roster
-        WHERE psn = ?
-    """, (query_psn,))
+        WHERE psn = ? OR amended_psn = ?
+    """, (query_psn, query_psn))
     
     row = cursor.fetchone()
     conn.close()
@@ -652,10 +674,10 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
         
     # 4. Fetch candidate details from candidate_roster
     cursor.execute("""
-        SELECT id, psn, name, amended_name, mda, exam_code, proposed_rank, proposed_gl, group_category, email, passport_photo
+        SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, proposed_rank, proposed_gl, group_category, email, passport_photo
         FROM candidate_roster
-        WHERE psn = ?
-    """, (psn,))
+        WHERE psn = ? OR amended_psn = ?
+    """, (psn, psn))
     cand = cursor.fetchone()
     
     if not cand:
@@ -847,7 +869,7 @@ def get_admin_registrations(auth: bool = Depends(verify_admin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT psn, name, amended_name, mda, proposed_rank, proposed_gl, group_category, exam_code,
+        SELECT psn, amended_psn, name, amended_name, mda, proposed_rank, proposed_gl, group_category, exam_code,
                phone, email, registration_status, registered_at
         FROM candidate_roster
         WHERE registration_status IN ('registered', 'tested') OR registered_at IS NOT NULL

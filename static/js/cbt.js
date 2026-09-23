@@ -538,6 +538,11 @@ function resetCandidateLookup() {
   if (profileBox) profileBox.style.display = 'none';
   state.registeredCandidate = null;
   state.tempPassportBase64 = null;
+  const psnInput = document.getElementById('reg-input-psn');
+  if (psnInput) {
+    psnInput.value = '';
+    psnInput.focus();
+  }
 }
 
 // Lookup Form Event Listener
@@ -578,7 +583,13 @@ if (lookupForm) {
       // Populate form
       document.getElementById('reg-orig-name-lbl').textContent = cand.name;
       document.getElementById('reg-amended-name').value = cand.amended_name || cand.name;
-      document.getElementById('reg-disp-psn').value = cand.psn;
+      const origPsnLbl = document.getElementById('reg-orig-psn-lbl');
+      if (origPsnLbl) origPsnLbl.textContent = cand.psn;
+      const psnInput = document.getElementById('reg-amended-psn') || document.getElementById('reg-disp-psn');
+      if (psnInput) {
+        psnInput.value = cand.amended_psn || cand.psn;
+        psnInput.readOnly = false;
+      }
       document.getElementById('reg-disp-mda').value = cand.mda;
       document.getElementById('reg-disp-rank').value = cand.proposed_rank || 'Civil Service Cadre';
       document.getElementById('reg-disp-gl').value = `${cand.proposed_gl || ''} (${cand.group_category || ''})`;
@@ -758,6 +769,7 @@ if (completeRegForm) {
           psn: state.registeredCandidate.psn,
           code_1: state.registeredCandidate.code_1,
           amended_name: amendedName,
+          amended_psn: amendedPsn,
           phone: phone,
           email: email,
           passport_photo: state.tempPassportBase64
@@ -846,7 +858,10 @@ function renderPhotocard(c) {
           </tr>
           <tr>
             <th style="padding: 3px 6px;">Public Service No (PSN):</th>
-            <td style="padding: 3px 6px;"><code style="font-size: 0.95rem; font-weight: 800; color: #0f172a;">${c.psn}</code></td>
+            <td style="padding: 3px 6px;">
+              <code style="font-size: 0.95rem; font-weight: 800; color: #0f172a;">${c.amended_psn || c.psn}</code>
+              ${c.amended_psn && c.amended_psn !== c.psn ? `<small style="font-size: 0.72rem; color: #64748b; margin-left: 6px;">(Roster PSN: ${c.psn})</small>` : ''}
+            </td>
           </tr>
           <tr>
             <th style="padding: 3px 6px;">Ministry / MDA:</th>
