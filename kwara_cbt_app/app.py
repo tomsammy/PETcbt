@@ -215,6 +215,25 @@ def read_index():
             with open(c, "r", encoding="utf-8") as f:
                 return f.read()
     return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - 2026 Promotion Evaluation CBT Examination</h1>"
+
+@app.get("/demo", response_class=HTMLResponse)
+@app.get("/demo-cbt", response_class=HTMLResponse)
+@app.get("/practice", response_class=HTMLResponse)
+def read_demo():
+    candidates = [
+        os.path.join(STATIC_DIR, "demo.html"),
+        os.path.join(os.path.dirname(__file__), "static", "demo.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "demo.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "public", "demo.html"),
+        os.path.join(os.getcwd(), "static", "demo.html"),
+        os.path.join(os.getcwd(), "kwara_cbt_app", "static", "demo.html"),
+        os.path.join(os.getcwd(), "public", "demo.html")
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            with open(c, "r", encoding="utf-8") as f:
+                return f.read()
+    return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - CBT Demo Examination</h1>"
  
 # Router for all CBT Endpoints (supports both /api/* and /* paths)
 router = APIRouter()

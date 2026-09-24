@@ -462,7 +462,11 @@ function applyExamStatusToUI(status) {
       proceedPhotocardBtn.style.display = 'none';
     }
 
-
+    // 4. Show Dedicated Demo CBT Practice Banner
+    const demoBanner = document.getElementById('closed-demo-banner');
+    if (demoBanner) {
+      demoBanner.style.display = 'block';
+    }
 
     if (startBtn) {
       startBtn.disabled = true;
@@ -481,6 +485,12 @@ function applyExamStatusToUI(status) {
     // 2. Restore Proceed to Exam button on photocard view
     if (proceedPhotocardBtn) {
       proceedPhotocardBtn.style.display = '';
+    }
+
+    // 3. Hide closed demo banner when portal is open
+    const demoBanner = document.getElementById('closed-demo-banner');
+    if (demoBanner) {
+      demoBanner.style.display = 'none';
     }
 
 

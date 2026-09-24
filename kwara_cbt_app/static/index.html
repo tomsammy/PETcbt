@@ -47,6 +47,11 @@
         <p>2026 Promotion Evaluation CBT Examination</p>
       </div>
     </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <a href="/demo" target="_blank" class="header-demo-link" style="text-decoration: none; background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #065f46; font-size: 0.84rem; font-weight: 800; padding: 7px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.2s ease;">
+        <span>🎯 Demo CBT (Practice)</span>
+      </a>
+    </div>
   </header>
 
   <!-- Main Container -->
@@ -67,6 +72,27 @@
           <div class="alert-cta">👉 Click here to read the full examination directives & venue rules</div>
         </div>
       </div>
+
+      <!-- Dedicated Demo CBT Banner (Visible when exam portal is closed or for orientation) -->
+      <div id="closed-demo-banner" style="display: none; max-width: 680px; margin: 0 auto 20px auto; background: linear-gradient(135deg, #004d40 0%, #00695c 100%); color: #ffffff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(0,77,64,0.18);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+          <div style="flex: 1; min-width: 260px;">
+            <div style="font-size: 0.74rem; font-weight: 800; color: #fde047; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+              📢 CBT EXAMINATION PORTAL IS CURRENTLY CLOSED FOR TESTING
+            </div>
+            <div style="font-size: 1.05rem; font-weight: 800; margin-bottom: 4px; color: #ffffff;">
+              Try the Official Demo CBT Examination (Practice Mode)
+            </div>
+            <p style="font-size: 0.85rem; color: #e0f2f1; margin: 0; line-height: 1.45;">
+              The live promotion exam has not yet commenced. Experience the authentic <strong>Question Grid (40)</strong>, 20-minute timer countdown, and smartphone layout on our interactive Demo page!
+            </p>
+          </div>
+          <a href="/demo" target="_blank" class="btn-demo-cta" style="background: #f59e0b; color: #000; font-weight: 800; padding: 11px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.92rem; white-space: nowrap; box-shadow: 0 3px 8px rgba(0,0,0,0.2);">
+            <span>🎯 Launch Demo CBT</span> ➔
+          </a>
+        </div>
+      </div>
+
       <div class="card-entry" style="max-width: 680px;">
         <div class="card-entry-header">
           <img src="/static/images/logo.png" alt="Kwara State Seal" class="hero-logo" onerror="this.style.display='none'">
@@ -535,6 +561,9 @@
           <button type="button" class="btn-ctrl btn-submit" id="btn-print-photocard" style="padding: 12px 28px; font-size: 1rem;" onclick="window.print()">
             <span>🖨️ Print CBT Photocard (PDF)</span>
           </button>
+          <a href="/demo" target="_blank" class="btn-ctrl" id="btn-photocard-demo" style="text-decoration:none; padding: 12px 22px; font-size: 1rem; border-color: #f59e0b; color: #92400e; background: #fffbeb; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            <span>🎯 Practice with Demo CBT Exam</span>
+          </a>
           <button type="button" class="btn-ctrl" id="btn-proceed-exam-from-photocard" style="padding: 12px 24px; font-size: 1rem; border-color: #059669; color: #047857; background: #ecfdf5; font-weight: 700;" onclick="proceedToExamFromPhotocard()">
             <span>📝 Proceed to CBT Examination</span>
           </button>
