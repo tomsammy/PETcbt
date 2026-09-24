@@ -335,6 +335,7 @@ function closeExitModal() {
 
 // Close CBT Exam Session
 function closeExamSession() {
+  if (typeof proctorEngine !== 'undefined') proctorEngine.stop();
   if (state.timerInterval) clearInterval(state.timerInterval);
   state.candidate = null;
   state.candidateId = null;
@@ -1194,6 +1195,7 @@ if (tokenExamForm) {
         startTimer();
         updateNetworkStatusIndicator();
         showView('exam');
+        proctorEngine.start(state.candidate);
         showRetryToast('✅ Resumed ongoing examination session seamlessly.');
         if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
         return;
@@ -1231,6 +1233,7 @@ if (tokenExamForm) {
       updateNetworkStatusIndicator();
       saveExamProgress();
       showView('exam');
+      proctorEngine.start(state.candidate);
 
     } catch (err) {
       state.candidate = null;
@@ -1252,6 +1255,390 @@ if (tokenExamForm) {
     }
   });
 }
+
+// ============================================================================
+// PROCTORING & ANTI-CHEATING SHIELD ENGINE
+// ============================================================================
+const proctorEngine = {
+  active: false,
+  violations: 0,
+  maxViolations: 3,
+  violationLogs: [],
+  hasLeftWindow: false,
+  toastTimer: null,
+  curtainTimer: null,
+
+  init() {
+    // 1. App-switching & tab-switching listeners
+    window.addEventListener('blur', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      // Immediate blackout protects against Snipping Tool, Alt+Tab, and background capture
+      this.showCurtain();
+      this.hasLeftWindow = true;
+    });
+
+    window.addEventListener('focus', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      if (this.hasLeftWindow) {
+        this.recordViolation('Switched to another application or window');
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (!this.active || state.isSubmitted) return;
+      if (document.visibilityState === 'hidden') {
+        this.showCurtain();
+        this.hasLeftWindow = true;
+      } else if (document.visibilityState === 'visible') {
+        if (this.hasLeftWindow) {
+          this.recordViolation('Switched browser tab or minimized examination window');
+        }
+      }
+    });
+
+    // 2. Fullscreen change listener
+    const handleFs = () => {
+      if (!this.active || state.isSubmitted) return;
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      if (!isFs) {
+        this.showCurtain();
+        this.recordViolation('Exited secure fullscreen examination mode');
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFs);
+    document.addEventListener('webkitfullscreenchange', handleFs);
+
+    // 3. Screenshot & Hotkey Blocking (Capture phase to intercept before OS/browser)
+    window.addEventListener('keydown', (e) => {
+      if (!this.active || state.isSubmitted) return;
+
+      // PrintScreen key
+      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.wipeClipboard();
+        this.flashBlackout();
+        this.showToast('⚠️ SCREENSHOT BLOCKED: Taking screenshots is strictly prohibited.');
+        this.logIncident('PrintScreen key pressed');
+        return false;
+      }
+
+      // Windows Snipping Tool (Win + Shift + S) or Mac (Cmd + Shift + 3/4/5)
+      if ((e.shiftKey && (e.metaKey || e.ctrlKey || e.altKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) ||
+          (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key))) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.wipeClipboard();
+        this.flashBlackout();
+        this.showToast('⚠️ SCREEN CAPTURE BLOCKED: Snipping tool is disabled.');
+        this.logIncident('Snipping shortcut triggered');
+        return false;
+      }
+
+      // Print Dialog (Ctrl + P / Cmd + P)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.keyCode === 80)) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showToast('⚠️ PRINTING BLOCKED: Examination pages cannot be printed.');
+        this.logIncident('Print shortcut attempted');
+        return false;
+      }
+
+      // Save Page (Ctrl + S / Cmd + S)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showToast('⚠️ SAVE BLOCKED: Saving exam content is prohibited.');
+        return false;
+      }
+
+      // Developer Tools & View Source (F12, Ctrl+Shift+I/J/C, Ctrl+U)
+      if (e.key === 'F12' || e.keyCode === 123 ||
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
+          ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U'))) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.showToast('⚠️ ACTION BLOCKED: Developer tools are disabled.');
+        this.logIncident('Dev tools shortcut attempted');
+        return false;
+      }
+    }, true);
+
+    window.addEventListener('keyup', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.wipeClipboard();
+      }
+    }, true);
+
+    // 4. Mouse Context Menu (Right Click)
+    document.addEventListener('contextmenu', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      e.preventDefault();
+      this.showToast('⚠️ Context menu is disabled during the examination.');
+      return false;
+    }, true);
+
+    // 5. Copy, Cut, Drag Prevention
+    document.addEventListener('copy', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      e.preventDefault();
+      this.showToast('⚠️ Copy and paste functions are disabled.');
+      return false;
+    }, true);
+
+    document.addEventListener('cut', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      e.preventDefault();
+      return false;
+    }, true);
+
+    document.addEventListener('dragstart', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      e.preventDefault();
+      return false;
+    }, true);
+  },
+
+  start(candidate) {
+    this.active = true;
+    this.violations = 0;
+    this.violationLogs = [];
+    this.hasLeftWindow = false;
+
+    // Apply proctor classes
+    document.body.classList.add('exam-proctored');
+    const examView = document.getElementById('view-exam');
+    if (examView) examView.classList.add('exam-proctored');
+
+    this.updateWatermark(candidate);
+    this.updateSecurityBadge();
+    this.enterFullscreen();
+  },
+
+  stop() {
+    this.active = false;
+    document.body.classList.remove('exam-proctored');
+    const examView = document.getElementById('view-exam');
+    if (examView) examView.classList.remove('exam-proctored');
+
+    this.hideCurtain();
+    this.closeViolationModal();
+
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+    }
+  },
+
+  enterFullscreen() {
+    const docEl = document.documentElement;
+    const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+    if (rfs) {
+      rfs.call(docEl).catch(err => {
+        console.warn('Fullscreen entry deferred/declined:', err);
+      });
+    }
+  },
+
+  showCurtain() {
+    const curtain = document.getElementById('security-curtain');
+    if (curtain) {
+      curtain.style.display = 'flex';
+      curtain.classList.add('active');
+    }
+  },
+
+  hideCurtain() {
+    const curtain = document.getElementById('security-curtain');
+    if (curtain) {
+      curtain.style.display = 'none';
+      curtain.classList.remove('active');
+    }
+  },
+
+  flashBlackout() {
+    this.showCurtain();
+    setTimeout(() => {
+      if (!this.hasLeftWindow && (!document.getElementById('security-violation-modal') || !document.getElementById('security-violation-modal').classList.contains('active'))) {
+        this.hideCurtain();
+      }
+    }, 1200);
+  },
+
+  wipeClipboard() {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText('⚠️ Screenshots and screen capture are strictly prohibited by Kwara State Civil Service Commission.').catch(() => {});
+      }
+    } catch (e) {}
+  },
+
+  recordViolation(reason) {
+    this.hasLeftWindow = false;
+    this.violations++;
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = `${timestamp} - ${reason}`;
+    this.violationLogs.push(logEntry);
+    console.warn(`[SECURITY VIOLATION ${this.violations}/${this.maxViolations}]:`, logEntry);
+
+    this.sendTelemetry(reason);
+    this.updateSecurityBadge();
+    this.showViolationModal(reason);
+  },
+
+  sendTelemetry(reason) {
+    try {
+      if (state.candidate && state.candidate.psn) {
+        fetch('/api/exam/log-security-incident', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            psn: state.candidate.psn,
+            incident_type: 'app_switch',
+            details: reason,
+            warning_level: this.violations
+          })
+        }).catch(() => {});
+      }
+    } catch(e) {}
+  },
+
+  logIncident(incident) {
+    const timestamp = new Date().toLocaleTimeString();
+    this.violationLogs.push(`${timestamp} - ${incident}`);
+    this.sendTelemetry(incident);
+  },
+
+  showViolationModal(reason) {
+    const modal = document.getElementById('security-violation-modal');
+    if (!modal) return;
+
+    const countEl = document.getElementById('sec-violation-count');
+    const titleEl = document.getElementById('sec-violation-title');
+    const badgeEl = document.getElementById('sec-violation-badge');
+    const msgEl = document.getElementById('sec-violation-msg');
+    const actionsEl = document.getElementById('sec-violation-actions');
+    const psnEl = document.getElementById('sec-candidate-psn');
+
+    if (psnEl && state.candidate) {
+      psnEl.textContent = state.candidate.amended_psn || state.candidate.psn || '-';
+    }
+
+    if (countEl) countEl.textContent = this.violations;
+
+    if (this.violations === 1) {
+      titleEl.textContent = 'SECURITY WARNING (STRIKE 1)';
+      titleEl.style.color = '#b45309';
+      badgeEl.style.background = '#fef3c7';
+      badgeEl.style.color = '#92400e';
+      badgeEl.innerHTML = `⚠️ Warning 1 of ${this.maxViolations}`;
+      msgEl.innerHTML = `You navigated away from the examination window (<em>${reason}</em>).<br><br>Switching to another application, opening new browser tabs, or attempting screen capture is <strong>strictly prohibited</strong>. This incident has been logged with your candidate record.<br><br>Please return to secure fullscreen mode immediately.`;
+      actionsEl.innerHTML = `
+        <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="proctorEngine.resumeExam()">
+          <span>🛡️ Re-enter Fullscreen & Continue Exam</span>
+        </button>
+      `;
+    } else if (this.violations === 2) {
+      titleEl.textContent = 'FINAL WARNING (STRIKE 2)';
+      titleEl.style.color = '#dc2626';
+      badgeEl.style.background = '#fee2e2';
+      badgeEl.style.color = '#b91c1c';
+      badgeEl.innerHTML = `🚨 Warning 2 of ${this.maxViolations} (FINAL WARNING)`;
+      msgEl.innerHTML = `Another unauthorized window switch was detected (<em>${reason}</em>).<br><br><strong style="color: #b91c1c;">You have only ONE warning remaining!</strong><br><br>Any further attempt to exit fullscreen, switch applications, or minimize this window will result in <strong>IMMEDIATE EXAM TERMINATION and automatic submission</strong> to the Civil Service Commission.`;
+      actionsEl.innerHTML = `
+        <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #b91c1c;" onclick="proctorEngine.resumeExam()">
+          <span>⚠️ I Understand - Return to Fullscreen (Final Chance)</span>
+        </button>
+      `;
+    } else {
+      // Strike 3: Disqualification & Auto-Submission
+      titleEl.textContent = 'EXAMINATION TERMINATED (STRIKE 3)';
+      titleEl.style.color = '#7f1d1d';
+      badgeEl.style.background = '#7f1d1d';
+      badgeEl.style.color = '#ffffff';
+      badgeEl.innerHTML = `🛑 Maximum Violations Exceeded (3 of ${this.maxViolations})`;
+      msgEl.innerHTML = `You have exceeded the maximum allowable application-switching violations.<br><br>In compliance with Kwara State Civil Service Commission anti-cheating regulations, <strong>your examination has been locked and automatically submitted</strong> with a security infraction report.`;
+      actionsEl.innerHTML = `
+        <div style="font-weight: 700; color: #dc2626; padding: 12px; font-size: 0.95rem;">
+          ⏳ Locking examination and saving final evaluation...
+        </div>
+      `;
+
+      // Auto submit after 2.5 seconds
+      setTimeout(() => {
+        this.closeViolationModal();
+        this.hideCurtain();
+        submitExam(true);
+      }, 2500);
+    }
+
+    modal.classList.add('active');
+  },
+
+  resumeExam() {
+    this.closeViolationModal();
+    this.hideCurtain();
+    this.enterFullscreen();
+  },
+
+  closeViolationModal() {
+    const modal = document.getElementById('security-violation-modal');
+    if (modal) modal.classList.remove('active');
+  },
+
+  updateSecurityBadge() {
+    const badge = document.getElementById('exam-security-badge');
+    const text = document.getElementById('security-status-text');
+    if (!badge || !text) return;
+
+    if (this.violations === 0) {
+      badge.className = 'security-status-badge secure';
+      text.textContent = '🛡️ Shield: Active (0/3)';
+    } else if (this.violations === 1) {
+      badge.className = 'security-status-badge warning';
+      text.textContent = '⚠️ Shield: Warning (1/3)';
+    } else if (this.violations >= 2) {
+      badge.className = 'security-status-badge danger';
+      text.textContent = `🚨 Shield: Warning (${this.violations}/3)`;
+    }
+  },
+
+  updateWatermark(candidate) {
+    const watermarkEl = document.getElementById('exam-watermark-overlay');
+    if (!watermarkEl || !candidate) return;
+    const psn = candidate.amended_psn || candidate.psn || 'OFFICER';
+    const name = candidate.amended_name || candidate.name || 'CANDIDATE';
+    const text = `${name} • PSN: ${psn} • KWCSC CBT 2026 • CONFIDENTIAL`;
+    
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">
+      <text x="30" y="100" fill="rgba(15, 23, 42, 0.035)" font-size="13" font-family="system-ui, -apple-system, sans-serif" font-weight="700" transform="rotate(-22 30 100)">
+        ${text}
+      </text>
+    </svg>`;
+    const encoded = btoa(unescape(encodeURIComponent(svg)));
+    watermarkEl.style.backgroundImage = `url("data:image/svg+xml;base64,${encoded}")`;
+  },
+
+  showToast(msg) {
+    let toast = document.getElementById('cbt-security-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'cbt-security-toast';
+      toast.className = 'security-toast';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span style="font-size:1.2rem;">🛡️</span> <span>${msg}</span>`;
+    toast.style.display = 'flex';
+
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      toast.style.display = 'none';
+    }, 3500);
+  }
+};
 
 // -------------------------------------------------------------
 // 2. CBT Testing Engine & Live Countdown
@@ -1578,6 +1965,8 @@ async function submitExam(isAuto = false) {
   closeExitModal();
   closeUnansweredWarningModal();
 
+  if (typeof proctorEngine !== 'undefined') proctorEngine.stop();
+
   const timeTaken = state.durationSeconds - state.secondsRemaining;
 
   const payload = {
@@ -1589,7 +1978,9 @@ async function submitExam(isAuto = false) {
     mda: state.candidate.mda,
     paper_code: (state.candidate.paper_code || ""),
     answers: state.answers,
-    time_taken_seconds: timeTaken
+    time_taken_seconds: timeTaken,
+    violations_count: (typeof proctorEngine !== 'undefined' ? proctorEngine.violations : 0),
+    security_flags: (typeof proctorEngine !== 'undefined' ? proctorEngine.violationLogs.join('; ') : '')
   };
 
   pendingSubmissionPayload = payload;
@@ -1957,6 +2348,16 @@ function renderAdminTable() {
     else if (s.score_percentage >= 60) remarkBadge = 'background: #e0f2fe; color: #0369a1;';
     else if (s.score_percentage < 50) remarkBadge = 'background: #fee2e2; color: #991b1b;';
 
+    const vCount = parseInt(s.violations_count || 0);
+    let integrityTag = '';
+    if (vCount === 0) {
+      integrityTag = '<span title="Session Clean: Zero proctor violations" style="display:inline-block; margin-top:3px; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#ecfdf5; color:#047857;">🛡️ Clean</span>';
+    } else if (vCount < 3) {
+      integrityTag = `<span title="${s.security_flags || 'App switch detected'}" style="display:inline-block; margin-top:3px; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#fffbeb; color:#b45309;">⚠️ ${vCount} Strike${vCount>1?'s':''}</span>`;
+    } else {
+      integrityTag = `<span title="${s.security_flags || 'Disqualified for excessive app-switching'}" style="display:inline-block; margin-top:3px; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#fee2e2; color:#b91c1c;">🛑 Disqualified (${vCount}/3)</span>`;
+    }
+
     return `
       <tr>
         <td style="font-weight:700; text-align:center;">${idx + 1}</td>
@@ -1967,7 +2368,10 @@ function renderAdminTable() {
         <td>${s.mda}</td>
         <td style="text-align:center;"><strong>${s.correct_count * 2} / 100</strong> (${s.correct_count}/50)</td>
         <td style="text-align:center; font-weight:800; font-size:1.05rem; color:#004d40;">${s.score_percentage}%</td>
-        <td><span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:700; ${remarkBadge}">${s.grade_remark}</span></td>
+        <td>
+          <span style="display:inline-block; padding:3px 10px; border-radius:12px; font-size:0.8rem; font-weight:700; ${remarkBadge}">${s.grade_remark}</span>
+          <br>${integrityTag}
+        </td>
         <td style="font-size:0.8rem; color:#64748b;">${s.submitted_at}</td>
       </tr>
     `;
@@ -2372,12 +2776,14 @@ function closeHomepageInstructionsModal() {
   }
 }
 
-// Automatically display instructions modal as homepage loads
+// Automatically display instructions modal as homepage loads and initialize proctorEngine
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     openHomepageInstructionsModal();
+    if (typeof proctorEngine !== 'undefined') proctorEngine.init();
   });
 } else {
   // If DOM is already interactive or complete
   setTimeout(openHomepageInstructionsModal, 150);
+  if (typeof proctorEngine !== 'undefined') proctorEngine.init();
 }

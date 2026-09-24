@@ -6,8 +6,11 @@ import io
 import secrets
 import hmac
 import hashlib
+import logging
 from datetime import datetime
 from typing import Dict, Any, Optional, Union
+
+logger = logging.getLogger("kwara_cbt")
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
@@ -106,6 +109,14 @@ class SubmitExamRequest(BaseModel):
     paper_code: Optional[str] = None
     answers: Dict[str, str] = {}
     time_taken_seconds: Optional[int] = 0
+    violations_count: Optional[int] = 0
+    security_flags: Optional[str] = None
+
+class SecurityIncidentRequest(BaseModel):
+    psn: str
+    incident_type: str
+    details: Optional[str] = None
+    warning_level: Optional[int] = 1
 
 class RetrieveResultRequest(BaseModel):
     psn: str
@@ -450,14 +461,15 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
         INSERT INTO submissions (
             candidate_id, candidate_name, psn, email, grade_level, mda,
             total_questions, correct_count, score_percentage, grade_remark,
-            time_taken_seconds, answers_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            time_taken_seconds, answers_json, violations_count, security_flags
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         cid, data.name.strip(), data.psn.strip(),
         data.email.strip().lower(), data.grade_level.strip(),
         (data.mda or "State Civil Service").strip(),
         total_questions, correct_count, score_percentage, grade_remark,
-        data.time_taken_seconds or 0, answers_json_str
+        data.time_taken_seconds or 0, answers_json_str,
+        data.violations_count or 0, data.security_flags or None
     ))
     submission_id = cursor.lastrowid
     
@@ -984,6 +996,11 @@ def send_result_email_endpoint(data: SendResultEmailRequest, background_tasks: B
         detail="Examination result emailing is disabled. Official results will be published through designated Commission channels."
     )
 
+@router.post("/api/exam/log-security-incident")
+def log_security_incident(data: SecurityIncidentRequest):
+    logger.warning(f"[SECURITY SHIELD]: PSN={data.psn} Type={data.incident_type} Level={data.warning_level} Details={data.details}")
+    return {"success": True, "recorded": True}
+
 @router.get("/admin/submissions")
 @router.get("/api/admin/submissions")
 def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
@@ -993,7 +1010,8 @@ def get_admin_submissions(auth: bool = Depends(verify_admin_auth)):
     cursor.execute("""
         SELECT id, candidate_name, psn, email, grade_level, mda,
                total_questions, correct_count, score_percentage, grade_remark,
-               time_taken_seconds, submitted_at
+               time_taken_seconds, submitted_at,
+               COALESCE(violations_count, 0) as violations_count, security_flags
         FROM submissions
         ORDER BY id DESC
     """)

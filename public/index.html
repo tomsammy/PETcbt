@@ -239,6 +239,7 @@
                   <li>Questions: <strong>40 Cadre-Specific Multiple Choice Questions</strong> (2.5 marks each = 100 marks)</li>
                   <li>Authentication: <strong>PSN + 5-Digit Scratch Card Token</strong> issued physically in the examination hall</li>
                   <li>Token Binding: Token binds permanently to your PSN upon first login. Single attempt only.</li>
+                  <li>🛡️ <strong>Anti-Cheating Proctor Active:</strong> Fullscreen mode is enforced. Screenshots, screen capture, and switching to other apps/tabs are strictly blocked (max 3 warnings before auto-submission).</li>
                 </ul>
               </div>
             </div>
@@ -274,11 +275,18 @@
     <!-- VIEW 2: Active CBT Testing Interface                     -->
     <!-- ======================================================== -->
     <section id="view-exam" class="view-section">
+      <!-- Diagonal Confidential Watermark Overlay -->
+      <div class="exam-watermark-overlay" id="exam-watermark-overlay"></div>
+
       <!-- Exam Info Bar with Live Countdown & Exit Control -->
       <div class="exam-top-bar">
-                <div class="network-status-badge online" id="exam-network-status" title="Real-time network status">
+        <div class="network-status-badge online" id="exam-network-status" title="Real-time network status">
           <span class="network-dot"></span>
           <span id="network-status-text">Connected</span>
+        </div>
+        <div class="security-status-badge secure" id="exam-security-badge" title="Anti-Cheating Proctor Shield Active">
+          <span class="security-dot"></span>
+          <span id="security-status-text">🛡️ Shield: Active (0/3)</span>
         </div>
         <div class="candidate-badge">
           <div class="candidate-avatar" id="exam-candidate-avatar">I</div>
@@ -1127,6 +1135,46 @@
             <span>📶 Check Network Connection</span>
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 12: Instant Screen Shield & Anti-Capture Curtain    -->
+    <!-- ======================================================== -->
+    <div id="security-curtain" class="security-curtain" style="display:none;">
+      <div class="security-curtain-card">
+        <div class="security-curtain-icon">🛡️ ⛔</div>
+        <h2>EXAMINATION SCREEN BLURRED & PROTECTED</h2>
+        <p>Application switch, screen capture, or window blur detected.</p>
+        <p class="security-curtain-sub">Return focus to this examination window immediately to continue your test.</p>
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 13: Anti-Cheating Security Violation Modal          -->
+    <!-- ======================================================== -->
+    <div class="modal-overlay" id="security-violation-modal" style="z-index: 100000; backdrop-filter: blur(8px);">
+      <div class="modal-card" style="max-width: 520px; text-align: center; padding: 32px 24px; border: 2px solid #ef4444; box-shadow: 0 20px 45px rgba(239, 68, 68, 0.3);">
+        <div id="sec-violation-icon" style="width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 16px auto; background: #fee2e2; color: #dc2626;">
+          🚨
+        </div>
+        <h3 id="sec-violation-title" style="font-size: 1.35rem; font-weight: 800; color: #991b1b; margin-bottom: 10px;">
+          SECURITY VIOLATION DETECTED
+        </h3>
+        <div id="sec-violation-badge" style="display: inline-block; padding: 4px 14px; border-radius: 999px; background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 0.85rem; margin-bottom: 16px;">
+          Warning <span id="sec-violation-count">1</span> of 3
+        </div>
+        <div id="sec-violation-msg" style="font-size: 0.95rem; color: #334155; line-height: 1.6; margin-bottom: 24px;">
+          You navigated away from the examination window or exited secure fullscreen. Switching to other applications, tabs, or attempting screen capture is strictly forbidden.
+        </div>
+        <div id="sec-violation-actions" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+          <button type="button" class="btn-primary-large" id="sec-resume-btn" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="proctorEngine.resumeExam()">
+            <span>🛡️ Re-enter Secure Fullscreen & Resume Exam</span>
+          </button>
+        </div>
+        <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 14px; margin-bottom: 0;">
+          All security infractions are recorded with your candidate session (PSN: <span id="sec-candidate-psn">-</span>).
+        </p>
       </div>
     </div>
 

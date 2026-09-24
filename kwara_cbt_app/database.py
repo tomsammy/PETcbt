@@ -177,7 +177,9 @@ def init_db():
             grade_remark VARCHAR(100) NOT NULL,
             time_taken_seconds INT DEFAULT 0,
             submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            answers_json TEXT
+            answers_json TEXT,
+            violations_count INT DEFAULT 0,
+            security_flags TEXT
         )
         """)
 
@@ -205,9 +207,11 @@ def init_db():
             cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_group VARCHAR(50)")
             cursor.execute("ALTER TABLE candidate_roster ADD COLUMN IF NOT EXISTS amended_exam_code VARCHAR(100)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_roster_amended_psn ON candidate_roster(amended_psn)")
+            cursor.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS violations_count INT DEFAULT 0")
+            cursor.execute("ALTER TABLE submissions ADD COLUMN IF NOT EXISTS security_flags TEXT")
             conn.commit()
         except Exception as e:
-            logger.warning(f"Could not auto-add amended columns to Postgres candidate_roster: {e}")
+            logger.warning(f"Could not auto-add amended columns to Postgres candidate_roster or submissions: {e}")
 
         cursor.execute("SELECT COUNT(*) AS cnt FROM questions")
         row = cursor.fetchone()
@@ -262,7 +266,9 @@ def init_db():
             grade_remark TEXT NOT NULL,
             time_taken_seconds INTEGER DEFAULT 0,
             submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            answers_json TEXT
+            answers_json TEXT,
+            violations_count INTEGER DEFAULT 0,
+            security_flags TEXT
         )
         """)
 
@@ -293,9 +299,15 @@ def init_db():
                 cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_group TEXT")
             if "amended_exam_code" not in cols:
                 cursor.execute("ALTER TABLE candidate_roster ADD COLUMN amended_exam_code TEXT")
+            cursor.execute("PRAGMA table_info(submissions)")
+            sub_cols = [r[1] for r in cursor.fetchall()]
+            if "violations_count" not in sub_cols:
+                cursor.execute("ALTER TABLE submissions ADD COLUMN violations_count INTEGER DEFAULT 0")
+            if "security_flags" not in sub_cols:
+                cursor.execute("ALTER TABLE submissions ADD COLUMN security_flags TEXT")
             conn.commit()
         except Exception as e:
-            logger.warning(f"Could not auto-add amended columns to SQLite candidate_roster: {e}")
+            logger.warning(f"Could not auto-add amended columns to SQLite candidate_roster or submissions: {e}")
 
         conn.commit()
 
