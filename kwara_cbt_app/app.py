@@ -149,6 +149,7 @@ class CompleteRegistrationRequest(BaseModel):
 class StartExamWithTokenRequest(BaseModel):
     psn: str
     token_code: str
+    code_1: Optional[str] = None
 
 def verify_admin_auth(
     request: Request,
@@ -684,10 +685,17 @@ def calculate_candidate_allocation(
 @router.post("/candidate/lookup")
 @router.post("/api/candidate/lookup")
 def candidate_lookup(data: CandidateLookupRequest):
-    psn = data.psn.strip()
-    code_1 = data.code_1.strip().upper()
+    psn = re.sub(r'\s+', '', data.psn.strip())
+    raw_code = re.sub(r'\s+', '', data.code_1.strip().upper())
+    if len(raw_code) == 6 and raw_code[0].isalpha() and raw_code[1:].isdigit():
+        clean_code = f"{raw_code[0]}-{raw_code[1:]}"
+    elif '-' in raw_code:
+        parts = raw_code.split('-')
+        clean_code = f"{parts[0].strip()}-{parts[1].strip()}"
+    else:
+        clean_code = raw_code
     
-    if not psn or not code_1:
+    if not psn or not raw_code:
         raise HTTPException(status_code=400, detail="Both PSN and Registration Code 1 are required.")
         
     conn = get_db_connection()
@@ -699,8 +707,9 @@ def candidate_lookup(data: CandidateLookupRequest):
                exam_date, batch_session, batch_time, accreditation_time,
                phone, email, passport_photo, registration_status
         FROM candidate_roster
-        WHERE (psn = ? OR amended_psn = ?) AND UPPER(code_1) = ?
-    """, (psn, psn, code_1))
+        WHERE (psn = ? OR amended_psn = ?) 
+          AND (UPPER(code_1) = ? OR UPPER(code_1) = ? OR REPLACE(UPPER(code_1), ' ', '') = ?)
+    """, (psn, psn, clean_code, raw_code, raw_code))
     
     row = cursor.fetchone()
     conn.close()
@@ -708,7 +717,7 @@ def candidate_lookup(data: CandidateLookupRequest):
     if not row:
         raise HTTPException(
             status_code=401,
-            detail=f"Authentication Failed: No officer matched PSN '{psn}' with Registration Code '{code_1}'. Please check your slip and try again."
+            detail=f"Authentication Failed: No officer matched PSN '{psn}' with Registration Code '{clean_code}'. Please check your slip and try again."
         )
         
     return {
@@ -719,8 +728,16 @@ def candidate_lookup(data: CandidateLookupRequest):
 @router.post("/candidate/complete-registration")
 @router.post("/api/candidate/complete-registration")
 def complete_candidate_registration(data: CompleteRegistrationRequest):
-    psn = data.psn.strip()
-    code_1 = data.code_1.strip().upper()
+    psn = re.sub(r'\s+', '', data.psn.strip())
+    raw_code = re.sub(r'\s+', '', data.code_1.strip().upper())
+    if len(raw_code) == 6 and raw_code[0].isalpha() and raw_code[1:].isdigit():
+        clean_code = f"{raw_code[0]}-{raw_code[1:]}"
+    elif '-' in raw_code:
+        parts = raw_code.split('-')
+        clean_code = f"{parts[0].strip()}-{parts[1].strip()}"
+    else:
+        clean_code = raw_code
+
     amended_psn = (data.amended_psn or "").strip() or None
     if amended_psn and amended_psn == psn:
         amended_psn = None
@@ -738,8 +755,9 @@ def complete_candidate_registration(data: CompleteRegistrationRequest):
         SELECT id, psn, code_1, mda, exam_code, proposed_rank, proposed_gl, group_category,
                exam_date, batch_session, batch_time, accreditation_time
         FROM candidate_roster 
-        WHERE (psn = ? OR amended_psn = ?) AND UPPER(code_1) = ?
-    """, (psn, psn, code_1))
+        WHERE (psn = ? OR amended_psn = ?)
+          AND (UPPER(code_1) = ? OR UPPER(code_1) = ? OR REPLACE(UPPER(code_1), ' ', '') = ?)
+    """, (psn, psn, clean_code, raw_code, raw_code))
     existing = cursor.fetchone()
     if not existing:
         conn.close()
@@ -837,19 +855,31 @@ def complete_candidate_registration(data: CompleteRegistrationRequest):
 
 @router.get("/candidate/photocard/{psn}")
 @router.get("/api/candidate/photocard/{psn}")
-def get_candidate_photocard(psn: str):
+def get_candidate_photocard(psn: str, code_1: Optional[str] = Query(None)):
     query_psn = psn.strip()
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("""
-        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code, amended_exam_code,
-               proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group,
-               exam_date, batch_session, batch_time, accreditation_time,
-               phone, email, passport_photo, registration_status, registered_at
-        FROM candidate_roster
-        WHERE psn = ? OR amended_psn = ?
-    """, (query_psn, query_psn))
+    if code_1:
+        raw_code = re.sub(r'\s+', '', code_1.strip().upper())
+        cursor.execute("""
+            SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code, amended_exam_code,
+                   proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group,
+                   exam_date, batch_session, batch_time, accreditation_time,
+                   phone, email, passport_photo, registration_status, registered_at
+            FROM candidate_roster
+            WHERE (psn = ? OR amended_psn = ?) AND (UPPER(code_1) = ? OR REPLACE(UPPER(code_1), ' ', '') = ?)
+        """, (query_psn, query_psn, raw_code, raw_code))
+    else:
+        cursor.execute("""
+            SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code, amended_exam_code,
+                   proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group,
+                   exam_date, batch_session, batch_time, accreditation_time,
+                   phone, email, passport_photo, registration_status, registered_at
+            FROM candidate_roster
+            WHERE psn = ? OR amended_psn = ?
+            ORDER BY registered_at DESC NULLS LAST
+        """, (query_psn, query_psn))
     
     row = cursor.fetchone()
     conn.close()
@@ -867,6 +897,7 @@ def get_candidate_photocard(psn: str):
 def start_exam_with_token(data: StartExamWithTokenRequest):
     psn = data.psn.strip()
     token_code = data.token_code.strip()
+    raw_code = re.sub(r'\s+', '', data.code_1.strip().upper()) if data.code_1 else None
     
     if not psn or not token_code:
         raise HTTPException(status_code=400, detail="Both PSN and 5-digit Exam Token are required.")
@@ -879,19 +910,64 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
     if status == "closed":
         conn.close()
         raise HTTPException(status_code=403, detail="The CBT Examination portal is currently closed by Administrator.")
-        
-    # 2. Check single attempt protection in submissions (Sandbox bypass for 999xxx test accounts)
+
+    # 2. Fetch candidate details from candidate_roster (with code_1 disambiguation if available)
+    if raw_code:
+        cursor.execute("""
+            SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, proposed_rank, amended_rank, proposed_gl, group_category, email, passport_photo, code_1
+            FROM candidate_roster
+            WHERE (psn = ? OR amended_psn = ?) AND (UPPER(code_1) = ? OR REPLACE(UPPER(code_1), ' ', '') = ?)
+        """, (psn, psn, raw_code, raw_code))
+        cand = cursor.fetchone()
+    else:
+        cursor.execute("""
+            SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, proposed_rank, amended_rank, proposed_gl, group_category, email, passport_photo, code_1
+            FROM candidate_roster
+            WHERE psn = ? OR amended_psn = ?
+            ORDER BY registered_at DESC NULLS LAST
+        """, (psn, psn))
+        cand = cursor.fetchone()
+    
+    if not cand:
+        # Fallback to candidates table
+        cursor.execute("SELECT id, name, psn, email, grade_level, mda FROM candidates WHERE psn = ?", (psn,))
+        c_old = cursor.fetchone()
+        if c_old:
+            cand = {
+                "id": c_old["id"],
+                "psn": c_old["psn"],
+                "name": c_old["name"],
+                "amended_name": c_old["name"],
+                "mda": c_old["mda"],
+                "exam_code": None,
+                "proposed_rank": "Candidate",
+                "amended_rank": None,
+                "proposed_gl": c_old["grade_level"],
+                "group_category": "GROUP B",
+                "email": c_old["email"],
+                "passport_photo": None
+            }
+        else:
+            conn.close()
+            raise HTTPException(status_code=404, detail=f"No candidate record found for PSN {psn}.")
+
+    # 3. Check single attempt protection in submissions (Sandbox bypass for 999xxx test accounts)
     if not psn.startswith("999"):
-        cursor.execute("SELECT id, submitted_at, score_percentage FROM submissions WHERE psn = ?", (psn,))
+        cand_name = cand.get("amended_name") or cand.get("name") or ""
+        cursor.execute("""
+            SELECT id, submitted_at, score_percentage 
+            FROM submissions 
+            WHERE psn = ? AND (candidate_name = ? OR candidate_id = ?)
+        """, (psn, cand_name, cand["id"]))
         sub = cursor.fetchone()
         if sub:
             conn.close()
             raise HTTPException(
                 status_code=400,
-                detail=f"This examination has already been completed for PSN {psn} on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
+                detail=f"This examination has already been completed for {cand_name} (PSN {psn}) on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
             )
         
-    # 3. Validate Token
+    # 4. Validate Token
     cursor.execute("SELECT id, token_code, status, assigned_to_psn FROM exam_tokens WHERE token_code = ?", (token_code,))
     tok = cursor.fetchone()
     if not tok:
@@ -914,36 +990,6 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
             WHERE token_code = ?
         """, (psn, token_code))
         
-    # 4. Fetch candidate details from candidate_roster
-    cursor.execute("""
-        SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, proposed_rank, amended_rank, proposed_gl, group_category, email, passport_photo
-        FROM candidate_roster
-        WHERE psn = ? OR amended_psn = ?
-    """, (psn, psn))
-    cand = cursor.fetchone()
-    
-    if not cand:
-        # Fallback to candidates table
-        cursor.execute("SELECT id, name, psn, email, grade_level, mda FROM candidates WHERE psn = ?", (psn,))
-        c_old = cursor.fetchone()
-        if c_old:
-            cand = {
-                "id": c_old["id"],
-                "psn": c_old["psn"],
-                "name": c_old["name"],
-                "amended_name": c_old["name"],
-                "mda": c_old["mda"],
-                "exam_code": "OHOS/C1",
-                "proposed_rank": "Officer",
-                "proposed_gl": c_old["grade_level"],
-                "group_category": "C",
-                "email": c_old["email"],
-                "passport_photo": None
-            }
-        else:
-            conn.close()
-            raise HTTPException(status_code=404, detail=f"Officer record with PSN '{psn}' not found in candidate roster.")
-            
     # 5. Fetch questions matching candidate's exam_code
     paper_code = cand["exam_code"]
     mda = cand["mda"]
