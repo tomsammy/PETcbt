@@ -16,14 +16,46 @@ const state = {
   durationSeconds: 20 * 60,
   secondsRemaining: 20 * 60,
   timerInterval: null,
-  isSubmitted: false,
-  adminToken: sessionStorage.getItem('kws_admin_token') || null,
+  adminToken: sessionStorage.getItem('kws_admin_token') || (function() {
+    try {
+      const match = document.cookie.match(/(?:^|;\s*)admin_token=([^;]*)/);
+      return match ? decodeURIComponent(match[1]) : null;
+    } catch (e) {
+      return null;
+    }
+  })(),
   adminSubmissions: [],
   adminRegistrations: [],
   adminTableView: 'submissions',
   adminTokensSummary: null,
   examStatus: 'open'
 };
+
+function syncAdminSessionCookie() {
+  if (state.adminToken) {
+    try {
+      document.cookie = `admin_token=${encodeURIComponent(state.adminToken)}; path=/; max-age=604800; SameSite=Lax`;
+    } catch (e) {}
+  }
+}
+
+function updateAdminDownloadLinks() {
+  if (!state.adminToken) return;
+  syncAdminSessionCookie();
+  const tokenParam = `?token=${encodeURIComponent(state.adminToken)}`;
+  const btnExcel = document.getElementById('btn-download-excel');
+  const btnCsv = document.getElementById('btn-download-csv');
+  const btnRoster = document.getElementById('btn-download-roster');
+  const btnPhotocards = document.getElementById('btn-download-photocards');
+  const btnTokens = document.getElementById('btn-download-tokens');
+  if (btnExcel) btnExcel.href = `/api/results/excel${tokenParam}`;
+  if (btnCsv) btnCsv.href = `/api/results/csv${tokenParam}`;
+  if (btnRoster) btnRoster.href = `/api/admin/roster/excel${tokenParam}`;
+  if (btnPhotocards) btnPhotocards.href = `/api/admin/registrations/excel${tokenParam}`;
+  if (btnTokens) btnTokens.href = `/api/admin/tokens/excel${tokenParam}`;
+}
+
+syncAdminSessionCookie();
 
 // DOM Elements
 const views = {
@@ -468,6 +500,7 @@ function checkRoute() {
   if (path === '/admin' || hash === '#admin') {
     if (state.adminToken) {
       showView('admin');
+      updateAdminDownloadLinks();
       loadAdminSubmissions();
     } else {
       showView('entry');
@@ -2185,6 +2218,8 @@ if (adminLoginForm) {
 
       state.adminToken = data.token;
       sessionStorage.setItem('kws_admin_token', data.token);
+      syncAdminSessionCookie();
+      updateAdminDownloadLinks();
 
       closeAdminLoginModal();
       adminLoginForm.reset();
@@ -2322,14 +2357,7 @@ async function loadAdminSubmissions() {
     document.getElementById('kpi-pass').textContent = `${data.summary.passed_count} Passed`;
 
     // Update download URLs with admin token
-    const btnExcel = document.getElementById('btn-download-excel');
-    const btnCsv = document.getElementById('btn-download-csv');
-    const btnRoster = document.getElementById('btn-download-roster');
-    const btnPhotocards = document.getElementById('btn-download-photocards');
-    if (btnExcel) btnExcel.href = `/api/results/excel?token=${encodeURIComponent(state.adminToken)}`;
-    if (btnCsv) btnCsv.href = `/api/results/csv?token=${encodeURIComponent(state.adminToken)}`;
-    if (btnRoster) btnRoster.href = `/api/admin/roster/excel?token=${encodeURIComponent(state.adminToken)}`;
-    if (btnPhotocards) btnPhotocards.href = `/api/admin/registrations/excel?token=${encodeURIComponent(state.adminToken)}`;
+    updateAdminDownloadLinks();
 
     renderAdminTable();
     loadAdminTokens();
@@ -2711,6 +2739,9 @@ if (adminLogoutBtn) {
     }
     state.adminToken = null;
     sessionStorage.removeItem('kws_admin_token');
+    try {
+      document.cookie = 'admin_token=; path=/; max-age=0; SameSite=Lax';
+    } catch (e) {}
     window.history.pushState({}, '', '/');
     showView('entry');
     switchEntryTab('start');

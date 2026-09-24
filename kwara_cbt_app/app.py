@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, Union
 
 logger = logging.getLogger("kwara_cbt")
 
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query, Cookie, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -149,15 +149,27 @@ class StartExamWithTokenRequest(BaseModel):
     token_code: str
 
 def verify_admin_auth(
+    request: Request,
     authorization: Optional[str] = Header(None),
-    token: Optional[str] = Query(None)
+    token: Optional[str] = Query(None),
+    admin_token: Optional[str] = Cookie(None)
 ):
-    auth_token = token
-    if not auth_token and authorization:
+    auth_token = token if isinstance(token, str) else None
+    if not auth_token and isinstance(admin_token, str):
+        auth_token = admin_token
+    if not auth_token and request:
+        try:
+            auth_token = request.cookies.get("admin_token") or request.cookies.get("token") or request.query_params.get("token")
+        except Exception:
+            auth_token = None
+    if not auth_token and isinstance(authorization, str):
         if authorization.startswith("Bearer "):
             auth_token = authorization.split("Bearer ")[1].strip()
         else:
             auth_token = authorization.strip()
+            
+    if auth_token and isinstance(auth_token, str):
+        auth_token = auth_token.strip('"\' ')
             
     if not auth_token:
         raise HTTPException(status_code=401, detail="Unauthorized: Admin login required.")
@@ -193,13 +205,26 @@ router = APIRouter()
 
 @router.post("/admin/login")
 @router.post("/api/admin/login")
-def admin_login(creds: AdminLoginRequest):
+def admin_login(creds: AdminLoginRequest, response: Response, request: Request):
     u = creds.username.strip()
     p = creds.password.strip()
     
     if u == ADMIN_USERNAME and p == ADMIN_PASSWORD:
         token = generate_admin_token(u)
         ACTIVE_ADMIN_TOKENS.add(token)
+
+        # Set persistent cookie for direct browser URL access & file downloads
+        is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+        response.set_cookie(
+            key="admin_token",
+            value=token,
+            max_age=86400 * 7,
+            path="/",
+            httponly=False,
+            samesite="lax",
+            secure=is_https
+        )
+
         return {
             "success": True,
             "token": token,
@@ -215,14 +240,24 @@ def admin_verify(auth: bool = Depends(verify_admin_auth)):
 @router.post("/admin/logout")
 @router.post("/api/admin/logout")
 def admin_logout(
+    response: Response,
+    request: Request,
     authorization: Optional[str] = Header(None),
-    token: Optional[str] = Query(None)
+    token: Optional[str] = Query(None),
+    admin_token: Optional[str] = Cookie(None)
 ):
-    auth_token = token
-    if not auth_token and authorization and authorization.startswith("Bearer "):
+    auth_token = token if isinstance(token, str) else None
+    if not auth_token and isinstance(admin_token, str):
+        auth_token = admin_token
+    if not auth_token and request:
+        auth_token = request.cookies.get("admin_token")
+    if not auth_token and isinstance(authorization, str) and authorization.startswith("Bearer "):
         auth_token = authorization.split("Bearer ")[1].strip()
-    if auth_token in ACTIVE_ADMIN_TOKENS:
-        ACTIVE_ADMIN_TOKENS.remove(auth_token)
+    if auth_token and isinstance(auth_token, str):
+        auth_token = auth_token.strip('"\' ')
+        if auth_token in ACTIVE_ADMIN_TOKENS:
+            ACTIVE_ADMIN_TOKENS.remove(auth_token)
+    response.delete_cookie(key="admin_token", path="/")
     return {"success": True, "message": "Logged out successfully."}
 
 @router.post("/admin/toggle-exam-status")
@@ -1558,10 +1593,50 @@ def download_tokens_inventory_excel(auth: bool = Depends(verify_admin_auth)):
 
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Tokens Inventory"
-    ws.append(["S/N", "Serial Number", "5-Digit Exam Token (Code 2)", "Token Status", "Assigned PSN"])
+    ws.title = "Exam Tokens Inventory"
+
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    header_fill = PatternFill(start_color="004D40", end_color="004D40", fill_type="solid")
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+    thin_border = Border(
+        left=Side(style='thin', color='CBD5E1'),
+        right=Side(style='thin', color='CBD5E1'),
+        top=Side(style='thin', color='CBD5E1'),
+        bottom=Side(style='thin', color='CBD5E1')
+    )
+
+    headers = ["S/N", "Serial Number", "5-Digit Exam Token (Code 2)", "Token Status", "Assigned PSN"]
+    ws.append(headers)
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center_align
+
     for idx, r in enumerate(rows, 1):
-        ws.append([idx, f"CSC-2026-{idx:04d}", r["token_code"], r["status"], r.get("assigned_to_psn") or "Unassigned"])
+        row_data = dict(r) if hasattr(r, 'keys') else dict(zip([col[0] for col in cursor.description], r))
+        assigned = row_data.get("assigned_to_psn") or "Unassigned"
+        ws.append([
+            idx,
+            f"CSC-2026-{idx:04d}",
+            str(row_data.get("token_code", "")),
+            str(row_data.get("status", "unassigned")).upper(),
+            str(assigned)
+        ])
+        for col_idx in range(1, len(headers) + 1):
+            c = ws.cell(row=idx + 1, column=col_idx)
+            c.border = thin_border
+            if col_idx in [1, 2, 3, 4]:
+                c.alignment = center_align
+            else:
+                c.alignment = left_align
+
+    for col in ws.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        col_letter = get_column_letter(col[0].column)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 15)
 
     out = io.BytesIO()
     wb.save(out)
