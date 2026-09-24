@@ -1813,6 +1813,12 @@ function buildPalette() {
     btn.onclick = () => jumpToQuestion(idx);
     container.appendChild(btn);
   });
+
+  const togglePaletteBtn = document.getElementById('btn-toggle-palette');
+  if (togglePaletteBtn) {
+    togglePaletteBtn.innerHTML = `<span>📋 Question Grid (40)</span>`;
+  }
+
   updatePaletteState();
 }
 
