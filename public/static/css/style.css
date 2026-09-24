@@ -2546,15 +2546,21 @@ body {
   -webkit-touch-callout: none !important;
 }
 
-/* 6. Strict CSS Print Shield (Completely blocks Print Screen / Ctrl+P to PDF) */
+/* 6. Strict CSS Print Shield for Active CBT Examination ONLY */
 @media print {
-  html, body, .app-container, #view-exam, .exam-layout, .exam-top-bar {
+  /* When candidate is in an active exam session, completely block exam questions from printing */
+  body.exam-active #view-exam,
+  body.exam-proctored #view-exam,
+  #view-exam.active,
+  #view-exam.active * {
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
     overflow: hidden !important;
   }
-  body::before {
+
+  body.exam-active::before,
+  body.exam-proctored::before {
     content: "⚠️ EXAMINATION CONTENT IS CONFIDENTIAL AND PROTECTED AGAINST PRINTING & CAPTURE.";
     display: block !important;
     font-size: 22pt;
@@ -2563,6 +2569,18 @@ body {
     text-align: center;
     margin-top: 150px;
     padding: 30px;
+  }
+
+  /* Explicitly guarantee Photocard & Results remain fully visible for candidate printing */
+  #view-photocard.active,
+  #view-photocard.active .photocard-container,
+  #view-photocard.active .photocard-slip-card,
+  #view-result.active,
+  #view-result.active .result-container,
+  #view-result.active .result-slip-card {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
   }
 }
 

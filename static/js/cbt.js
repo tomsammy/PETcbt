@@ -410,6 +410,9 @@ function showView(viewName) {
   if (navExam) {
     navExam.classList.toggle('active', viewName !== 'admin');
   }
+
+  // Toggle body exam-active class so CSS security print shield targets only the active CBT exam
+  document.body.classList.toggle('exam-active', viewName === 'exam');
 }
 
 // Format Seconds to MM:SS

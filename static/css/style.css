@@ -2023,11 +2023,19 @@ body {
 
   /* Sticky Exam Top Bar */
   .exam-top-bar {
-    top: 54px;
-    padding: 8px 10px;
+    top: 50px;
+    padding: 6px 8px;
     border-radius: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     gap: 6px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .security-status-badge {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+    gap: 4px;
   }
 
   .candidate-badge {
@@ -2375,5 +2383,250 @@ body {
   }
   .homepage-exam-alert .alert-desc {
     font-size: 0.8rem;
+  }
+}
+
+/* ========================================================================== */
+/* ANTI-CHEATING, SCREEN CAPTURE & PROCTORING SHIELD SYSTEM                   */
+/* ========================================================================== */
+
+/* 1. Instant Security Curtain (Triggered on Window Blur / App Switch / Screenshot) */
+.security-curtain {
+  position: fixed;
+  inset: 0;
+  background: #020617;
+  z-index: 9999999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.security-curtain.active {
+  display: flex !important;
+}
+
+.security-curtain-card {
+  max-width: 520px;
+  background: #0f172a;
+  border: 2px solid #ef4444;
+  border-radius: 20px;
+  padding: 38px 28px;
+  color: #ffffff;
+  box-shadow: 0 0 50px rgba(239, 68, 68, 0.4);
+  animation: pulseSecurityBorder 2s infinite ease-in-out;
+}
+
+@keyframes pulseSecurityBorder {
+  0%, 100% { border-color: #ef4444; box-shadow: 0 0 35px rgba(239, 68, 68, 0.35); }
+  50% { border-color: #f87171; box-shadow: 0 0 55px rgba(239, 68, 68, 0.65); }
+}
+
+.security-curtain-icon {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  line-height: 1;
+}
+
+.security-curtain-card h2 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #f87171;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.security-curtain-card p {
+  font-size: 0.96rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.security-curtain-sub {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+/* 2. Top-Bar Proctoring Status Badge */
+.security-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.security-status-badge.secure {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.security-status-badge.warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  animation: pulseBadge 1.5s infinite;
+}
+
+.security-status-badge.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  animation: pulseBadge 1s infinite;
+}
+
+.security-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.security-status-badge.warning .security-dot {
+  background: #f59e0b;
+}
+
+.security-status-badge.danger .security-dot {
+  background: #ef4444;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+/* 3. Anti-Screenshot Floating Toast */
+.security-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #7f1d1d;
+  color: #ffffff;
+  padding: 13px 22px;
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  font-size: 0.92rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10000000;
+  border: 1.5px solid #ef4444;
+  animation: toastSlideUp 0.25s ease-out;
+}
+
+@keyframes toastSlideUp {
+  from { opacity: 0; transform: translate(-50%, 25px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 4. Diagonal Confidential Exam Watermark Overlay */
+.exam-watermark-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  background-repeat: repeat;
+  background-position: center;
+}
+
+/* 5. Exam Selection / Copy Protection */
+.exam-proctored {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+/* 6. Strict CSS Print Shield for Active CBT Examination ONLY */
+@media print {
+  /* When candidate is in an active exam session, completely block exam questions from printing */
+  body.exam-active #view-exam,
+  body.exam-proctored #view-exam,
+  #view-exam.active,
+  #view-exam.active * {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.exam-active::before,
+  body.exam-proctored::before {
+    content: "⚠️ EXAMINATION CONTENT IS CONFIDENTIAL AND PROTECTED AGAINST PRINTING & CAPTURE.";
+    display: block !important;
+    font-size: 22pt;
+    font-weight: 800;
+    color: #b91c1c;
+    text-align: center;
+    margin-top: 150px;
+    padding: 30px;
+  }
+
+  /* Explicitly guarantee Photocard & Results remain fully visible for candidate printing */
+  #view-photocard.active,
+  #view-photocard.active .photocard-container,
+  #view-photocard.active .photocard-slip-card,
+  #view-result.active,
+  #view-result.active .result-container,
+  #view-result.active .result-slip-card {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+  }
+}
+
+/* 7. Mobile-Optimized Rules for Proctor Shield & Modals (< 640px) */
+@media (max-width: 640px) {
+  .security-curtain-card {
+    max-width: 92% !important;
+    padding: 24px 18px !important;
+    border-radius: 16px !important;
+  }
+  .security-curtain-icon {
+    font-size: 2.5rem !important;
+    margin-bottom: 12px !important;
+  }
+  .security-curtain-card h2 {
+    font-size: 1.15rem !important;
+    margin-bottom: 8px !important;
+  }
+  .security-curtain-card p {
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+  }
+
+  #security-violation-modal .modal-card {
+    padding: 24px 16px !important;
+    max-width: 92% !important;
+    border-radius: 16px !important;
+  }
+  #sec-violation-icon {
+    width: 54px !important;
+    height: 54px !important;
+    font-size: 1.8rem !important;
+    margin-bottom: 10px !important;
+  }
+  #sec-violation-title {
+    font-size: 1.15rem !important;
+  }
+  #sec-violation-msg {
+    font-size: 0.86rem !important;
+    margin-bottom: 18px !important;
+    line-height: 1.5 !important;
+  }
+  .security-toast {
+    width: 90% !important;
+    font-size: 0.82rem !important;
+    padding: 10px 14px !important;
+    bottom: 20px !important;
   }
 }
