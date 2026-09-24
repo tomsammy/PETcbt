@@ -2023,11 +2023,19 @@ body {
 
   /* Sticky Exam Top Bar */
   .exam-top-bar {
-    top: 54px;
-    padding: 8px 10px;
+    top: 50px;
+    padding: 6px 8px;
     border-radius: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     gap: 6px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+
+  .security-status-badge {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+    gap: 4px;
   }
 
   .candidate-badge {
@@ -2555,5 +2563,52 @@ body {
     text-align: center;
     margin-top: 150px;
     padding: 30px;
+  }
+}
+
+/* 7. Mobile-Optimized Rules for Proctor Shield & Modals (< 640px) */
+@media (max-width: 640px) {
+  .security-curtain-card {
+    max-width: 92% !important;
+    padding: 24px 18px !important;
+    border-radius: 16px !important;
+  }
+  .security-curtain-icon {
+    font-size: 2.5rem !important;
+    margin-bottom: 12px !important;
+  }
+  .security-curtain-card h2 {
+    font-size: 1.15rem !important;
+    margin-bottom: 8px !important;
+  }
+  .security-curtain-card p {
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+  }
+
+  #security-violation-modal .modal-card {
+    padding: 24px 16px !important;
+    max-width: 92% !important;
+    border-radius: 16px !important;
+  }
+  #sec-violation-icon {
+    width: 54px !important;
+    height: 54px !important;
+    font-size: 1.8rem !important;
+    margin-bottom: 10px !important;
+  }
+  #sec-violation-title {
+    font-size: 1.15rem !important;
+  }
+  #sec-violation-msg {
+    font-size: 0.86rem !important;
+    margin-bottom: 18px !important;
+    line-height: 1.5 !important;
+  }
+  .security-toast {
+    width: 90% !important;
+    font-size: 0.82rem !important;
+    padding: 10px 14px !important;
+    bottom: 20px !important;
   }
 }

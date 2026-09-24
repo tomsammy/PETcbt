@@ -1265,16 +1265,31 @@ const proctorEngine = {
   maxViolations: 3,
   violationLogs: [],
   hasLeftWindow: false,
+  isFullscreenActive: false,
+  wakeLock: null,
   toastTimer: null,
   curtainTimer: null,
+  blurCheckTimer: null,
 
   init() {
-    // 1. App-switching & tab-switching listeners
+    // 1. Mobile & Desktop App-switching & tab-switching listeners
     window.addEventListener('blur', (e) => {
       if (!this.active || state.isSubmitted) return;
       // Immediate blackout protects against Snipping Tool, Alt+Tab, and background capture
       this.showCurtain();
-      this.hasLeftWindow = true;
+      
+      // 180ms verification to prevent transient scroll-edge touch glitches on mobile
+      if (this.blurCheckTimer) clearTimeout(this.blurCheckTimer);
+      this.blurCheckTimer = setTimeout(() => {
+        if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+          this.hasLeftWindow = true;
+        } else {
+          // Transient blur (e.g. rapid touch near edge) - restore screen smoothly
+          if (!this.hasLeftWindow && (!document.getElementById('security-violation-modal') || !document.getElementById('security-violation-modal').classList.contains('active'))) {
+            this.hideCurtain();
+          }
+        }
+      }, 180);
     });
 
     window.addEventListener('focus', (e) => {
@@ -1296,11 +1311,29 @@ const proctorEngine = {
       }
     });
 
-    // 2. Fullscreen change listener
+    // Mobile OS lifecycle (Crucial for iOS Safari & Android when Home gesture is swiped)
+    window.addEventListener('pagehide', () => {
+      if (!this.active || state.isSubmitted) return;
+      this.showCurtain();
+      this.hasLeftWindow = true;
+    });
+
+    window.addEventListener('pageshow', () => {
+      if (!this.active || state.isSubmitted) return;
+      if (this.hasLeftWindow) {
+        this.recordViolation('Returned from home screen or background');
+      }
+    });
+
+    // 2. Fullscreen change listener (guards against false alarms on devices without HTML fullscreen like iPhone)
     const handleFs = () => {
       if (!this.active || state.isSubmitted) return;
       const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-      if (!isFs) {
+      if (isFs) {
+        this.isFullscreenActive = true;
+      } else if (this.isFullscreenActive) {
+        // Fullscreen was previously active and was exited
+        this.isFullscreenActive = false;
         this.showCurtain();
         this.recordViolation('Exited secure fullscreen examination mode');
       }
@@ -1308,7 +1341,24 @@ const proctorEngine = {
     document.addEventListener('fullscreenchange', handleFs);
     document.addEventListener('webkitfullscreenchange', handleFs);
 
-    // 3. Screenshot & Hotkey Blocking (Capture phase to intercept before OS/browser)
+    // 3. Multi-touch screenshot gesture blocking on mobile (e.g. 3-finger swipe on Xiaomi/Samsung/Oppo)
+    window.addEventListener('touchstart', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      if (e.touches && e.touches.length >= 3) {
+        e.preventDefault();
+        this.showCurtain();
+        this.showToast('⚠️ Multi-finger gesture screenshot blocked.');
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      if (!this.active || state.isSubmitted) return;
+      if (e.touches && e.touches.length >= 3) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    // 4. Desktop & External Keyboard Screenshot & Hotkey Blocking
     window.addEventListener('keydown', (e) => {
       if (!this.active || state.isSubmitted) return;
 
@@ -1373,15 +1423,14 @@ const proctorEngine = {
       }
     }, true);
 
-    // 4. Mouse Context Menu (Right Click)
+    // 5. Long-press and Context Menu (Disables text selection / image download on mobile)
     document.addEventListener('contextmenu', (e) => {
       if (!this.active || state.isSubmitted) return;
       e.preventDefault();
-      this.showToast('⚠️ Context menu is disabled during the examination.');
+      this.showToast('⚠️ Context menu and text selection are disabled.');
       return false;
     }, true);
 
-    // 5. Copy, Cut, Drag Prevention
     document.addEventListener('copy', (e) => {
       if (!this.active || state.isSubmitted) return;
       e.preventDefault();
@@ -1402,11 +1451,12 @@ const proctorEngine = {
     }, true);
   },
 
-  start(candidate) {
+  async start(candidate) {
     this.active = true;
     this.violations = 0;
     this.violationLogs = [];
     this.hasLeftWindow = false;
+    this.isFullscreenActive = false;
 
     // Apply proctor classes
     document.body.classList.add('exam-proctored');
@@ -1416,14 +1466,19 @@ const proctorEngine = {
     this.updateWatermark(candidate);
     this.updateSecurityBadge();
     this.enterFullscreen();
+
+    // Keep phone screen awake during examination
+    await this.requestWakeLock();
   },
 
   stop() {
     this.active = false;
+    this.isFullscreenActive = false;
     document.body.classList.remove('exam-proctored');
     const examView = document.getElementById('view-exam');
     if (examView) examView.classList.remove('exam-proctored');
 
+    this.releaseWakeLock();
     this.hideCurtain();
     this.closeViolationModal();
 
@@ -1433,11 +1488,32 @@ const proctorEngine = {
     }
   },
 
+  async requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator && navigator.wakeLock.request) {
+        this.wakeLock = await navigator.wakeLock.request('screen');
+        console.log('Mobile Screen Wake Lock active - screen will not dim or sleep.');
+      }
+    } catch (err) {
+      console.warn('Wake Lock request skipped:', err);
+    }
+  },
+
+  releaseWakeLock() {
+    if (this.wakeLock) {
+      try {
+        this.wakeLock.release().then(() => { this.wakeLock = null; }).catch(() => {});
+      } catch (e) {}
+    }
+  },
+
   enterFullscreen() {
     const docEl = document.documentElement;
     const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
     if (rfs) {
-      rfs.call(docEl).catch(err => {
+      rfs.call(docEl).then(() => {
+        this.isFullscreenActive = true;
+      }).catch(err => {
         console.warn('Fullscreen entry deferred/declined:', err);
       });
     }
@@ -1535,10 +1611,10 @@ const proctorEngine = {
       badgeEl.style.background = '#fef3c7';
       badgeEl.style.color = '#92400e';
       badgeEl.innerHTML = `⚠️ Warning 1 of ${this.maxViolations}`;
-      msgEl.innerHTML = `You navigated away from the examination window (<em>${reason}</em>).<br><br>Switching to another application, opening new browser tabs, or attempting screen capture is <strong>strictly prohibited</strong>. This incident has been logged with your candidate record.<br><br>Please return to secure fullscreen mode immediately.`;
+      msgEl.innerHTML = `You navigated away from the examination window (<em>${reason}</em>).<br><br>Switching to another application, opening new browser tabs, or attempting screen capture is <strong>strictly prohibited</strong>. This incident has been logged with your candidate record.<br><br>Please return to the examination immediately.`;
       actionsEl.innerHTML = `
         <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="proctorEngine.resumeExam()">
-          <span>🛡️ Re-enter Fullscreen & Continue Exam</span>
+          <span>🛡️ Return to Examination</span>
         </button>
       `;
     } else if (this.violations === 2) {
@@ -1547,10 +1623,10 @@ const proctorEngine = {
       badgeEl.style.background = '#fee2e2';
       badgeEl.style.color = '#b91c1c';
       badgeEl.innerHTML = `🚨 Warning 2 of ${this.maxViolations} (FINAL WARNING)`;
-      msgEl.innerHTML = `Another unauthorized window switch was detected (<em>${reason}</em>).<br><br><strong style="color: #b91c1c;">You have only ONE warning remaining!</strong><br><br>Any further attempt to exit fullscreen, switch applications, or minimize this window will result in <strong>IMMEDIATE EXAM TERMINATION and automatic submission</strong> to the Civil Service Commission.`;
+      msgEl.innerHTML = `Another unauthorized window switch was detected (<em>${reason}</em>).<br><br><strong style="color: #b91c1c;">You have only ONE warning remaining!</strong><br><br>Any further attempt to exit, switch applications, or minimize this window will result in <strong>IMMEDIATE EXAM TERMINATION and automatic submission</strong> to the Civil Service Commission.`;
       actionsEl.innerHTML = `
         <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #b91c1c;" onclick="proctorEngine.resumeExam()">
-          <span>⚠️ I Understand - Return to Fullscreen (Final Chance)</span>
+          <span>⚠️ I Understand - Resume Exam (Final Chance)</span>
         </button>
       `;
     } else {
@@ -1599,10 +1675,10 @@ const proctorEngine = {
       text.textContent = '🛡️ Shield: Active (0/3)';
     } else if (this.violations === 1) {
       badge.className = 'security-status-badge warning';
-      text.textContent = '⚠️ Shield: Warning (1/3)';
+      text.textContent = '⚠️ Warning (1/3)';
     } else if (this.violations >= 2) {
       badge.className = 'security-status-badge danger';
-      text.textContent = `🚨 Shield: Warning (${this.violations}/3)`;
+      text.textContent = `🚨 Warning (${this.violations}/3)`;
     }
   },
 
@@ -1611,10 +1687,10 @@ const proctorEngine = {
     if (!watermarkEl || !candidate) return;
     const psn = candidate.amended_psn || candidate.psn || 'OFFICER';
     const name = candidate.amended_name || candidate.name || 'CANDIDATE';
-    const text = `${name} • PSN: ${psn} • KWCSC CBT 2026 • CONFIDENTIAL`;
+    const text = `${name} • PSN: ${psn} • KWCSC 2026`;
     
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200">
-      <text x="30" y="100" fill="rgba(15, 23, 42, 0.035)" font-size="13" font-family="system-ui, -apple-system, sans-serif" font-weight="700" transform="rotate(-22 30 100)">
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="280" height="140">
+      <text x="15" y="70" fill="rgba(15, 23, 42, 0.038)" font-size="11" font-family="system-ui, -apple-system, sans-serif" font-weight="700" transform="rotate(-18 15 70)">
         ${text}
       </text>
     </svg>`;
