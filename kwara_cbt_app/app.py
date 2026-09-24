@@ -7,6 +7,7 @@ import secrets
 import hmac
 import hashlib
 import logging
+import urllib.parse
 from datetime import datetime
 from typing import Dict, Any, Optional, Union
 
@@ -69,6 +70,7 @@ def generate_admin_token(username: str) -> str:
 def verify_admin_token_stateless(token_str: str) -> bool:
     if not token_str:
         return False
+    token_str = urllib.parse.unquote(str(token_str)).strip('"\' ')
     parts = token_str.split(":")
     if len(parts) != 3:
         return False
@@ -154,26 +156,39 @@ def verify_admin_auth(
     token: Optional[str] = Query(None),
     admin_token: Optional[str] = Cookie(None)
 ):
-    auth_token = token if isinstance(token, str) else None
-    if not auth_token and isinstance(admin_token, str):
-        auth_token = admin_token
-    if not auth_token and request:
-        try:
-            auth_token = request.cookies.get("admin_token") or request.cookies.get("token") or request.query_params.get("token")
-        except Exception:
-            auth_token = None
-    if not auth_token and isinstance(authorization, str):
+    # 1. Authorization Header (Highest priority for SPA fetch requests)
+    auth_token = None
+    if isinstance(authorization, str) and authorization.strip():
         if authorization.startswith("Bearer "):
-            auth_token = authorization.split("Bearer ")[1].strip()
+            auth_token = authorization[7:].strip()
         else:
             auth_token = authorization.strip()
-            
+
+    # 2. Query param (for direct download links ?token=...)
+    if not auth_token and isinstance(token, str) and token.strip():
+        auth_token = token.strip()
+
+    # 3. Cookie (for direct browser URL navigation)
+    if not auth_token and isinstance(admin_token, str) and admin_token.strip():
+        auth_token = admin_token.strip()
+
+    # 4. Fallback to request cookies or query params
+    if not auth_token and request:
+        try:
+            auth_token = (
+                request.cookies.get("admin_token")
+                or request.cookies.get("token")
+                or request.query_params.get("token")
+            )
+        except Exception:
+            auth_token = None
+
     if auth_token and isinstance(auth_token, str):
-        auth_token = auth_token.strip('"\' ')
-            
+        auth_token = urllib.parse.unquote(auth_token).strip('"\' ')
+
     if not auth_token:
         raise HTTPException(status_code=401, detail="Unauthorized: Admin login required.")
-        
+
     if not verify_admin_token_stateless(auth_token) and auth_token not in ACTIVE_ADMIN_TOKENS:
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid or expired administrator session.")
     return True
@@ -254,7 +269,7 @@ def admin_logout(
     if not auth_token and isinstance(authorization, str) and authorization.startswith("Bearer "):
         auth_token = authorization.split("Bearer ")[1].strip()
     if auth_token and isinstance(auth_token, str):
-        auth_token = auth_token.strip('"\' ')
+        auth_token = urllib.parse.unquote(auth_token).strip('"\' ')
         if auth_token in ACTIVE_ADMIN_TOKENS:
             ACTIVE_ADMIN_TOKENS.remove(auth_token)
     response.delete_cookie(key="admin_token", path="/")
