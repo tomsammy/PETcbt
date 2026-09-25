@@ -9,12 +9,40 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css?v=20260924_40q">
   <style>
-    /* Demo Specific Custom Accents */
+    /* Security & Print Protection for Demo */
+    @media print {
+      body.exam-active #demo-view-exam,
+      body.exam-proctored #demo-view-exam,
+      #demo-view-exam.active,
+      #demo-view-exam.active * {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+      }
+      #demo-view-result.active,
+      #demo-view-result.active .result-container {
+        display: block !important;
+        visibility: visible !important;
+        height: auto !important;
+      }
+    }
+
+    /* Prevent selection of question text during testing */
+    body.exam-proctored .question-card,
+    body.exam-proctored .question-text,
+    body.exam-proctored .options-list {
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      -moz-user-select: none !important;
+      -ms-user-select: none !important;
+    }
+
+    /* Demo Ribbon Header */
     .demo-ribbon {
-      background: linear-gradient(90deg, #b45309 0%, #d97706 50%, #b45309 100%);
+      background: linear-gradient(90deg, #004d40 0%, #00796b 50%, #004d40 100%);
       color: #ffffff;
       text-align: center;
-      padding: 6px 12px;
+      padding: 6px 14px;
       font-size: 0.8rem;
       font-weight: 800;
       letter-spacing: 0.05em;
@@ -25,103 +53,20 @@
       z-index: 1001;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
       gap: 10px;
     }
     .demo-badge-pill {
-      background: #ffffff;
-      color: #b45309;
+      background: #f59e0b;
+      color: #000;
       font-size: 0.72rem;
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 12px;
       font-weight: 900;
-    }
-    .demo-hero-card {
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 14px;
-      padding: 24px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-      max-width: 720px;
-      margin: 20px auto;
-    }
-    .demo-rules-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin: 18px 0;
-    }
-    .demo-rule-item {
-      background: #f8fafc;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px 14px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-    .demo-rule-icon {
-      font-size: 1.4rem;
-      flex-shrink: 0;
-    }
-    .demo-rule-title {
-      font-size: 0.88rem;
-      font-weight: 800;
-      color: #0f172a;
-      margin-bottom: 2px;
-    }
-    .demo-rule-desc {
-      font-size: 0.78rem;
-      color: #64748b;
-      line-height: 1.35;
-    }
-    .demo-toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #1e293b;
-      color: #ffffff;
-      padding: 14px 18px;
-      border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-      z-index: 9999;
-      display: none;
-      max-width: 380px;
-      font-size: 0.86rem;
-      line-height: 1.4;
-      border-left: 4px solid #f59e0b;
-    }
-    .demo-review-item {
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 12px;
-    }
-    .demo-review-qnum {
-      font-size: 0.78rem;
-      font-weight: 800;
-      color: #004d40;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .demo-review-text {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 10px;
-    }
-    .demo-review-ans {
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-    }
-    .demo-review-exp {
-      background: #f1f5f9;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 0.8rem;
-      color: #334155;
-      margin-top: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .btn-return-portal {
       display: inline-flex;
@@ -130,15 +75,91 @@
       color: #004d40;
       font-weight: 700;
       text-decoration: none;
-      font-size: 0.88rem;
-      padding: 6px 12px;
+      font-size: 0.82rem;
+      padding: 4px 10px;
       border: 1.2px solid #cbd5e1;
       border-radius: 6px;
       background: #fff;
+      transition: all 0.2s ease;
     }
     .btn-return-portal:hover {
       background: #f8fafc;
       border-color: #004d40;
+    }
+
+    /* Security Notice Box in Orientation */
+    .demo-security-banner {
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 16px 0;
+      color: #991b1b;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .demo-security-banner strong {
+      color: #7f1d1d;
+    }
+
+    /* Security Violation Toast */
+    .cbt-security-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      color: #ffffff;
+      padding: 14px 20px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 999999;
+      display: none;
+      max-width: 380px;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      border-left: 4px solid #ef4444;
+      animation: toastSlideUp 0.3s ease-out;
+    }
+    @keyframes toastSlideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Question Review Styles */
+    .demo-review-item {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .demo-review-qnum {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #004d40;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .demo-review-text {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 10px;
+      line-height: 1.45;
+    }
+    .demo-review-ans {
+      font-size: 0.88rem;
+      margin-bottom: 4px;
+    }
+    .demo-review-exp {
+      background: #f8fafc;
+      border-left: 3px solid #004d40;
+      border-radius: 0 6px 6px 0;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      color: #334155;
+      margin-top: 10px;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -146,10 +167,12 @@
 
   <!-- Demo Notice Header Ribbon -->
   <div class="demo-ribbon">
-    <span class="demo-badge-pill">DEMO / PRACTICE MODE</span>
-    <span>Kwara State Civil Service Commission &bull; Official CBT Interface Simulation</span>
-    <a href="/" class="btn-return-portal" style="padding: 2px 8px; font-size: 0.75rem; border-color: #fde68a; background: #fffbeb; color: #92400e;">
-      🏠 Exit to Main Portal
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span class="demo-badge-pill">🛡️ FULL PROCTORING ACTIVE</span>
+      <span>Kwara State Civil Service Commission &bull; Official CBT Simulator</span>
+    </div>
+    <a href="/" class="btn-return-portal">
+      🏠 Return to Official Portal
     </a>
   </div>
 
@@ -159,7 +182,7 @@
       <img src="/static/images/logo.png" alt="Kwara State Seal" class="brand-logo" onerror="this.style.display='none'">
       <div class="brand-titles">
         <h1>KWARA STATE CIVIL SERVICE COMMISSION</h1>
-        <p>2026 Promotion Evaluation CBT Examination &bull; <strong>Interactive Training Demo</strong></p>
+        <p>2026 Promotion Evaluation CBT &bull; <strong>Interactive Training Demo</strong></p>
       </div>
     </div>
     <div style="display: flex; gap: 8px; align-items: center;">
@@ -176,49 +199,64 @@
     <!-- VIEW 1: DEMO WELCOME & ORIENTATION SETUP                 -->
     <!-- ======================================================== -->
     <section id="demo-view-welcome" class="view-section active">
-      <div class="demo-hero-card">
+      <div class="demo-hero-card" style="background:#fff; border:1.5px solid #e2e8f0; border-radius:14px; padding:24px; box-shadow:0 4px 16px rgba(0,0,0,0.06); max-width:740px; margin:20px auto;">
         <div style="text-align: center; margin-bottom: 20px;">
           <div style="font-size: 2.5rem; margin-bottom: 6px;">🎯</div>
-          <h2 style="font-size: 1.45rem; font-weight: 900; color: #004d40; letter-spacing: -0.01em;">CBT Examination Demonstration & Practice</h2>
-          <p style="font-size: 0.92rem; color: #475569; margin-top: 6px;">
-            This interactive simulator reproduces the <strong>exact user interface, Question Grid (40), and mobile controls</strong> that civil servants will use during the 2026 Promotion Evaluation Examination.
+          <h2 style="font-size: 1.45rem; font-weight: 900; color: #004d40; letter-spacing: -0.01em;">CBT Examination Demonstration & Security Orientation</h2>
+          <p style="font-size: 0.92rem; color: #475569; margin-top: 6px; line-height: 1.5;">
+            Experience the <strong>exact user interface, Question Grid (40), timing countdown, and anti-cheating protections</strong> that are active during the 2026 Promotion Evaluation Examination.
           </p>
         </div>
 
-        <div class="demo-rules-grid">
-          <div class="demo-rule-item">
-            <div class="demo-rule-icon">📋</div>
+        <!-- Strict Security Directives Callout -->
+        <div class="demo-security-banner">
+          <div style="font-weight: 800; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            <span>🛡️</span> All Live Examination Security Protections are Enforced in this Demo:
+          </div>
+          <ul style="margin-left: 20px; font-size: 0.84rem; line-height: 1.5;">
+            <li><strong>Anti-Screenshot & Screen Capture Protection:</strong> Screenshots, PrintScreen, Snipping tool, and print commands are blocked.</li>
+            <li><strong>3-Strike Application Switching Rule:</strong> Switching apps, opening browser tabs, or minimizing the window triggers blackout curtains and proctor violation warnings.</li>
+            <li><strong>Disabled Copying & Context Menu:</strong> Right-clicking, long-pressing, and text copying are disabled.</li>
+            <li><strong>Candidate Forensic Watermark:</strong> Your Name and PSN appear watermarked across the screen.</li>
+            <li><strong>Safe Practice:</strong> None of these 40 orientation questions are from any real promotion exam paper, and demo scores are not recorded in the official database.</li>
+          </ul>
+        </div>
+
+        <!-- Rules Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 18px 0;">
+          <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; gap:10px; align-items:flex-start;">
+            <div style="font-size:1.4rem;">📋</div>
             <div>
-              <div class="demo-rule-title">40 Questions Grid</div>
-              <div class="demo-rule-desc">Real-time status indicators: Answered (Green), Flagged (Purple), Current (Blue), and Unanswered (Gray).</div>
+              <div style="font-weight:800; font-size:0.88rem; color:#0f172a;">40 Questions Grid</div>
+              <div style="font-size:0.78rem; color:#64748b;">Navigate questions freely: Green = Answered, Purple = Flagged, Gray = Unanswered.</div>
             </div>
           </div>
-          <div class="demo-rule-item">
-            <div class="demo-rule-icon">⏱️</div>
+          <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; gap:10px; align-items:flex-start;">
+            <div style="font-size:1.4rem;">⏱️</div>
             <div>
-              <div class="demo-rule-title">20-Minute Countdown</div>
-              <div class="demo-rule-desc">Live timer matching exam timing. Includes pause & resume controls for demonstration facilitators.</div>
+              <div style="font-weight:800; font-size:0.88rem; color:#0f172a;">20-Minute Timer</div>
+              <div style="font-size:0.78rem; color:#64748b;">Live countdown. Auto-submits automatically when time expires at 00:00.</div>
             </div>
           </div>
-          <div class="demo-rule-item">
-            <div class="demo-rule-icon">📱</div>
+          <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; gap:10px; align-items:flex-start;">
+            <div style="font-size:1.4rem;">📱</div>
             <div>
-              <div class="demo-rule-title">Mobile Phone Optimized</div>
-              <div class="demo-rule-desc">Designed specifically for touchscreens: tap-to-answer options, swipe-ready layout, and slide-out palette drawer.</div>
+              <div style="font-weight:800; font-size:0.88rem; color:#0f172a;">Smartphone Optimized</div>
+              <div style="font-size:0.78rem; color:#64748b;">Touch-friendly options, screen wake-lock, and slide-out Question Grid drawer.</div>
             </div>
           </div>
-          <div class="demo-rule-item">
-            <div class="demo-rule-icon">🛡️</div>
+          <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:10px; padding:12px; display:flex; gap:10px; align-items:flex-start;">
+            <div style="font-size:1.4rem;">💡</div>
             <div>
-              <div class="demo-rule-title">Anti-Cheating Safeguards</div>
-              <div class="demo-rule-desc">Experience the screen-focus monitoring and tab-switch security prompts built into the official system.</div>
+              <div style="font-weight:800; font-size:0.88rem; color:#0f172a;">Zero-Overlap Questions</div>
+              <div style="font-size:0.78rem; color:#64748b;">Covers CBT guidelines, exam day directives, and digital literacy.</div>
             </div>
           </div>
         </div>
 
         <!-- Customizable Demo Profile -->
-        <div style="background: #f1f5f9; border-radius: 10px; padding: 18px; margin: 20px 0;">
-          <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+        <div style="background: #f1f5f9; border-radius: 10px; padding: 18px; margin: 18px 0;">
+          <div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
             <span>👤</span> Candidate Profile for this Demonstration Session:
           </div>
 
@@ -261,10 +299,10 @@
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <button type="button" class="btn-primary-large" style="background: #004d40; padding: 14px;" onclick="startDemoExam()">
-            <span>🚀 Start Demo CBT Exam (40 Questions)</span>
+            <span>🚀 Start Demo CBT Exam (40 Questions with Full Security)</span>
           </button>
           <div style="text-align: center; font-size: 0.78rem; color: #64748b;">
-            🔒 Safe Sandbox Mode &bull; No answers, scores, or attempts will be written to the official live examination database.
+            🔒 Safe Sandbox Mode &bull; Fully protected against cheating, but completely isolated from live exam records.
           </div>
         </div>
       </div>
@@ -274,22 +312,31 @@
     <!-- VIEW 2: ACTIVE DEMO CBT EXAMINATION INTERFACE            -->
     <!-- ======================================================== -->
     <section id="demo-view-exam" class="view-section">
-      <!-- Exam Day Proctored Header Bar -->
-      <div class="exam-proctor-bar">
-        <div class="exam-candidate-info">
-          <div class="exam-avatar" id="demo-avatar">A</div>
-          <div>
-            <div class="exam-cand-name" id="demo-disp-name">Ahmad Toyin</div>
-            <div class="exam-cand-meta">
-              <span>PSN: <strong id="demo-disp-psn">DEMO-2026-001</strong></span> &bull;
-              <span>GL: <strong id="demo-disp-gl">14</strong></span> &bull;
-              <span id="demo-disp-mda">MARD</span> &bull;
-              <span>Paper: <strong>CSC/DEMO/40Q</strong></span>
-            </div>
+      <!-- Diagonal Confidential Watermark Overlay -->
+      <div class="exam-watermark-overlay" id="demo-watermark-overlay"></div>
+
+      <!-- Exam Top Bar with Proctor Badge & Live Countdown -->
+      <div class="exam-top-bar" style="margin-bottom: 16px;">
+        <div class="network-status-badge online">
+          <span class="network-dot"></span>
+          <span>Connected</span>
+        </div>
+        
+        <!-- Anti-Cheating Live Shield Status Badge -->
+        <div class="security-status-badge secure" id="demo-security-badge" title="Anti-Cheating Proctor Shield Active">
+          <span class="security-dot"></span>
+          <span id="demo-security-status-text">🛡️ Shield: Active (0/3)</span>
+        </div>
+
+        <div class="candidate-badge">
+          <div class="candidate-avatar" id="demo-avatar">A</div>
+          <div class="candidate-meta">
+            <h3 id="demo-disp-name">Ahmad Toyin</h3>
+            <p><span id="demo-disp-psn">PSN: DEMO-2026-001</span> | GL <span id="demo-disp-gl">14</span> | <span id="demo-disp-mda">MARD</span></p>
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-left: auto;">
           <!-- Facilitator Pause / Resume Button -->
           <button type="button" id="btn-demo-pause" onclick="toggleDemoTimerPause()" class="btn-ctrl" style="padding: 6px 12px; font-size: 0.8rem; background: #fff; border-color: #cbd5e1; font-weight: 700;" title="Click to Pause timer during training explanations">
             <span>⏸️ Pause Timer</span>
@@ -442,12 +489,12 @@
     <!-- VIEW 4: DEMO RESULT & QUESTION REVIEW                    -->
     <!-- ======================================================== -->
     <section id="demo-view-result" class="view-section">
-      <div class="result-container" style="max-width: 820px;">
+      <div class="result-container" style="max-width: 840px;">
         <div class="result-slip-card">
           <div class="slip-header">
             <img src="/static/images/logo.png" alt="Kwara State Seal" class="slip-header-logo" onerror="this.style.display='none'">
             <h2>KWARA STATE CIVIL SERVICE COMMISSION</h2>
-            <p>2026 Promotion Evaluation Examination &bull; <strong>Demo CBT Result & Performance Review</strong></p>
+            <p>2026 Promotion Evaluation Examination &bull; <strong>Demo CBT Result & Security Audit Report</strong></p>
           </div>
 
           <div class="slip-body">
@@ -456,7 +503,7 @@
               <div style="font-size: 2.6rem; margin-bottom: 8px;">🎯</div>
               <h3 style="font-size: 1.35rem; font-weight: 800; margin-bottom: 6px; color: #ffffff; letter-spacing: -0.01em;">Demo Examination Successfully Completed</h3>
               <p style="font-size: 0.92rem; color: #e0f2f1; margin: 0; font-weight: 500;">
-                Your demo test answers have been analyzed. Review your score and correct answers below.
+                Your demo test answers and proctoring telemetry have been analyzed. Review your score and proctoring log below.
               </p>
             </div>
 
@@ -484,6 +531,21 @@
               </div>
             </div>
 
+            <!-- Security Infraction Audit Box -->
+            <div id="demo-security-summary-card" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 24px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+                <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                  <span>🛡️</span> Anti-Cheating Proctor Telemetry Audit:
+                </div>
+                <div id="demo-security-audit-badge" style="font-weight: 700; font-size: 0.8rem; padding: 3px 10px; border-radius: 999px; background: #ecfdf5; color: #065f46;">
+                  Clean Session (0 Violations)
+                </div>
+              </div>
+              <div id="demo-security-log-content" style="font-size: 0.84rem; color: #475569; line-height: 1.5;">
+                No unauthorized window switches, screenshots, or app switches were detected during your examination session.
+              </div>
+            </div>
+
             <!-- Candidate Details Table -->
             <div class="slip-details-grid">
               <div class="slip-detail-row">
@@ -500,7 +562,7 @@
               </div>
               <div class="slip-detail-row">
                 <div class="lbl">Examination Paper</div>
-                <div class="val">CSC-DEMO-40: General Administration & PSR</div>
+                <div class="val">CSC-DEMO-40: CBT Orientation, Regulations & Digital Literacy</div>
               </div>
             </div>
 
@@ -533,517 +595,559 @@
 
   </main>
 
-  <!-- Anti-Cheating Demo Notification Toast -->
-  <div class="demo-toast" id="demo-security-toast">
-    <div style="font-weight: 800; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-      <span>⚠️ Demo Security Notice</span>
+  <!-- ======================================================== -->
+  <!-- ANTI-CHEATING SECURITY OVERLAYS                          -->
+  <!-- ======================================================== -->
+
+  <!-- Instant Screen Shield & Anti-Capture Curtain -->
+  <div id="demo-security-curtain" class="security-curtain" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.96); z-index:99999; backdrop-filter:blur(15px); align-items:center; justify-content:center;">
+    <div class="security-curtain-card" style="background:#1e293b; color:#fff; border:2px solid #ef4444; border-radius:16px; padding:32px; text-align:center; max-width:480px; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+      <div style="font-size:3rem; margin-bottom:12px;">🛡️ ⛔</div>
+      <h2 style="font-size:1.35rem; font-weight:900; color:#ef4444; margin-bottom:8px;">EXAMINATION SCREEN BLURRED & PROTECTED</h2>
+      <p style="font-size:0.92rem; color:#cbd5e1; line-height:1.5; margin-bottom:12px;">
+        Application switch, screen capture shortcut, or window blur detected.
+      </p>
+      <p style="font-size:0.8rem; color:#94a3b8; line-height:1.45;">
+        In the official CBT examination, leaving the examination window is strictly prohibited. Return focus to this examination window immediately.
+      </p>
     </div>
-    <div>Window or App Switch Detected! In the live examination, switching apps or browser tabs is prohibited and automatically logged by the proctoring engine.</div>
   </div>
 
-  <!-- Embedded Demo CBT Javascript Engine -->
-  <script>
-    // 40 Authentic Public Service Questions for Kwara State CBT Demonstration
-    const DEMO_QUESTIONS = [
-      {
-        id: 1,
-        question: "Under the Public Service Rules (PSR), what is the statutory retirement age for civil servants in Kwara State?",
-        options: {
-          A: "55 years of age or 30 years of pensionable service, whichever is earlier",
-          B: "60 years of age or 35 years of pensionable service, whichever is earlier",
-          C: "65 years of age or 35 years of pensionable service, whichever is earlier",
-          D: "60 years of age or 40 years of pensionable service, whichever is earlier"
-        },
-        correct: "B",
-        explanation: "Rule 020810 of the Public Service Rules provides that the compulsory retirement age for all grades in the service shall be 60 years of age or 35 years of pensionable service, whichever is earlier."
-      },
-      {
-        id: 2,
-        question: "Which of the following is the highest disciplinary penalty that can be imposed on a confirmed Civil Servant?",
-        options: {
-          A: "Surcharge",
-          B: "Reduction in rank",
-          C: "Dismissal",
-          D: "Interdiction"
-        },
-        correct: "C",
-        explanation: "Dismissal is the ultimate penalty for serious misconduct resulting in complete forfeiture of retirement benefits."
-      },
-      {
-        id: 3,
-        question: "The period of probation required for a newly appointed pensionable officer into the Kwara State Civil Service is normally:",
-        options: {
-          A: "6 months",
-          B: "1 year",
-          C: "2 years",
-          D: "3 years"
-        },
-        correct: "C",
-        explanation: "Under PSR 020301, newly appointed officers serve a probationary period of two (2) years before confirmation."
-      },
-      {
-        id: 4,
-        question: "An official written communication addressed to an officer outside your Ministry, Department, or Agency (MDA) is formally known as a:",
-        options: {
-          A: "Minute",
-          B: "Letter",
-          C: "Memorandum",
-          D: "Circular"
-        },
-        correct: "B",
-        explanation: "Letters are used for external correspondence, while Memoranda are used internally between departments within the service."
-      },
-      {
-        id: 5,
-        question: "Which body is constitutionally vested with the power to appoint, promote, and exercise disciplinary control over civil servants in Kwara State?",
-        options: {
-          A: "Office of the Head of Service",
-          B: "Kwara State Civil Service Commission",
-          C: "Ministry of Finance",
-          D: "Kwara State House of Assembly"
-        },
-        correct: "B",
-        explanation: "Section 197 and Part II of the Third Schedule of the 1999 Constitution (as amended) vests this mandate in the State Civil Service Commission."
-      },
-      {
-        id: 6,
-        question: "What is an A.I.E. in Government financial accounting procedures?",
-        options: {
-          A: "Authority to Incur Expenditure",
-          B: "Annual Internal Estimate",
-          C: "Account of Income and Expenditure",
-          D: "Audit Inspection of Expenses"
-        },
-        correct: "A",
-        explanation: "An Authority to Incur Expenditure (A.I.E.) empowers an officer to incur expenditure on behalf of the Government against an approved vote."
-      },
-      {
-        id: 7,
-        question: "Annual Performance Evaluation Reports (APER) forms are primarily designed to evaluate an officer's:",
-        options: {
-          A: "Monthly salary increments",
-          B: "Work performance, competence, and suitability for advancement",
-          C: "Health and medical fitness",
-          D: "Union activities and attendance"
-        },
-        correct: "B",
-        explanation: "The APER is an objective tool for assessing an officer's efficiency, output, and potential for promotion."
-      },
-      {
-        id: 8,
-        question: "In the Civil Service, a 'Minute' refers to:",
-        options: {
-          A: "Sixty seconds of elapsed official time",
-          B: "A written communication written in a file offering advice or directives",
-          C: "A press release from the Chief Press Secretary",
-          D: "A gazetted government law"
-        },
-        correct: "B",
-        explanation: "A minute is an internal communication written on a file docket to consider and advise on an issue."
-      },
-      {
-        id: 9,
-        question: "How many Local Government Areas (LGAs) make up Kwara State?",
-        options: {
-          A: "12",
-          B: "14",
-          C: "16",
-          D: "18"
-        },
-        correct: "C",
-        explanation: "Kwara State comprises 16 Local Government Areas spread across three senatorial districts (Kwara Central, North, and South)."
-      },
-      {
-        id: 10,
-        question: "An officer on Grade Level 14 is entitled to how many working days of annual leave per annum under current Public Service Regulations?",
-        options: {
-          A: "14 calendar days",
-          B: "21 calendar days",
-          C: "30 calendar days",
-          D: "42 calendar days"
-        },
-        correct: "C",
-        explanation: "Officers on GL 07 and above are entitled to 30 calendar days of annual vacation leave."
-      },
-      {
-        id: 11,
-        question: "Which of the following documents conveys general policy directives, rule amendments, or guidelines from the Head of Service to all MDAs?",
-        options: {
-          A: "Notice of Query",
-          B: "Circular",
-          C: "Payment Voucher",
-          D: "Vote Book"
-        },
-        correct: "B",
-        explanation: "Circulars convey broad administrative, financial, and personnel policy guidelines across the entire public service."
-      },
-      {
-        id: 12,
-        question: "The principle of 'Anonymity' in the Civil Service implies that:",
-        options: {
-          A: "Civil servants should not reveal their names to their families",
-          B: "Civil servants execute government policies without seeking personal public glory or blame",
-          C: "Civil servants must never wear name tags in the office",
-          D: "Civil servants are not permitted to write letters"
-        },
-        correct: "B",
-        explanation: "Anonymity means that ministers/commissioners take political responsibility before parliament and the public, while civil servants advise and execute behind the scenes."
-      },
-      {
-        id: 13,
-        question: "What is the primary role of the Auditor-General for Kwara State?",
-        options: {
-          A: "To disburse funds to contractors",
-          B: "To audit all accounts of all state offices and courts and report to the State House of Assembly",
-          C: "To approve annual leave for civil servants",
-          D: "To prepare the State Government's annual budget"
-        },
-        correct: "B",
-        explanation: "Under Section 125 of the Constitution, the Auditor-General audits the public accounts of the State and submits reports to the Legislature."
-      },
-      {
-        id: 14,
-        question: "When an officer is issued a formal Query for misconduct, the officer is expected to reply within:",
-        options: {
-          A: "24 to 48 hours as specified in the query",
-          B: "Two weeks",
-          C: "One month",
-          D: "At the end of the year"
-        },
-        correct: "A",
-        explanation: "Queries usually stipulate that an officer must respond in writing within 24, 48, or 72 hours of receipt."
-      },
-      {
-        id: 15,
-        question: "The accounting book used in MDAs to monitor committed and actual expenditure against budgeted votes is called:",
-        options: {
-          A: "Day Book",
-          B: "Departmental Vote Expenditure Account (Vote Book)",
-          C: "Store Receipt Voucher",
-          D: "Audit Register"
-        },
-        correct: "B",
-        explanation: "The Vote Book ensures that expenditure does not exceed approved budgetary allocations."
-      },
-      {
-        id: 16,
-        question: "Which of the following is considered serious misconduct under the Public Service Rules?",
-        options: {
-          A: "Dressing neatly",
-          B: "Punctuality at official functions",
-          C: "Insubordination and refusal to obey lawful orders",
-          D: "Filing official minutes promptly"
-        },
-        correct: "C",
-        explanation: "Insubordination is classified as serious misconduct that warrants formal disciplinary proceedings."
-      },
-      {
-        id: 17,
-        question: "The official headquarters and seat of Government of Kwara State is located in:",
-        options: {
-          A: "Offa",
-          B: "Ilorin",
-          C: "Omu-Aran",
-          D: "Lafiagi"
-        },
-        correct: "B",
-        explanation: "Ilorin is the capital city and seat of Government of Kwara State."
-      },
-      {
-        id: 18,
-        question: "The process of transferring an officer from one Ministry or Department to another without change of cadre is called:",
-        options: {
-          A: "Secondment",
-          B: "Deployment / Posting",
-          C: "Conversion",
-          D: "Promotion"
-        },
-        correct: "B",
-        explanation: "Posting or internal deployment moves an officer between stations, units, or departments in the same cadre."
-      },
-      {
-        id: 19,
-        question: "In administrative drafting, a good official letter must exhibit all the following qualities EXCEPT:",
-        options: {
-          A: "Clarity and conciseness",
-          B: "Polite and formal tone",
-          C: "Ambiguous and confusing statements",
-          D: "Accurate facts and references"
-        },
-        correct: "C",
-        explanation: "Official correspondence must avoid ambiguity and present clear, unambiguous facts."
-      },
-      {
-        id: 20,
-        question: "Under Financial Regulations, when an officer is granted an official Cash Advance for a tour or assignment, the advance must be retired within:",
-        options: {
-          A: "7 days of return from the assignment",
-          B: "6 months",
-          C: "End of the civil servant's career",
-          D: "Next fiscal year"
-        },
-        correct: "A",
-        explanation: "Financial Regulations require immediate retirement of non-personal advances within 7 days of completing the official duty."
-      },
-      {
-        id: 21,
-        question: "Who is the Administrative Head and Chief Accounting Officer of a Government Ministry in Kwara State?",
-        options: {
-          A: "The Permanent Secretary",
-          B: "The Honourable Commissioner",
-          C: "The Director of Personnel Management",
-          D: "The Internal Auditor"
-        },
-        correct: "A",
-        explanation: "The Permanent Secretary is the administrative head and Accounting Officer of the Ministry."
-      },
-      {
-        id: 22,
-        question: "Which of the following represents the correct order of a standard file docket in Government registries?",
-        options: {
-          A: "Loose correspondence thrown into the drawer",
-          B: "Enclosures on the right side, minutes on the left side",
-          C: "Minutes on the right side, correspondence on the left side",
-          D: "Financial vouchers on top of all files"
-        },
-        correct: "B",
-        explanation: "Civil service registry convention places incoming and outgoing letters (enclosures) on the right flap and internal minutes on the left flap."
-      },
-      {
-        id: 23,
-        question: "The Code of Conduct Bureau was established primarily to:",
-        options: {
-          A: "Pay monthly pensions to retirees",
-          B: "Establish and maintain a high standard of public morality in the conduct of government business",
-          C: "Issue driver licenses to civil servants",
-          D: "Conduct primary school examinations"
-        },
-        correct: "B",
-        explanation: "The Code of Conduct Bureau enforces transparency, anti-corruption standards, and asset declaration among public officers."
-      },
-      {
-        id: 24,
-        question: "What does 'Interdiction' mean in civil service disciplinary procedure?",
-        options: {
-          A: "Permanent removal from the service",
-          B: "Temporary suspension of an officer from performing duties on half pay pending investigation of criminal or serious charges",
-          C: "Promotion to the next higher grade level",
-          D: "Award of commendation for excellent service"
-        },
-        correct: "B",
-        explanation: "Interdiction is a temporary holding action on half pay when formal disciplinary or criminal proceedings are instituted against an officer."
-      },
-      {
-        id: 25,
-        question: "Maternity leave for a confirmed female civil servant in the Kwara State Public Service is granted for a duration of:",
-        options: {
-          A: "6 weeks",
-          B: "8 weeks",
-          C: "16 weeks (or as provided by state civil service regulations)",
-          D: "1 year"
-        },
-        correct: "C",
-        explanation: "Public Service Rules and recent state civil service guidelines provide fully paid maternity leave of 16 weeks for eligible female officers."
-      },
-      {
-        id: 26,
-        question: "Which of the following is an example of a Statutory Board or Commission in Kwara State?",
-        options: {
-          A: "Kwara State Internal Revenue Service (KW-IRS)",
-          B: "Kwara State Civil Service Commission",
-          C: "Kwara State Judicial Service Commission",
-          D: "All of the above"
-        },
-        correct: "D",
-        explanation: "All listed entities are statutory organizations established by constitutional or state legislative enactments."
-      },
-      {
-        id: 27,
-        question: "The security classification 'SECRET' on an official document signifies that unauthorized disclosure would:",
-        options: {
-          A: "Cause trivial embarrassment",
-          B: "Cause exceptionally grave damage to State or National interests",
-          C: "Have no effect whatsoever",
-          D: "Be circulated freely to the press"
-        },
-        correct: "B",
-        explanation: "Security gradings range from Restricted, Confidential, Secret to Top Secret based on the potential harm of unauthorized disclosure."
-      },
-      {
-        id: 28,
-        question: "What is the minimum maturity period required on a post before an officer on Grade Level 07 to 14 becomes eligible for promotion consideration?",
-        options: {
-          A: "1 year",
-          B: "2 years",
-          C: "3 years",
-          D: "5 years"
-        },
-        correct: "C",
-        explanation: "Officers on GL 07 to 14 must spend a minimum of three (3) years on their current grade before being eligible for promotion."
-      },
-      {
-        id: 29,
-        question: "A Store Issue Voucher (SIV) is used in Government store keeping to:",
-        options: {
-          A: "Receive items from contractors",
-          B: "Authorize and document the issuance of store materials to requesting departments",
-          C: "Pay staff overtime allowances",
-          D: "Cancel expired cheques"
-        },
-        correct: "B",
-        explanation: "Store Issue Vouchers authenticate and track items taken out of the central store for official departmental use."
-      },
-      {
-        id: 30,
-        question: "Choose the correct spelling of the official who represents a Ministry in legal matters:",
-        options: {
-          A: "Sollicitor",
-          B: "Solicitor",
-          C: "Solliciter",
-          D: "Solecitor"
-        },
-        correct: "B",
-        explanation: "The correct English spelling is 'Solicitor' (e.g. Solicitor-General and Permanent Secretary, Ministry of Justice)."
-      },
-      {
-        id: 31,
-        question: "Which of the following best describes the principle of 'Merit' in civil service promotion evaluations?",
-        options: {
-          A: "Advancement based purely on family ties",
-          B: "Advancement based on demonstrated competence, performance, exam score, and track record",
-          C: "Advancement based on physical height",
-          D: "Advancement by alphabetical order of names"
-        },
-        correct: "B",
-        explanation: "Meritocracy ensures that promotions are awarded based on proven capability, qualifications, evaluation results, and APER scores."
-      },
-      {
-        id: 32,
-        question: "In the abbreviation 'KWSUTH', what does 'UTH' stand for?",
-        options: {
-          A: "Universal Town Hospital",
-          B: "University Teaching Hospital",
-          C: "Urgent Treatment Home",
-          D: "Union of Teachers and Health"
-        },
-        correct: "B",
-        explanation: "KWSUTH stands for Kwara State University Teaching Hospital."
-      },
-      {
-        id: 33,
-        question: "An officer who is absent from duty without permission or leave is guilty of:",
-        options: {
-          A: "Study leave",
-          B: "Absence Without Official Leave (AWOL)",
-          C: "Casual leave",
-          D: "Duty tour"
-        },
-        correct: "B",
-        explanation: "Absence without official leave (AWOL) constitutes severe misconduct subject to salary stoppage and disciplinary proceedings."
-      },
-      {
-        id: 34,
-        question: "What is the primary function of an Internal Audit unit in a Ministry?",
-        options: {
-          A: "To sign cheques on behalf of the Commissioner",
-          B: "To conduct pre-payment verification, ensure compliance with financial rules, and protect public assets",
-          C: "To approve annual leave for staff",
-          D: "To supervise janitorial services"
-        },
-        correct: "B",
-        explanation: "Internal Audit provides continuous appraisal of financial operations and controls to prevent irregular payments."
-      },
-      {
-        id: 35,
-        question: "Identify the grammatically correct sentence for an official minute:",
-        options: {
-          A: "The matter have been discussed between you and I.",
-          B: "The matter has been discussed between you and me.",
-          C: "The matters has been discussed between us both.",
-          D: "The matter were discussed by me and you."
-        },
-        correct: "B",
-        explanation: "'Between' is a preposition requiring the objective pronoun 'me' ('between you and me'), and the singular subject 'matter' takes 'has'."
-      },
-      {
-        id: 36,
-        question: "Which office coordinates the overall civil service bureaucracy and advises the Governor on top civil service appointments in Kwara State?",
-        options: {
-          A: "Office of the Head of Service (OHOS)",
-          B: "Ministry of Communications",
-          C: "Sports Council",
-          D: "Printing Corporation"
-        },
-        correct: "A",
-        explanation: "The Head of Service is the head of the civil service bureaucracy and principal adviser to the Governor on civil service management."
-      },
-      {
-        id: 37,
-        question: "In CBT examination navigation, what is the purpose of the 'Flag for Review' button?",
-        options: {
-          A: "To immediately cancel your exam",
-          B: "To bookmark a question so you can quickly return and re-evaluate your answer before submitting",
-          C: "To submit your answer to the Governor",
-          D: "To turn off the computer monitor"
-        },
-        correct: "B",
-        explanation: "Flag for Review colors the question distinctly on the grid so the candidate remembers to double-check it before final submission."
-      },
-      {
-        id: 38,
-        question: "What happens automatically when the 20-minute CBT timer reaches 00:00 on exam day?",
-        options: {
-          A: "All your answers are wiped out",
-          B: "The examination is automatically saved and securely submitted to the database",
-          C: "You receive an extra hour automatically",
-          D: "Your mobile device reboots"
-        },
-        correct: "B",
-        explanation: "The proctoring system automatically captures, packages, and submits all answered questions at timer expiration."
-      },
-      {
-        id: 39,
-        question: "Under Kwara State Civil Service Commission guidelines, candidates taking the promotion examination on their smartphone MUST:",
-        options: {
-          A: "Answer calls while taking the exam",
-          B: "Arrive at the accredited venue with a fully charged phone and stay on the active examination screen throughout",
-          C: "Share screens with nearby candidates",
-          D: "Bring printed textbooks into the hall"
-        },
-        correct: "B",
-        explanation: "CSC guidelines require candidates to come with a fully charged smartphone with active data and maintain focus on the exam screen."
-      },
-      {
-        id: 40,
-        question: "The fundamental ethos of the Kwara State Civil Service is centered on:",
-        options: {
-          A: "Selfishness, delay, and partiality",
-          B: "Integrity, professionalism, excellence, accountability, and selfless service to the people of Kwara State",
-          C: "Commercial retail sales",
-          D: "Private commercial trading during official hours"
-        },
-        correct: "B",
-        explanation: "The core values of the civil service are excellence, integrity, fairness, loyalty, accountability, and professionalism in public service delivery."
-      }
-    ];
+  <!-- Anti-Cheating 3-Strike Security Violation Modal -->
+  <div class="modal-overlay" id="demo-security-violation-modal" style="z-index: 100000; backdrop-filter: blur(8px);">
+    <div class="modal-card" style="max-width: 520px; text-align: center; padding: 32px 24px; border: 2px solid #ef4444; box-shadow: 0 20px 45px rgba(239, 68, 68, 0.3);">
+      <div id="demo-sec-violation-icon" style="width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 16px auto; background: #fee2e2; color: #dc2626;">
+        🚨
+      </div>
+      <h3 id="demo-sec-violation-title" style="font-size: 1.35rem; font-weight: 800; color: #991b1b; margin-bottom: 10px;">
+        SECURITY VIOLATION DETECTED
+      </h3>
+      <div id="demo-sec-violation-badge" style="display: inline-block; padding: 4px 14px; border-radius: 999px; background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 0.85rem; margin-bottom: 16px;">
+        Warning <span id="demo-sec-violation-count">1</span> of 3
+      </div>
+      <div id="demo-sec-violation-msg" style="font-size: 0.95rem; color: #334155; line-height: 1.6; margin-bottom: 24px;">
+        You navigated away from the examination window or exited secure fullscreen. Switching to other applications, tabs, or attempting screen capture is strictly forbidden.
+      </div>
+      <div id="demo-sec-violation-actions" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <button type="button" class="btn-primary-large" id="demo-sec-resume-btn" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="demoProctorEngine.resumeExam()">
+          <span>🛡️ Re-enter Secure Fullscreen & Resume Exam</span>
+        </button>
+      </div>
+      <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 14px; margin-bottom: 0;">
+        In the live examination, all infractions are recorded with your candidate session (PSN: <span id="demo-sec-candidate-psn">-</span>).
+      </p>
+    </div>
+  </div>
 
-    // Demo Application State
+  <!-- Real-time Security Toast Notification -->
+  <div class="cbt-security-toast" id="cbt-security-toast"></div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT ENGINE & DEMO PROCTOR ENGINE                  -->
+  <!-- ======================================================== -->
+  <script>
+    // 40 Validated Zero-Overlap Demo Questions
+    const DEMO_QUESTIONS = [
+  {
+    "id": 1,
+    "question": "In the Kwara CSC CBT examination, how many total questions are presented to each candidate in their allocated paper?",
+    "options": {
+      "A": "20 questions",
+      "B": "30 questions",
+      "C": "40 questions",
+      "D": "50 questions"
+    },
+    "correct": "C",
+    "explanation": "Every promotional examination paper consists of exactly 40 objective multiple-choice questions to be completed in 20 minutes."
+  },
+  {
+    "id": 2,
+    "question": "What is the official allocated time duration for completing the 40 questions in the promotion evaluation CBT?",
+    "options": {
+      "A": "10 minutes",
+      "B": "20 minutes",
+      "C": "45 minutes",
+      "D": "60 minutes"
+    },
+    "correct": "B",
+    "explanation": "The examination duration is strictly 20 minutes. The countdown timer on the screen indicates elapsed and remaining time."
+  },
+  {
+    "id": 3,
+    "question": "On the 40-question palette grid, what does a GREEN colored square indicate?",
+    "options": {
+      "A": "The question is currently selected on the screen",
+      "B": "The question has been answered by the candidate",
+      "C": "The question has been flagged for review",
+      "D": "The question has not yet been answered"
+    },
+    "correct": "B",
+    "explanation": "Green indicates that the candidate has successfully chosen an answer for that question number."
+  },
+  {
+    "id": 4,
+    "question": "What does a PURPLE colored square on the question palette signify?",
+    "options": {
+      "A": "The candidate has submitted the examination",
+      "B": "The question has been bookmarked using 'Flag for Review' for later checking",
+      "C": "The question is bonus question with double marks",
+      "D": "The question was skipped due to network glitch"
+    },
+    "correct": "B",
+    "explanation": "Flagging a question turns its palette icon purple so you can quickly jump back to review it before submitting."
+  },
+  {
+    "id": 5,
+    "question": "How can a candidate quickly jump directly from Question 2 to Question 35 on mobile or desktop?",
+    "options": {
+      "A": "Clicking the 'Next Question' button 33 consecutive times",
+      "B": "Tapping number 35 directly on the 40-question palette grid",
+      "C": "Refreshing the browser page",
+      "D": "Logging out and logging back in"
+    },
+    "correct": "B",
+    "explanation": "Tapping any number on the 40-question grid immediately loads that specific question onto the screen."
+  },
+  {
+    "id": 6,
+    "question": "If a candidate accidentally taps option A but wishes to change it to option C, what should they do?",
+    "options": {
+      "A": "Submit the exam and restart from the beginning",
+      "B": "Simply tap option C directly, and the selection will automatically update",
+      "C": "Call an invigilator to reset the phone",
+      "D": "Close the mobile browser immediately"
+    },
+    "correct": "B",
+    "explanation": "You can change your selected answer at any time before final submission simply by tapping a different option."
+  },
+  {
+    "id": 7,
+    "question": "What is the primary function of the 'Clear Choice' button on the exam toolbar?",
+    "options": {
+      "A": "It wipes out all answers across the entire examination",
+      "B": "It deselects the current question's answer, returning it to an unanswered state",
+      "C": "It closes the browser window",
+      "D": "It restarts the 20-minute countdown timer"
+    },
+    "correct": "B",
+    "explanation": "'Clear Choice' only removes the selected option for the current question you are viewing."
+  },
+  {
+    "id": 8,
+    "question": "What happens automatically when the 20-minute examination timer reaches 00:00?",
+    "options": {
+      "A": "All chosen answers are deleted from the database",
+      "B": "All answered questions are automatically packaged, saved, and submitted to the server",
+      "C": "The candidate receives an automatic 10-minute extension",
+      "D": "The smartphone screen turns off permanently"
+    },
+    "correct": "B",
+    "explanation": "Once the timer expires, the proctoring engine automatically saves and submits the test with whatever questions were answered."
+  },
+  {
+    "id": 9,
+    "question": "Under the CBT anti-cheating rules, how many unauthorized window or app switches are allowed before automatic disqualification?",
+    "options": {
+      "A": "Unlimited switches",
+      "B": "10 switches",
+      "C": "Maximum of 2 warnings (Exam terminates on the 3rd strike)",
+      "D": "50 switches"
+    },
+    "correct": "C",
+    "explanation": "The proctoring system enforces a strict 3-strike rule: Warning 1, Final Warning 2, and automatic termination on Strike 3."
+  },
+  {
+    "id": 10,
+    "question": "What happens if a candidate attempts to switch to WhatsApp, a browser search tab, or another application during the live exam?",
+    "options": {
+      "A": "The system pauses the examination timer indefinitely",
+      "B": "The screen blacks out with a security curtain, and an infraction strike is logged against the candidate",
+      "C": "The test questions change to French",
+      "D": "The phone camera flashes green"
+    },
+    "correct": "B",
+    "explanation": "The security proctor curtain immediately blocks the screen to prevent external viewing, and logs the incident."
+  },
+  {
+    "id": 11,
+    "question": "Which of the following actions is strictly prohibited during the CBT examination?",
+    "options": {
+      "A": "Using the 'Next Question' button to proceed",
+      "B": "Taking screenshots, screen recordings, or photos of examination questions",
+      "C": "Scrolling down to view all answer choices",
+      "D": "Using the 'Flag for Review' bookmark"
+    },
+    "correct": "B",
+    "explanation": "Taking screenshots, photos, or screen recordings is an exam malpractice offense and triggers instant blackout shields."
+  },
+  {
+    "id": 12,
+    "question": "What physical document must every candidate present at the accreditation desk to be admitted into the examination venue?",
+    "options": {
+      "A": "Their primary school leaving certificate",
+      "B": "Their official printed CBT Photocard",
+      "C": "A handwritten letter from their department",
+      "D": "A utility bill"
+    },
+    "correct": "B",
+    "explanation": "The official printed CBT Photocard containing candidate photo, PSN, paper code, and timetable is mandatory for admission."
+  },
+  {
+    "id": 13,
+    "question": "What type of primary testing device must candidates bring to the accredited examination center?",
+    "options": {
+      "A": "A desktop computer with a cathode-ray monitor",
+      "B": "A fully charged smartphone (Android or iOS) with active mobile internet data",
+      "C": "A digital wristwatch",
+      "D": "A pocket radio receiver"
+    },
+    "correct": "B",
+    "explanation": "CSC directives require each candidate to bring their own fully charged smartphone with active cellular data."
+  },
+  {
+    "id": 14,
+    "question": "To avoid unexpected interruptions like incoming phone calls during the CBT examination, what setting should candidates activate?",
+    "options": {
+      "A": "Airplane mode with cellular data off",
+      "B": "'Do Not Disturb' (DND) or Call Barring while keeping mobile internet data active",
+      "C": "Power off the mobile device completely",
+      "D": "Bluetooth discoverability mode"
+    },
+    "correct": "B",
+    "explanation": "Enabling 'Do Not Disturb' silences incoming phone calls and pop-up messages while allowing continuous data connectivity."
+  },
+  {
+    "id": 15,
+    "question": "Why does the CBT examination screen display a faint, repeating background watermark containing the candidate's PSN and Name?",
+    "options": {
+      "A": "As a decorative background wallpaper pattern",
+      "B": "To ensure forensic security attribution and prevent unauthorized photography of question content",
+      "C": "To test candidate vision",
+      "D": "To increase internet bandwidth usage"
+    },
+    "correct": "B",
+    "explanation": "The dynamic forensic watermark traces any leaked photography back to the specific candidate session."
+  },
+  {
+    "id": 16,
+    "question": "What should a candidate do if their smartphone battery drops below 20% before arriving at the venue?",
+    "options": {
+      "A": "Rely on the exam hall invigilator to charge the phone during the test",
+      "B": "Ensure the phone is charged to 100% prior to arrival, or bring a portable power bank for pre-exam charging",
+      "C": "Take the examination without turning on the screen",
+      "D": "Lend their phone to another candidate"
+    },
+    "correct": "B",
+    "explanation": "Candidates are personally responsible for ensuring their mobile device has 100% battery charge before entering."
+  },
+  {
+    "id": 17,
+    "question": "What is the recommended screen orientation when taking the CBT examination on a smartphone?",
+    "options": {
+      "A": "Upside down",
+      "B": "Portrait orientation (vertical)",
+      "C": "Rotated continuously during every question",
+      "D": "Split-screen dual window mode"
+    },
+    "correct": "B",
+    "explanation": "Portrait orientation provides optimal vertical readability for questions, option cards, and bottom navigation."
+  },
+  {
+    "id": 18,
+    "question": "On smartphone browsers, how does a candidate open the 40-question palette grid if it is collapsed?",
+    "options": {
+      "A": "Shake the mobile device violently",
+      "B": "Tap the 'Question Grid (40)' button on the bottom toolbar",
+      "C": "Turn the phone off and on",
+      "D": "Double-tap the device camera"
+    },
+    "correct": "B",
+    "explanation": "Tapping the 'Question Grid (40)' button slides open the question palette drawer on mobile screens."
+  },
+  {
+    "id": 19,
+    "question": "Can a candidate submit their examination if 15 out of 40 questions are left unanswered?",
+    "options": {
+      "A": "Yes, manual submission can be completed at any time with any number of questions",
+      "B": "No, Kwara CSC regulations require all 40 questions to be answered before manual submission is unlocked (or wait for timer expiry)",
+      "C": "Only if the candidate writes a formal waiver letter",
+      "D": "Only if the battery is below 5%"
+    },
+    "correct": "B",
+    "explanation": "The official system enforces answering all 40 questions before the manual submit button unlocks, preventing premature accidental submission."
+  },
+  {
+    "id": 20,
+    "question": "What confirmation screen appears immediately after a candidate successfully submits their CBT examination?",
+    "options": {
+      "A": "A blank white screen with no feedback",
+      "B": "The Official Submission Acknowledgement screen with candidate details and timestamp",
+      "C": "A prompt asking for payment",
+      "D": "The candidate's personal social media account"
+    },
+    "correct": "B",
+    "explanation": "An official submission acknowledgement slip confirms that answers have been securely received and saved in the database."
+  },
+  {
+    "id": 21,
+    "question": "In computer systems and mobile technology, what does 'RAM' stand for?",
+    "options": {
+      "A": "Random Access Memory",
+      "B": "Rapid Application Module",
+      "C": "Readily Available Media",
+      "D": "Remote Auxiliary Machine"
+    },
+    "correct": "A",
+    "explanation": "Random Access Memory (RAM) provides high-speed temporary working data storage for the operating system and active apps."
+  },
+  {
+    "id": 22,
+    "question": "In internet website addresses, what does the acronym 'URL' stand for?",
+    "options": {
+      "A": "Universal Resource Locator",
+      "B": "Uniform Resource Locator",
+      "C": "Unified Routing Link",
+      "D": "User Response Log"
+    },
+    "correct": "B",
+    "explanation": "A Uniform Resource Locator (URL) is the formal reference address used to identify web resources on the internet."
+  },
+  {
+    "id": 23,
+    "question": "Which of the following software applications is categorized as a web browser?",
+    "options": {
+      "A": "Google Chrome",
+      "B": "Mozilla Firefox",
+      "C": "Apple Safari",
+      "D": "All of the above"
+    },
+    "correct": "D",
+    "explanation": "Chrome, Firefox, Safari, Edge, and Opera are all web browsers used to access internet portals like the CBT platform."
+  },
+  {
+    "id": 24,
+    "question": "How many days are in a standard leap year on the Gregorian calendar?",
+    "options": {
+      "A": "364 days",
+      "B": "365 days",
+      "C": "366 days",
+      "D": "368 days"
+    },
+    "correct": "C",
+    "explanation": "A leap year has 366 days due to the addition of an extra 29th day in the month of February."
+  },
+  {
+    "id": 25,
+    "question": "What is the capital city of Nigeria?",
+    "options": {
+      "A": "Lagos",
+      "B": "Abuja (Federal Capital Territory)",
+      "C": "Ibadan",
+      "D": "Kaduna"
+    },
+    "correct": "B",
+    "explanation": "Abuja is the federal capital territory of the Federal Republic of Nigeria."
+  },
+  {
+    "id": 26,
+    "question": "In basic mathematical calculations, what is 25 percent of 400?",
+    "options": {
+      "A": "50",
+      "B": "75",
+      "C": "100",
+      "D": "125"
+    },
+    "correct": "C",
+    "explanation": "25% of 400 = (25 / 100) * 400 = 0.25 * 400 = 100."
+  },
+  {
+    "id": 27,
+    "question": "Which planet in our solar system is known as the 'Red Planet'?",
+    "options": {
+      "A": "Venus",
+      "B": "Mars",
+      "C": "Jupiter",
+      "D": "Saturn"
+    },
+    "correct": "B",
+    "explanation": "Mars is commonly called the Red Planet because iron minerals in its soil oxidize (rust), causing the surface to look red."
+  },
+  {
+    "id": 28,
+    "question": "Under standard atmospheric conditions, what is the boiling point of pure water on the Celsius scale?",
+    "options": {
+      "A": "50 degrees Celsius",
+      "B": "80 degrees Celsius",
+      "C": "100 degrees Celsius",
+      "D": "120 degrees Celsius"
+    },
+    "correct": "C",
+    "explanation": "Pure water boils at 100 degrees Celsius (212 degrees Fahrenheit) at standard sea-level pressure."
+  },
+  {
+    "id": 29,
+    "question": "How many millimeters (mm) are equivalent to 5 centimeters (cm)?",
+    "options": {
+      "A": "5 mm",
+      "B": "25 mm",
+      "C": "50 mm",
+      "D": "500 mm"
+    },
+    "correct": "C",
+    "explanation": "Since 1 centimeter equals 10 millimeters, 5 cm = 5 * 10 = 50 mm."
+  },
+  {
+    "id": 30,
+    "question": "In digital file storage, approximately how many Megabytes (MB) make up one Gigabyte (GB)?",
+    "options": {
+      "A": "100 MB",
+      "B": "500 MB",
+      "C": "1,024 MB",
+      "D": "10,000 MB"
+    },
+    "correct": "C",
+    "explanation": "In standard binary computing, 1 Gigabyte equals 1,024 Megabytes."
+  },
+  {
+    "id": 31,
+    "question": "Which ocean is the largest and deepest ocean on planet Earth?",
+    "options": {
+      "A": "Atlantic Ocean",
+      "B": "Indian Ocean",
+      "C": "Pacific Ocean",
+      "D": "Arctic Ocean"
+    },
+    "correct": "C",
+    "explanation": "The Pacific Ocean is the largest and deepest of the world's five oceans, covering more than 60 million square miles."
+  },
+  {
+    "id": 32,
+    "question": "What is the primary gas that humans absorb from the air to sustain cellular respiration?",
+    "options": {
+      "A": "Nitrogen",
+      "B": "Carbon dioxide",
+      "C": "Oxygen",
+      "D": "Helium"
+    },
+    "correct": "C",
+    "explanation": "Oxygen is essential for human respiration, transported by hemoglobin in red blood cells to tissues throughout the body."
+  },
+  {
+    "id": 33,
+    "question": "If a vehicle travels at a steady speed of 80 kilometers per hour, how far will it travel in 1 hour and 30 minutes?",
+    "options": {
+      "A": "100 kilometers",
+      "B": "120 kilometers",
+      "C": "140 kilometers",
+      "D": "160 kilometers"
+    },
+    "correct": "B",
+    "explanation": "Distance = Speed * Time = 80 km/h * 1.5 hours = 120 kilometers."
+  },
+  {
+    "id": 34,
+    "question": "Which of the following file extensions designates an electronic document in Portable Document Format?",
+    "options": {
+      "A": ".mp3",
+      "B": ".pdf",
+      "C": ".xlsx",
+      "D": ".jpg"
+    },
+    "correct": "B",
+    "explanation": "'.pdf' stands for Portable Document Format, universally used for viewable and printable digital documents."
+  },
+  {
+    "id": 35,
+    "question": "Choose the word that is an antonym (opposite in meaning) to the word 'PERMANENT':",
+    "options": {
+      "A": "Enduring",
+      "B": "Lasting",
+      "C": "Temporary",
+      "D": "Constant"
+    },
+    "correct": "C",
+    "explanation": "'Temporary' means lasting for a limited time only, which is the direct opposite of 'permanent'."
+  },
+  {
+    "id": 36,
+    "question": "In English grammar, what is the grammatical term for a word that connects clauses or sentences (such as 'and', 'but', 'because')?",
+    "options": {
+      "A": "Noun",
+      "B": "Conjunction",
+      "C": "Adjective",
+      "D": "Interjection"
+    },
+    "correct": "B",
+    "explanation": "Conjunctions are linking words used to connect words, phrases, or clauses in English grammar."
+  },
+  {
+    "id": 37,
+    "question": "What is the square root of the number 144?",
+    "options": {
+      "A": "10",
+      "B": "11",
+      "C": "12",
+      "D": "14"
+    },
+    "correct": "C",
+    "explanation": "12 * 12 = 144, therefore the square root of 144 is 12."
+  },
+  {
+    "id": 38,
+    "question": "How many total hours are contained in four (4) full days?",
+    "options": {
+      "A": "48 hours",
+      "B": "72 hours",
+      "C": "96 hours",
+      "D": "120 hours"
+    },
+    "correct": "C",
+    "explanation": "Each day has 24 hours. 4 days * 24 hours/day = 96 hours."
+  },
+  {
+    "id": 39,
+    "question": "Which punctuation mark is universally placed at the end of an interrogative sentence in the English language?",
+    "options": {
+      "A": "Period / Full Stop (.)",
+      "B": "Question Mark (?)",
+      "C": "Exclamation Mark (!)",
+      "D": "Semicolon (;)"
+    },
+    "correct": "B",
+    "explanation": "Interrogative sentences express a direct inquiry and conclude with a question mark (?)."
+  },
+  {
+    "id": 40,
+    "question": "If an examination session commences exactly at 11:15 AM and has a 20-minute time limit, at what time will the exam timer conclude?",
+    "options": {
+      "A": "11:25 AM",
+      "B": "11:35 AM",
+      "C": "11:45 AM",
+      "D": "12:00 PM"
+    },
+    "correct": "B",
+    "explanation": "11:15 AM + 20 minutes = 11:35 AM."
+  }
+];
+
+    // Demo State
     const demoState = {
       candidate: {
         name: "Ahmad Toyin (Demo Candidate)",
         psn: "DEMO-2026-001",
         mda: "Ministry of Agriculture & Rural Development",
         gl: "14",
-        paper: "CSC/DEMO/40Q"
+        paper: "CSC-DEMO-40Q"
       },
       currentIndex: 0,
-      answers: {},        // { 1: 'B', 2: 'C', ... }
-      flagged: new Set(), // Set of question ids
+      answers: {},
+      flagged: new Set(),
       totalQuestions: 40,
       totalDurationSeconds: 1200,
       remainingSeconds: 1200,
       timerInterval: null,
       isPaused: false,
+      isSubmitted: false,
       startTime: null,
       endTime: null
     };
@@ -1053,11 +1157,441 @@
     const viewExam = document.getElementById('demo-view-exam');
     const viewResult = document.getElementById('demo-view-result');
     const submitModal = document.getElementById('demo-submit-modal');
-    const secToast = document.getElementById('demo-security-toast');
+
+    // -------------------------------------------------------------
+    // DEMO PROCTOR ENGINE (Exact Mirror of Production System)
+    // -------------------------------------------------------------
+    const demoProctorEngine = {
+      active: false,
+      violations: 0,
+      maxViolations: 3,
+      violationLogs: [],
+      hasLeftWindow: false,
+      isFullscreenActive: false,
+      wakeLock: null,
+      blurCheckTimer: null,
+
+      init() {
+        // 1. Window Blur & App Switch (Desktop Alt+Tab, Mobile App Switcher)
+        window.addEventListener('blur', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          this.showCurtain();
+
+          if (this.blurCheckTimer) clearTimeout(this.blurCheckTimer);
+          this.blurCheckTimer = setTimeout(() => {
+            if (document.visibilityState === 'hidden' || !document.hasFocus()) {
+              this.hasLeftWindow = true;
+            } else {
+              if (!this.hasLeftWindow) {
+                this.hideCurtain();
+              }
+            }
+          }, 180);
+        });
+
+        window.addEventListener('focus', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          if (this.hasLeftWindow) {
+            this.recordViolation('Switched to another application or window');
+          }
+        });
+
+        // 2. Tab Switch & Browser Minimize
+        document.addEventListener('visibilitychange', () => {
+          if (!this.active || demoState.isSubmitted) return;
+          if (document.visibilityState === 'hidden') {
+            this.showCurtain();
+            this.hasLeftWindow = true;
+          } else if (document.visibilityState === 'visible') {
+            if (this.hasLeftWindow) {
+              this.recordViolation('Switched browser tab or minimized examination window');
+            }
+          }
+        });
+
+        // 3. Mobile OS Lifecycle (Home gesture swipe on iOS/Android)
+        window.addEventListener('pagehide', () => {
+          if (!this.active || demoState.isSubmitted) return;
+          this.showCurtain();
+          this.hasLeftWindow = true;
+        });
+
+        window.addEventListener('pageshow', () => {
+          if (!this.active || demoState.isSubmitted) return;
+          if (this.hasLeftWindow) {
+            this.recordViolation('Returned from home screen or background');
+          }
+        });
+
+        // 4. Fullscreen change listener
+        const handleFs = () => {
+          if (!this.active || demoState.isSubmitted) return;
+          const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+          if (isFs) {
+            this.isFullscreenActive = true;
+          } else if (this.isFullscreenActive) {
+            this.isFullscreenActive = false;
+            this.showCurtain();
+            this.recordViolation('Exited secure fullscreen examination mode');
+          }
+        };
+        document.addEventListener('fullscreenchange', handleFs);
+        document.addEventListener('webkitfullscreenchange', handleFs);
+
+        // 5. Multi-touch screenshot gesture blocking on mobile (3-finger swipe)
+        window.addEventListener('touchstart', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          if (e.touches && e.touches.length >= 3) {
+            e.preventDefault();
+            this.showCurtain();
+            this.showToast('⚠️ Multi-finger gesture screenshot blocked.');
+          }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          if (e.touches && e.touches.length >= 3) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        // 6. Desktop & External Keyboard Screenshot & Hotkey Blocking
+        window.addEventListener('keydown', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+
+          // PrintScreen key
+          if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.wipeClipboard();
+            this.flashBlackout();
+            this.showToast('⚠️ SCREENSHOT BLOCKED: Taking screenshots is strictly prohibited on both Demo and Official CBT exams.');
+            this.logIncident('PrintScreen key pressed');
+            return false;
+          }
+
+          // Windows Snipping Tool (Win + Shift + S) or Mac (Cmd + Shift + 3/4/5)
+          if ((e.shiftKey && (e.metaKey || e.ctrlKey || e.altKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) ||
+              (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key))) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.wipeClipboard();
+            this.flashBlackout();
+            this.showToast('⚠️ SCREEN CAPTURE BLOCKED: Snipping tool is disabled.');
+            this.logIncident('Snipping shortcut triggered');
+            return false;
+          }
+
+          // Print Dialog (Ctrl + P / Cmd + P)
+          if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.keyCode === 80)) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showToast('⚠️ PRINTING BLOCKED: Examination pages cannot be printed.');
+            this.logIncident('Print shortcut attempted');
+            return false;
+          }
+
+          // Save Page (Ctrl + S / Cmd + S)
+          if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showToast('⚠️ SAVE BLOCKED: Saving exam content is prohibited.');
+            return false;
+          }
+
+          // Developer Tools & View Source (F12, Ctrl+Shift+I/J/C, Ctrl+U)
+          if (e.key === 'F12' || e.keyCode === 123 ||
+              ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
+              ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showToast('⚠️ ACTION BLOCKED: Developer tools are disabled.');
+            this.logIncident('Dev tools shortcut attempted');
+            return false;
+          }
+        }, true);
+
+        window.addEventListener('keyup', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.wipeClipboard();
+          }
+        }, true);
+
+        // 7. Context Menu & Text Selection Blocking
+        document.addEventListener('contextmenu', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          e.preventDefault();
+          this.showToast('⚠️ Context menu and text selection are disabled.');
+          return false;
+        }, true);
+
+        document.addEventListener('copy', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          e.preventDefault();
+          this.showToast('⚠️ Copy and paste functions are disabled.');
+          return false;
+        }, true);
+
+        document.addEventListener('cut', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          e.preventDefault();
+          return false;
+        }, true);
+
+        document.addEventListener('dragstart', (e) => {
+          if (!this.active || demoState.isSubmitted) return;
+          e.preventDefault();
+          return false;
+        }, true);
+      },
+
+      async start(candidate) {
+        this.active = true;
+        this.violations = 0;
+        this.violationLogs = [];
+        this.hasLeftWindow = false;
+        this.isFullscreenActive = false;
+
+        document.body.classList.add('exam-proctored');
+        document.body.classList.add('exam-active');
+
+        this.updateWatermark(candidate);
+        this.updateSecurityBadge();
+        this.enterFullscreen();
+        await this.requestWakeLock();
+      },
+
+      stop() {
+        this.active = false;
+        this.isFullscreenActive = false;
+        document.body.classList.remove('exam-proctored');
+        document.body.classList.remove('exam-active');
+
+        this.releaseWakeLock();
+        this.hideCurtain();
+        this.closeViolationModal();
+
+        if (document.fullscreenElement || document.webkitFullscreenElement) {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
+        }
+      },
+
+      async requestWakeLock() {
+        try {
+          if ('wakeLock' in navigator && navigator.wakeLock.request) {
+            this.wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Mobile Screen Wake Lock active - screen will not dim or sleep.');
+          }
+        } catch (err) {
+          console.warn('Wake Lock request skipped:', err);
+        }
+      },
+
+      releaseWakeLock() {
+        if (this.wakeLock) {
+          try {
+            this.wakeLock.release().then(() => { this.wakeLock = null; }).catch(() => {});
+          } catch (e) {}
+        }
+      },
+
+      enterFullscreen() {
+        const docEl = document.documentElement;
+        const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+        if (rfs) {
+          rfs.call(docEl).then(() => {
+            this.isFullscreenActive = true;
+          }).catch(err => {
+            console.warn('Fullscreen entry deferred/declined:', err);
+          });
+        }
+      },
+
+      showCurtain() {
+        const curtain = document.getElementById('demo-security-curtain');
+        if (curtain) {
+          curtain.style.display = 'flex';
+          curtain.classList.add('active');
+        }
+      },
+
+      hideCurtain() {
+        const curtain = document.getElementById('demo-security-curtain');
+        if (curtain) {
+          curtain.style.display = 'none';
+          curtain.classList.remove('active');
+        }
+      },
+
+      flashBlackout() {
+        this.showCurtain();
+        setTimeout(() => {
+          if (!this.hasLeftWindow && (!document.getElementById('demo-security-violation-modal') || !document.getElementById('demo-security-violation-modal').classList.contains('active'))) {
+            this.hideCurtain();
+          }
+        }, 1200);
+      },
+
+      wipeClipboard() {
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText('⚠️ Screenshots and screen capture are strictly prohibited by Kwara State Civil Service Commission.').catch(() => {});
+          }
+        } catch (e) {}
+      },
+
+      recordViolation(reason) {
+        this.hasLeftWindow = false;
+        this.violations++;
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = `${timestamp} - ${reason}`;
+        this.violationLogs.push(logEntry);
+        console.warn(`[SECURITY VIOLATION ${this.violations}/${this.maxViolations}]:`, logEntry);
+
+        this.updateSecurityBadge();
+        this.showViolationModal(reason);
+      },
+
+      logIncident(incident) {
+        const timestamp = new Date().toLocaleTimeString();
+        this.violationLogs.push(`${timestamp} - ${incident}`);
+      },
+
+      showViolationModal(reason) {
+        const modal = document.getElementById('demo-security-violation-modal');
+        if (!modal) return;
+
+        const countEl = document.getElementById('demo-sec-violation-count');
+        const titleEl = document.getElementById('demo-sec-violation-title');
+        const badgeEl = document.getElementById('demo-sec-violation-badge');
+        const msgEl = document.getElementById('demo-sec-violation-msg');
+        const actionsEl = document.getElementById('demo-sec-violation-actions');
+        const psnEl = document.getElementById('demo-sec-candidate-psn');
+
+        if (psnEl && demoState.candidate) {
+          psnEl.textContent = demoState.candidate.psn || '-';
+        }
+
+        if (countEl) countEl.textContent = this.violations;
+
+        if (this.violations === 1) {
+          titleEl.textContent = 'DEMO SECURITY WARNING (STRIKE 1)';
+          titleEl.style.color = '#b45309';
+          badgeEl.style.background = '#fef3c7';
+          badgeEl.style.color = '#92400e';
+          badgeEl.innerHTML = `⚠️ Strike 1 of ${this.maxViolations}`;
+          msgEl.innerHTML = `You navigated away from the examination window (<em>${reason}</em>).<br><br>Switching to another application, opening new browser tabs, or attempting screen capture is <strong>strictly prohibited</strong>.<br><br>In the official CBT examination, this incident is permanently logged with your candidate file.<br><br>Please return to the examination screen immediately.`;
+          actionsEl.innerHTML = `
+            <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="demoProctorEngine.resumeExam()">
+              <span>🛡️ Return to Examination</span>
+            </button>
+          `;
+        } else if (this.violations === 2) {
+          titleEl.textContent = 'FINAL WARNING (STRIKE 2)';
+          titleEl.style.color = '#dc2626';
+          badgeEl.style.background = '#fee2e2';
+          badgeEl.style.color = '#b91c1c';
+          badgeEl.innerHTML = `🚨 Strike 2 of ${this.maxViolations} (FINAL WARNING)`;
+          msgEl.innerHTML = `Another unauthorized window switch was detected (<em>${reason}</em>).<br><br><strong style="color: #b91c1c;">You have only ONE warning remaining!</strong><br><br>Any further attempt to exit, switch applications, or minimize this window will result in <strong>IMMEDIATE EXAM TERMINATION and automatic submission</strong> with an infraction flag.`;
+          actionsEl.innerHTML = `
+            <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #b91c1c;" onclick="demoProctorEngine.resumeExam()">
+              <span>⚠️ I Understand - Resume Exam (Final Chance)</span>
+            </button>
+          `;
+        } else {
+          // Strike 3: Disqualification & Auto-Submission
+          titleEl.textContent = 'EXAMINATION TERMINATED (STRIKE 3)';
+          titleEl.style.color = '#7f1d1d';
+          badgeEl.style.background = '#7f1d1d';
+          badgeEl.style.color = '#ffffff';
+          badgeEl.innerHTML = `🛑 Maximum Violations Exceeded (3 of ${this.maxViolations})`;
+          msgEl.innerHTML = `You have exceeded the maximum allowable application-switching violations.<br><br>In compliance with Kwara State Civil Service Commission anti-cheating regulations, <strong>your examination has been locked and automatically submitted</strong> with a security infraction report.`;
+          actionsEl.innerHTML = `
+            <div style="font-weight: 700; color: #dc2626; padding: 12px; font-size: 0.95rem;">
+              ⏳ Locking examination and saving demo evaluation...
+            </div>
+          `;
+
+          // Auto submit after 2.5 seconds
+          setTimeout(() => {
+            this.closeViolationModal();
+            this.hideCurtain();
+            demoSubmitExamNow(true);
+          }, 2500);
+        }
+
+        modal.classList.add('active');
+      },
+
+      resumeExam() {
+        this.closeViolationModal();
+        this.hideCurtain();
+        this.enterFullscreen();
+      },
+
+      closeViolationModal() {
+        const modal = document.getElementById('demo-security-violation-modal');
+        if (modal) modal.classList.remove('active');
+      },
+
+      updateSecurityBadge() {
+        const badge = document.getElementById('demo-security-badge');
+        const text = document.getElementById('demo-security-status-text');
+        if (!badge || !text) return;
+
+        if (this.violations === 0) {
+          badge.className = 'security-status-badge secure';
+          text.textContent = '🛡️ Shield: Active (0/3)';
+        } else if (this.violations === 1) {
+          badge.className = 'security-status-badge warning';
+          text.textContent = '⚠️ Strike (1/3)';
+        } else if (this.violations >= 2) {
+          badge.className = 'security-status-badge danger';
+          text.textContent = `🚨 Strike (${this.violations}/3)`;
+        }
+      },
+
+      updateWatermark(candidate) {
+        const watermarkEl = document.getElementById('demo-watermark-overlay');
+        if (!watermarkEl || !candidate) return;
+        const psn = candidate.psn || 'DEMO-PSN';
+        const name = candidate.name || 'DEMO CANDIDATE';
+        const text = `${name} • PSN: ${psn} • KWCSC DEMO 2026`;
+        
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="280" height="140">
+          <text x="15" y="70" fill="rgba(15, 23, 42, 0.038)" font-size="11" font-family="system-ui, -apple-system, sans-serif" font-weight="700" transform="rotate(-18 15 70)">
+            ${text}
+          </text>
+        </svg>`;
+        const encoded = btoa(unescape(encodeURIComponent(svg)));
+        watermarkEl.style.backgroundImage = `url("data:image/svg+xml;base64,${encoded}")`;
+      },
+
+      showToast(msg) {
+        let toast = document.getElementById('cbt-security-toast');
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        if (this.toastTimer) clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => {
+          toast.style.display = 'none';
+        }, 4000);
+      }
+    };
+
+    // Initialize proctorEngine listeners on page load
+    demoProctorEngine.init();
+
+    // -------------------------------------------------------------
+    // DEMO EXAMINATION FLOW LOGIC
+    // -------------------------------------------------------------
 
     // 1. Start Demo Examination
     function startDemoExam() {
-      // Gather inputs
       const nameInput = document.getElementById('demo-input-name').value.trim();
       const psnInput = document.getElementById('demo-input-psn').value.trim();
       const mdaInput = document.getElementById('demo-input-mda').value.trim();
@@ -1066,42 +1600,36 @@
 
       demoState.candidate.name = nameInput || "Ahmad Toyin";
       demoState.candidate.psn = psnInput || "DEMO-2026-001";
-      demoState.candidate.mda = mdaInput || "State Ministry";
+      demoState.candidate.mda = mdaInput || "Ministry of Agriculture & Rural Development";
       demoState.candidate.gl = glSelect || "14";
       demoState.totalDurationSeconds = timerSelect || 1200;
       demoState.remainingSeconds = demoState.totalDurationSeconds;
 
-      // Update header details
       document.getElementById('demo-disp-name').textContent = demoState.candidate.name;
-      document.getElementById('demo-disp-psn').textContent = demoState.candidate.psn;
+      document.getElementById('demo-disp-psn').textContent = `PSN: ${demoState.candidate.psn}`;
       document.getElementById('demo-disp-mda').textContent = demoState.candidate.mda;
       document.getElementById('demo-disp-gl').textContent = demoState.candidate.gl;
       document.getElementById('demo-avatar').textContent = demoState.candidate.name.charAt(0).toUpperCase();
 
-      // Reset test state
       demoState.currentIndex = 0;
       demoState.answers = {};
       demoState.flagged.clear();
       demoState.isPaused = false;
+      demoState.isSubmitted = false;
       demoState.startTime = new Date();
 
-      // Build Question Palette
       buildDemoPalette();
 
-      // Switch View
       viewWelcome.classList.remove('active');
       viewResult.classList.remove('active');
       viewExam.classList.add('active');
 
-      // Render Question 1
       renderDemoQuestion(0);
       updateDemoSummary();
-
-      // Start Countdown Timer
       startDemoTimer();
 
-      // Setup Tab Switch / Anti-Cheating Simulator
-      setupDemoAntiCheating();
+      // Activate Full Proctoring Shield
+      demoProctorEngine.start(demoState.candidate);
     }
 
     // 2. Build 40-Question Grid Palette
@@ -1118,7 +1646,6 @@
         btn.textContent = qNum;
         btn.onclick = () => {
           renderDemoQuestion(i);
-          // Close mobile palette if open
           const palette = document.getElementById('demo-palette-sidebar');
           if (palette.classList.contains('mobile-palette-open')) {
             palette.classList.remove('mobile-palette-open');
@@ -1135,11 +1662,9 @@
       const q = DEMO_QUESTIONS[index];
       const qNum = index + 1;
 
-      // Update badge & question text
       document.getElementById('demo-q-badge').textContent = `Question ${qNum} of ${demoState.totalQuestions}`;
       document.getElementById('demo-q-text').textContent = q.question;
 
-      // Indicators
       const flagIndicator = document.getElementById('demo-q-flag-indicator');
       const isFlagged = demoState.flagged.has(q.id);
       flagIndicator.style.display = isFlagged ? 'inline-block' : 'none';
@@ -1149,13 +1674,11 @@
       statusIndicator.textContent = isAnswered ? '🟢 Answered' : '⚪ Unanswered';
       statusIndicator.style.color = isAnswered ? '#059669' : '#64748b';
 
-      // Update Flag button text
       const flagBtnText = document.getElementById('demo-flag-text');
       if (flagBtnText) {
         flagBtnText.textContent = isFlagged ? '🚩 Unflag Question' : '🏳️ Flag for Review';
       }
 
-      // Render Options
       const optionsContainer = document.getElementById('demo-options-container');
       optionsContainer.innerHTML = '';
 
@@ -1176,7 +1699,6 @@
         optionsContainer.appendChild(label);
       });
 
-      // Update Prev / Next Buttons state
       document.getElementById('demo-btn-prev').disabled = (index === 0);
       document.getElementById('demo-btn-prev').style.opacity = (index === 0) ? '0.5' : '1';
 
@@ -1187,7 +1709,6 @@
         nextBtn.innerHTML = `<span>Next Question ➔</span>`;
       }
 
-      // Update Palette styles
       updateDemoPaletteUI();
     }
 
@@ -1196,7 +1717,6 @@
       const q = DEMO_QUESTIONS[demoState.currentIndex];
       demoState.answers[q.id] = letter;
 
-      // Re-highlight options
       const optionsContainer = document.getElementById('demo-options-container');
       const labels = optionsContainer.querySelectorAll('.option-item');
       labels.forEach(lbl => {
@@ -1208,7 +1728,6 @@
         }
       });
 
-      // Update indicator
       const statusIndicator = document.getElementById('demo-q-answered-indicator');
       statusIndicator.textContent = '🟢 Answered';
       statusIndicator.style.color = '#059669';
@@ -1266,7 +1785,7 @@
       }
     }
 
-    // 8. Mobile Palette Toggle
+    // 8. Mobile Palette Drawer Toggle
     function demoToggleMobilePalette() {
       const palette = document.getElementById('demo-palette-sidebar');
       palette.classList.toggle('mobile-palette-open');
@@ -1285,9 +1804,7 @@
         const isAnswered = (demoState.answers[q.id] !== undefined);
         const isFlagged = demoState.flagged.has(q.id);
 
-        if (isCurrent) {
-          btn.classList.add('current');
-        }
+        if (isCurrent) btn.classList.add('current');
 
         if (isFlagged) {
           btn.classList.add('flagged');
@@ -1342,8 +1859,8 @@
 
         if (demoState.remainingSeconds <= 0) {
           clearInterval(demoState.timerInterval);
-          alert('⏱️ Demo Time Expired! The test will now auto-submit as it does on official exam day.');
-          demoSubmitExamNow();
+          alert('⏱️ Time Expired! The examination will now automatically submit as it does on official exam day.');
+          demoSubmitExamNow(false);
         }
       }
 
@@ -1357,7 +1874,7 @@
       }, 1000);
     }
 
-    // 12. Pause / Resume Timer for Presenters
+    // 12. Facilitator Timer Pause / Resume
     function toggleDemoTimerPause() {
       demoState.isPaused = !demoState.isPaused;
       const btn = document.getElementById('btn-demo-pause');
@@ -1374,7 +1891,7 @@
       }
     }
 
-    // 13. Submit Modals
+    // 13. Submit Confirmation Modal
     function demoOpenSubmitModal() {
       updateDemoSummary();
       submitModal.classList.add('active');
@@ -1385,12 +1902,13 @@
     }
 
     // 14. Finish & Submit Test
-    function demoSubmitExamNow() {
+    function demoSubmitExamNow(isTerminated = false) {
       if (demoState.timerInterval) clearInterval(demoState.timerInterval);
       demoCloseSubmitModal();
+      demoProctorEngine.stop();
+      demoState.isSubmitted = true;
       demoState.endTime = new Date();
 
-      // Calculate Scores
       let correctCount = 0;
       DEMO_QUESTIONS.forEach(q => {
         if (demoState.answers[q.id] === q.correct) {
@@ -1401,13 +1919,11 @@
       const incorrectCount = demoState.totalQuestions - correctCount;
       const pct = Math.round((correctCount / demoState.totalQuestions) * 100);
 
-      // Elapsed Time
       const elapsedSec = demoState.totalDurationSeconds - demoState.remainingSeconds;
       const elMins = Math.floor(elapsedSec / 60);
       const elSecs = elapsedSec % 60;
       const elFmt = `${String(elMins).padStart(2, '0')}:${String(elSecs).padStart(2, '0')}`;
 
-      // Populate Result View
       document.getElementById('demo-res-score-pct').textContent = `${pct}%`;
       document.getElementById('demo-res-score-fraction').textContent = `${correctCount} / ${demoState.totalQuestions} Marks`;
       document.getElementById('demo-res-correct').textContent = correctCount;
@@ -1418,10 +1934,34 @@
       document.getElementById('demo-res-cand-psn').textContent = demoState.candidate.psn;
       document.getElementById('demo-res-cand-mda').textContent = `${demoState.candidate.mda} (GL ${demoState.candidate.gl})`;
 
-      // Build Review List
+      // Populate Security Proctoring Audit Log
+      const secBadge = document.getElementById('demo-security-audit-badge');
+      const secContent = document.getElementById('demo-security-log-content');
+      const vCount = demoProctorEngine.violations;
+
+      if (vCount === 0) {
+        secBadge.textContent = 'Clean Session (0 Infractions)';
+        secBadge.style.background = '#ecfdf5';
+        secBadge.style.color = '#065f46';
+        secContent.innerHTML = '✅ No unauthorized window switches, screenshots, or app switches were detected during your examination session.';
+      } else {
+        secBadge.textContent = `${vCount} Infraction(s) Recorded`;
+        secBadge.style.background = vCount >= 3 ? '#fee2e2' : '#fef3c7';
+        secBadge.style.color = vCount >= 3 ? '#991b1b' : '#92400e';
+
+        let logHtml = `<div style="margin-bottom:6px; font-weight:700; color:${vCount >= 3 ? '#b91c1c' : '#b45309'};">`;
+        logHtml += isTerminated ? '⚠️ TEST AUTO-TERMINATED DUE TO EXCESSIVE APP SWITCHING' : '⚠️ Security Interceptions Logged During Test:';
+        logHtml += '</div><ul style="margin-left:20px; font-size:0.8rem; line-height:1.45;">';
+        demoProctorEngine.violationLogs.forEach(entry => {
+          logHtml += `<li>${entry}</li>`;
+        });
+        logHtml += '</ul>';
+        logHtml += '<div style="margin-top:8px; font-size:0.78rem; color:#64748b;"><em>Note: In the live examination, all infractions are transmitted in real time to the Civil Service Commission supervisor console.</em></div>';
+        secContent.innerHTML = logHtml;
+      }
+
       buildDemoReviewList();
 
-      // Switch View
       viewExam.classList.remove('active');
       viewResult.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1455,7 +1995,7 @@
             <strong>Official Correct Answer:</strong> <strong>(${q.correct})</strong> ${q.options[q.correct]}
           </div>
           <div class="demo-review-exp">
-            <strong>Rule / Explanation:</strong> ${q.explanation}
+            <strong>Orientation Rule / Explanation:</strong> ${q.explanation}
           </div>
         `;
         container.appendChild(card);
@@ -1477,27 +2017,12 @@
 
     // 16. Reset to Welcome Screen
     function resetDemoToWelcome() {
+      demoProctorEngine.stop();
       if (demoState.timerInterval) clearInterval(demoState.timerInterval);
       viewResult.classList.remove('active');
       viewExam.classList.remove('active');
       viewWelcome.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // 17. Anti-Cheating Simulator (Tab Switch Toast)
-    function setupDemoAntiCheating() {
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden && viewExam.classList.contains('active')) {
-          showDemoSecurityToast();
-        }
-      });
-    }
-
-    function showDemoSecurityToast() {
-      secToast.style.display = 'block';
-      setTimeout(() => {
-        secToast.style.display = 'none';
-      }, 5000);
     }
   </script>
 </body>
