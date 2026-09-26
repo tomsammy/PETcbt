@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kwara CSC 2026 CBT - Registration Clearance Slips (Omitted Candidates Batch 3 - 8 Officers)</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    @page {
+      size: A4 portrait;
+      margin: 6mm 6mm;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .no-print {
+      background: #004d40;
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+    .no-print h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+    }
+    .no-print p {
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
+    .btn-print {
+      background: #f59e0b;
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.92rem;
+    }
+    .btn-print:hover {
+      background: #d97706;
+      color: #fff;
+    }
+    .screen-wrapper {
+      max-width: 210mm;
+      margin: 15px auto;
+    }
+    .page-container {
+      background: #fff;
+      width: 198mm;
+      min-height: 284mm;
+      margin: 0 auto 20px auto;
+      padding: 4mm 4mm;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 3.5mm 3.5mm;
+      page-break-after: always;
+      break-after: page;
+    }
+    .slip-card {
+      border: 1.2px dashed #004d40;
+      border-radius: 4px;
+      padding: 4px 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: #fff;
+    }
+    .slip-header {
+      border-bottom: 1.2px solid #004d40;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+      text-align: center;
+    }
+    .header-seal {
+      font-size: 7.8px;
+      font-weight: 900;
+      color: #004d40;
+      letter-spacing: 0.02em;
+    }
+    .header-sub {
+      font-size: 6.2px;
+      font-weight: 700;
+      color: #475569;
+    }
+    .code-box {
+      background: #fffbeb;
+      border: 1.4px dashed #d97706;
+      border-radius: 3px;
+      padding: 2.5px 4px;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .code-lbl {
+      font-size: 6.2px;
+      font-weight: 700;
+      color: #92400e;
+    }
+    .code-val {
+      font-family: "Courier New", monospace;
+      font-size: 11px;
+      font-weight: 900;
+      color: #b45309;
+      letter-spacing: 0.06em;
+    }
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7px;
+      margin-bottom: 3px;
+    }
+    .details-table td {
+      padding: 1.2px 2px;
+      vertical-align: middle;
+      line-height: 1.15;
+    }
+    .td-lbl {
+      font-weight: 700;
+      color: #475569;
+      width: 25%;
+    }
+    .td-val {
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .psn-highlight {
+      color: #004d40;
+      font-size: 9px;
+      font-weight: 900;
+    }
+    .instruction-box {
+      background: #f8fafc;
+      border-left: 2.5px solid #004d40;
+      padding: 2px 4px;
+      font-size: 6.2px;
+      color: #334155;
+      line-height: 1.2;
+      border-radius: 0 2px 2px 0;
+      margin-bottom: 2px;
+    }
+    .slip-footer {
+      border-top: 0.8px dashed #cbd5e1;
+      padding-top: 1.5px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 6px;
+      color: #64748b;
+    }
+    .slip-footer strong {
+      color: #004d40;
+    }
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .screen-wrapper { max-width: 100%; margin: 0; padding: 0; }
+      .page-container { box-shadow: none; margin: 0; width: 198mm; height: 284mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <div>
+      <h1>KWARA STATE CIVIL SERVICE COMMISSION</h1>
+      <p>2026 Promotion Evaluation CBT &bull; Candidate Registration Clearance Slips (Omitted Batch 3 - 8 Officers)</p>
+    </div>
+    <div>
+      <button class="btn-print" onclick="window.print()">🖨️ Print Slips (PDF / Paper)</button>
+    </div>
+  </div>
+  <div class="screen-wrapper">
+    <div class="page-container">
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">A-24792</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Oniremu Oluseye Oyetokunbo</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">127610</span> &bull; <strong>KWSUTH</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Chief Nursing Officer &bull; <strong>GL 14</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>KWSUTH/A4</strong> (GROUP A)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Tuesday, 29th September 2026 &bull; <strong>Session 1</strong> (10:00 AM - 11:00 AM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>09:30 AM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (127610)</strong> and <strong>Code 1 (A-24792)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>S.16282087</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">B-97785</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Agboola Oyetunji Adeyemi</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">135733</span> &bull; <strong>OHOS</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Principal  Store Officer I &bull; <strong>GL 12</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>OHOS/B4</strong> (GROUP B)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Tuesday, 29th September 2026 &bull; <strong>Session 5</strong> (02:00 PM - 03:00 PM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>01:30 PM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (135733)</strong> and <strong>Code 1 (B-97785)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>S.319152302</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">C-61121</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Hammed Ibrahim Olawale</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">141443</span> &bull; <strong>OHOS</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Senior Store Officer &bull; <strong>GL 9</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>OHOS/C3</strong> (GROUP C)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Wednesday, 30th September 2026 &bull; <strong>Session 2</strong> (11:00 AM - 12:00 PM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>10:30 AM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (141443)</strong> and <strong>Code 1 (C-61121)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>S.082131</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">B-30883</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Amuzat Aminat</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">128645</span> &bull; <strong>KWSUTH</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Assistant Chief Nursing Officer &bull; <strong>GL 13</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>KWSUTH/B4</strong> (GROUP B)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Tuesday, 29th September 2026 &bull; <strong>Session 3</strong> (12:00 PM - 01:00 PM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>11:30 AM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (128645)</strong> and <strong>Code 1 (B-30883)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>S.318694</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">A-98542</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Akinrinmade Ayoola</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">128042</span> &bull; <strong>HMB</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Chief Nursing Supt. &bull; <strong>GL 14</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>HMB/A3</strong> (GROUP A)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Tuesday, 29th September 2026 &bull; <strong>Session 1</strong> (10:00 AM - 11:00 AM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>09:30 AM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (128042)</strong> and <strong>Code 1 (A-98542)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>S.318619</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">C-21835</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Mohammed Suleiman</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">137515</span> &bull; <strong>HMB</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Principal Nursing Supt. II &bull; <strong>GL 10</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>HMB/C3</strong> (GROUP C)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Wednesday, 30th September 2026 &bull; <strong>Session 1</strong> (10:00 AM - 11:00 AM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>09:30 AM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (137515)</strong> and <strong>Code 1 (C-21835)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>S.708</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">D-73857</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Giwa Aminat</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">135667</span> &bull; <strong>PHCDA</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Higher (CHEW) &bull; <strong>GL 8</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>PHCDA/D1</strong> (GROUP D)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Wednesday, 30th September 2026 &bull; <strong>Session 3</strong> (12:00 PM - 01:00 PM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>11:30 AM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (135667)</strong> and <strong>Code 1 (D-73857)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>135667</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+        <div class="code-box">
+          <span class="code-lbl">&#128273; REGISTRATION CODE (CODE 1):</span>
+          <span class="code-val">C-48205</span>
+        </div>
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">OFFICER:</td>
+            <td class="td-val">Zubair Dupe Olayinka</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val"><span class="psn-highlight">135073</span> &bull; <strong>PHCDA</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">RANK / GL:</td>
+            <td class="td-val">Senior (CHEW) &bull; <strong>GL 9</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">EXAM CODE:</td>
+            <td class="td-val"><strong>PHCDA/C1</strong> (GROUP C)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">DATE / TIME:</td>
+            <td class="td-val">Wednesday, 30th September 2026 &bull; <strong>Session 3</strong> (12:00 PM - 01:00 PM)</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">ACCREDITATION:</td>
+            <td class="td-val"><strong>11:30 AM</strong> &bull; Kwara State CBT Centre</td>
+          </tr>
+        </table>
+        <div class="instruction-box">
+          <strong>ONBOARDING INSTRUCTIONS:</strong><br>
+          1. Visit the portal, click <em>Candidate Registration</em>, and enter your <strong>PSN (135073)</strong> and <strong>Code 1 (C-48205)</strong>.<br>
+          2. Upload passport photo and print your Official Photocard.<br>
+          3. Bring your printed Photocard to the CBT Centre for accreditation.
+        </div>
+        <div class="slip-footer">
+          <span>CSC File: <strong>135073</strong></span>
+          <span>Batch: <strong>Omitted Batch 3 (2026)</strong></span>
+          <span>Security Token Required at CBT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

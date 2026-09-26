@@ -363,7 +363,43 @@ def init_db():
 
         conn.commit()
 
+    _sync_omitted_batch_3(conn, cursor)
     conn.close()
+
+def _sync_omitted_batch_3(conn, cursor):
+    omitted_candidates = [
+        ("127610", "Oniremu Oluseye Oyetokunbo", "A-24792", "KWSUTH", "KWSUTH/A4", "Chief Nursing Officer", "14", "GROUP A", "Tuesday, 29th September 2026", "Session 1", "10:00 AM - 11:00 AM", "09:30 AM", "08038271918", "127610@cbt.kw.gov.ng"),
+        ("135733", "Agboola Oyetunji Adeyemi", "B-97785", "OHOS", "OHOS/B4", "Principal Store Officer I", "12", "GROUP B", "Tuesday, 29th September 2026", "Session 5", "02:00 PM - 03:00 PM", "01:30 PM", "07062739105", "135733@cbt.kw.gov.ng"),
+        ("141443", "Hammed Ibrahim Olawale", "C-61121", "OHOS", "OHOS/C3", "Senior Store Officer", "9", "GROUP C", "Wednesday, 30th September 2026", "Session 2", "11:00 AM - 12:00 PM", "10:30 AM", "08140505550", "141443@cbt.kw.gov.ng"),
+        ("128645", "Amuzat Aminat", "B-30883", "KWSUTH", "KWSUTH/B4", "Assistant Chief Nursing Officer", "13", "GROUP B", "Tuesday, 29th September 2026", "Session 3", "12:00 PM - 01:00 PM", "11:30 AM", "08135545164", "128645@cbt.kw.gov.ng"),
+        ("128042", "Akinrinmade Ayoola", "A-98542", "HMB", "HMB/A3", "Chief Nursing Supt.", "14", "GROUP A", "Tuesday, 29th September 2026", "Session 1", "10:00 AM - 11:00 AM", "09:30 AM", "08023309439", "128042@cbt.kw.gov.ng"),
+        ("137515", "Mohammed Suleiman", "C-21835", "HMB", "HMB/C3", "Principal Nursing Supt. II", "10", "GROUP C", "Wednesday, 30th September 2026", "Session 1", "10:00 AM - 11:00 AM", "09:30 AM", "080664938", "137515@cbt.kw.gov.ng"),
+        ("135667", "Giwa Aminat", "D-73857", "PHCDA", "PHCDA/D1", "Higher (CHEW)", "8", "GROUP D", "Wednesday, 30th September 2026", "Session 3", "12:00 PM - 01:00 PM", "11:30 AM", "07066721337", "135667@cbt.kw.gov.ng"),
+        ("135073", "Zubair Dupe Olayinka", "C-48205", "PHCDA", "PHCDA/C1", "Senior (CHEW)", "9", "GROUP C", "Wednesday, 30th September 2026", "Session 3", "12:00 PM - 01:00 PM", "11:30 AM", "08039401871", "135073@cbt.kw.gov.ng")
+    ]
+    try:
+        for psn, name, code_1, mda, exam_code, rank, gl, grp, edate, b_sess, b_time, acc_time, phone, email in omitted_candidates:
+            cursor.execute("SELECT id FROM candidate_roster WHERE psn = ? AND name = ?", (psn, name))
+            row = cursor.fetchone()
+            if not row:
+                cursor.execute("""
+                    INSERT INTO candidate_roster (
+                        psn, name, code_1, mda, exam_code, proposed_rank, proposed_gl,
+                        group_category, exam_date, batch_session, batch_time,
+                        accreditation_time, test_duration_minutes, phone, email, registration_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 60, ?, ?, 'pending')
+                """, (psn, name, code_1, mda, exam_code, rank, gl, grp, edate, b_sess, b_time, acc_time, phone, email))
+            else:
+                cursor.execute("""
+                    UPDATE candidate_roster SET
+                        code_1 = ?, mda = ?, exam_code = ?, proposed_rank = ?, proposed_gl = ?,
+                        group_category = ?, exam_date = ?, batch_session = ?, batch_time = ?,
+                        accreditation_time = ?, phone = ?, email = ?
+                    WHERE psn = ? AND name = ?
+                """, (code_1, mda, exam_code, rank, gl, grp, edate, b_sess, b_time, acc_time, phone, email, psn, name))
+        conn.commit()
+    except Exception as e:
+        logger.warning(f"Could not auto-sync omitted batch 3 candidates: {e}")
 
 def get_setting(key: str, default: str = "") -> str:
     try:
