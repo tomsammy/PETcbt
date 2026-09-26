@@ -572,7 +572,7 @@ function switchEntryTab(tab) {
     if (inputRegPsn) inputRegPsn.focus();
   } else {
     if (title) title.textContent = 'Take CBT Examination';
-    if (subtitle) subtitle.textContent = 'Enter your Public Service Number (PSN) and 5-digit Exam Scratch Card Token issued in the examination hall';
+    if (subtitle) subtitle.textContent = 'Enter your PSN and 5-digit Login PIN issued in the examination hall';
     const inputTokenPsn = document.getElementById('token-exam-psn');
     if (inputTokenPsn) inputTokenPsn.focus();
   }
@@ -930,7 +930,7 @@ if (completeRegForm) {
     const email = document.getElementById('reg-input-email').value.trim();
 
     if (!amendedPsn) {
-      showAlertModal('Information Required', 'Please provide a valid Public Service Number (PSN).', 'warning');
+      showAlertModal('Information Required', 'Please provide a valid PSN.', 'warning');
       return;
     }
     if (!amendedRank) {
@@ -1120,7 +1120,7 @@ function renderPhotocard(c) {
         <li><strong>Strict Punctuality & Zero-Loitering Policy:</strong> Candidates must come to the venue at the stipulated accreditation time only (arrival is permitted at most <strong>20 minutes earlier</strong>). <strong>Loitering, crowding, or parading around the vicinity will NOT be tolerated.</strong></li>
         <li><strong>Mandatory Smart Mobile Device:</strong> Candidates <strong>MUST come to the venue with their smartphone</strong> (Android, iPhone, or any smart mobile device) with an active, functional web browser installed, and <strong>MUST HAVE AN ACTIVE INTERNET SUBSCRIPTION (DATA BUNDLE SUBSCRIPTION)</strong> (though internet is going to be provided).</li>
         <li><strong>Physical Photocard Required:</strong> This printed physical photocard must be presented physically to the invigilator during hall accreditation.</li>
-        <li><strong>Hall Scratch Card Token:</strong> Upon physical accreditation in the CBT hall, you will receive your single-use <strong>5-Digit Exam Scratch Card Token</strong> to unlock your workstation test.</li>
+        <li><strong>Examination Login PIN:</strong> Upon physical accreditation in the CBT hall, you will receive your single-use <strong>5-Digit Login PIN</strong> to unlock your workstation test.</li>
         <li><strong>Exam Duration:</strong> Strictly <strong>20 Minutes</strong> (40 cadre-specific multiple choice questions). The test automatically submits when the countdown timer expires.</li>
       </ol>
     </div>
@@ -1194,7 +1194,7 @@ if (tokenExamForm) {
     if (!psn || !tokenCode) {
       showAlertModal(
         'Missing Credentials',
-        'Please enter both your Public Service Number (PSN) and your 5-digit Exam Scratch Card Token.',
+        'Please enter both your PSN and your 5-digit Login PIN.',
         'warning'
       );
       return;
@@ -1203,14 +1203,14 @@ if (tokenExamForm) {
     if (tokenCode.includes('-') || /[A-Za-z]/.test(tokenCode)) {
       showAlertModal(
         'Registration Code Entered',
-        'You entered a Registration Clearance Code (' + tokenCode + '). Registration codes are used on Tab 1 ("🪪 Verification & Photocard") to generate your photocard.<br><br>To take the examination here on Tab 2, please enter your <strong>5-digit numeric hall scratch card token</strong> (e.g. <strong>65547</strong>).',
+        'You entered a Registration Clearance Code (' + tokenCode + '). Registration codes are used on Tab 1 ("🪪 Verification & Photocard") to generate your photocard.<br><br>To take the examination here on Tab 2, please enter your <strong>5-digit numeric Login PIN</strong> (e.g. <strong>65547</strong>).',
         'warning'
       );
       return;
     }
 
     if (tokenCode.length !== 5 || !/^\d{5}$/.test(tokenCode)) {
-      showAlertModal('Invalid Token Format', 'The exam scratch card token must be exactly 5 digits (e.g. 65547).', 'warning');
+      showAlertModal('Invalid PIN Format', 'The Login PIN must be exactly 5 digits (e.g. 65547).', 'warning');
       return;
     }
 
@@ -1218,7 +1218,7 @@ if (tokenExamForm) {
     const originalText = btn ? btn.innerHTML : '';
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = `<span>⏳ Validating Token & Unlocking Exam...</span>`;
+      btn.innerHTML = `<span>⏳ Validating Login PIN & Unlocking Exam...</span>`;
     }
 
     try {

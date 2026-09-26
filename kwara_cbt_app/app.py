@@ -1301,7 +1301,7 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
     raw_code = re.sub(r'\s+', '', data.code_1.strip().upper()) if data.code_1 else None
     
     if not psn or not token_code:
-        raise HTTPException(status_code=400, detail="Both PSN and 5-digit Exam Token are required.")
+        raise HTTPException(status_code=400, detail="Both PSN and 5-digit Login PIN are required.")
         
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1373,14 +1373,14 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
     tok = cursor.fetchone()
     if not tok:
         conn.close()
-        raise HTTPException(status_code=404, detail=f"Invalid Exam Access Token '{token_code}'. Please check your token slip.")
+        raise HTTPException(status_code=404, detail=f"Invalid Login PIN '{token_code}'. Please check your Login PIN slip.")
         
     # Check if assigned to another PSN (Sandbox test accounts can re-use test tokens)
     if tok["assigned_to_psn"] and tok["assigned_to_psn"] != psn and not psn.startswith("999"):
         conn.close()
         raise HTTPException(
             status_code=403,
-            detail=f"Access Denied: This 5-digit token ({token_code}) has already been activated by another officer."
+            detail=f"Access Denied: This 5-digit Login PIN ({token_code}) has already been activated by another officer."
         )
         
     # If unassigned, bind atomically to this PSN (or re-bind if test account)
