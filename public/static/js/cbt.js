@@ -26,6 +26,7 @@ const state = {
   })(),
   adminSubmissions: [],
   adminRegistrations: [],
+  adminDemoLogs: [],
   adminTableView: 'submissions',
   adminTokensSummary: null,
   examStatus: 'open'
@@ -48,11 +49,13 @@ function updateAdminDownloadLinks() {
   const btnRoster = document.getElementById('btn-download-roster');
   const btnPhotocards = document.getElementById('btn-download-photocards');
   const btnTokens = document.getElementById('btn-download-tokens');
+  const btnDemo = document.getElementById('btn-download-demo-excel');
   if (btnExcel) btnExcel.href = `/api/results/excel${tokenParam}`;
   if (btnCsv) btnCsv.href = `/api/results/csv${tokenParam}`;
   if (btnRoster) btnRoster.href = `/api/admin/roster/excel${tokenParam}`;
   if (btnPhotocards) btnPhotocards.href = `/api/admin/registrations/excel${tokenParam}`;
   if (btnTokens) btnTokens.href = `/api/admin/tokens/excel${tokenParam}`;
+  if (btnDemo) btnDemo.href = `/api/admin/demo/excel${tokenParam}`;
 }
 
 syncAdminSessionCookie();
@@ -462,7 +465,11 @@ function applyExamStatusToUI(status) {
       proceedPhotocardBtn.style.display = 'none';
     }
 
-
+    // 4. Show Dedicated Demo CBT Practice Banner
+    const demoBanner = document.getElementById('closed-demo-banner');
+    if (demoBanner) {
+      demoBanner.style.display = 'block';
+    }
 
     if (startBtn) {
       startBtn.disabled = true;
@@ -481,6 +488,12 @@ function applyExamStatusToUI(status) {
     // 2. Restore Proceed to Exam button on photocard view
     if (proceedPhotocardBtn) {
       proceedPhotocardBtn.style.display = '';
+    }
+
+    // 3. Hide closed demo banner when portal is open
+    const demoBanner = document.getElementById('closed-demo-banner');
+    if (demoBanner) {
+      demoBanner.style.display = 'none';
     }
 
 
@@ -2371,6 +2384,7 @@ async function loadAdminSubmissions() {
     renderAdminTable();
     loadAdminTokens();
     loadAdminRegistrations();
+    loadAdminDemoAnalytics();
   } catch (err) {
     console.error('Failed to load admin submissions:', err);
   }
@@ -2402,27 +2416,69 @@ async function loadAdminRegistrations() {
   }
 }
 
+async function loadAdminDemoAnalytics() {
+  if (!state.adminToken) return;
+  try {
+    const res = await fetch('/api/admin/demo-analytics', {
+      headers: { 'Authorization': `Bearer ${state.adminToken}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    state.adminDemoLogs = data.logs || [];
+    state.adminDemoAnalytics = data;
+
+    const countTabDemo = document.getElementById('count-tab-demo');
+    if (countTabDemo) countTabDemo.textContent = data.total_sessions || 0;
+
+    const kpiDemo = document.getElementById('kpi-demo-sessions');
+    const kpiDemoLbl = document.getElementById('kpi-demo-lbl');
+    if (kpiDemo) kpiDemo.textContent = `${data.total_sessions || 0} (${data.unique_candidates || 0} Unique)`;
+    if (kpiDemoLbl) kpiDemoLbl.textContent = `Demo Practice (${data.completed_sessions || 0} Completed • Avg ${data.average_score || 0}%)`;
+
+    if (state.adminTableView === 'demo') {
+      renderAdminDemoTable();
+    }
+  } catch (err) {
+    console.warn('Could not load admin demo analytics:', err);
+  }
+}
+
 function switchAdminTableView(targetView) {
   state.adminTableView = targetView;
   const tabSub = document.getElementById('tab-btn-submissions');
   const tabPhoto = document.getElementById('tab-btn-photocards');
+  const tabDemo = document.getElementById('tab-btn-demo');
   const wrapSub = document.getElementById('wrap-submissions-table');
   const wrapPhoto = document.getElementById('wrap-photocards-table');
+  const wrapDemo = document.getElementById('wrap-demo-table');
+
+  // Reset all tabs
+  if (tabSub) { tabSub.style.borderColor = '#cbd5e1'; tabSub.style.color = '#475569'; tabSub.style.background = '#fff'; }
+  if (tabPhoto) { tabPhoto.style.borderColor = '#cbd5e1'; tabPhoto.style.color = '#475569'; tabPhoto.style.background = '#fff'; }
+  if (tabDemo) { tabDemo.style.borderColor = '#cbd5e1'; tabDemo.style.color = '#475569'; tabDemo.style.background = '#fff'; }
+
+  // Hide all table wrappers
+  if (wrapSub) wrapSub.style.display = 'none';
+  if (wrapPhoto) wrapPhoto.style.display = 'none';
+  if (wrapDemo) wrapDemo.style.display = 'none';
 
   if (targetView === 'submissions') {
     if (tabSub) { tabSub.style.borderColor = '#004d40'; tabSub.style.color = '#004d40'; tabSub.style.background = '#e6f4ea'; }
-    if (tabPhoto) { tabPhoto.style.borderColor = '#cbd5e1'; tabPhoto.style.color = '#475569'; tabPhoto.style.background = '#fff'; }
     if (wrapSub) wrapSub.style.display = 'block';
-    if (wrapPhoto) wrapPhoto.style.display = 'none';
     renderAdminTable();
-  } else {
+  } else if (targetView === 'photocards') {
     if (tabPhoto) { tabPhoto.style.borderColor = '#0284c7'; tabPhoto.style.color = '#0369a1'; tabPhoto.style.background = '#f0f9ff'; }
-    if (tabSub) { tabSub.style.borderColor = '#cbd5e1'; tabSub.style.color = '#475569'; tabSub.style.background = '#fff'; }
-    if (wrapSub) wrapSub.style.display = 'none';
     if (wrapPhoto) wrapPhoto.style.display = 'block';
     renderAdminPhotocardsTable();
     if (!state.adminRegistrations || state.adminRegistrations.length === 0) {
       loadAdminRegistrations();
+    }
+  } else if (targetView === 'demo') {
+    if (tabDemo) { tabDemo.style.borderColor = '#6366f1'; tabDemo.style.color = '#4338ca'; tabDemo.style.background = '#eef2ff'; }
+    if (wrapDemo) wrapDemo.style.display = 'block';
+    renderAdminDemoTable();
+    if (!state.adminDemoLogs || state.adminDemoLogs.length === 0) {
+      loadAdminDemoAnalytics();
     }
   }
 }
@@ -2430,6 +2486,8 @@ function switchAdminTableView(targetView) {
 function onAdminFilterChange() {
   if (state.adminTableView === 'photocards') {
     renderAdminPhotocardsTable();
+  } else if (state.adminTableView === 'demo') {
+    renderAdminDemoTable();
   } else {
     renderAdminTable();
   }
@@ -2529,6 +2587,68 @@ function renderAdminPhotocardsTable() {
         <td>${r.proposed_rank || ''} <span class="grade-tag">${r.proposed_gl || ''}</span></td>
         <td><span class="badge-cadre">${r.exam_code}</span></td>
         <td style="font-size:0.8rem; color:#065f46; font-weight:600;">✅ ${r.registered_at_str || r.registered_at}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderAdminDemoTable() {
+  const tbody = document.getElementById('admin-demo-table-body');
+  if (!tbody) return;
+  const search = (document.getElementById('admin-search').value || '').toLowerCase();
+  const gradeFilter = document.getElementById('admin-grade-filter').value;
+
+  const filtered = (state.adminDemoLogs || []).filter(s => {
+    const matchSearch = (s.candidate_name || '').toLowerCase().includes(search) ||
+                        (s.psn || '').toLowerCase().includes(search) ||
+                        (s.mda || '').toLowerCase().includes(search) ||
+                        (s.device_type || '').toLowerCase().includes(search);
+    const matchGrade = (gradeFilter === 'ALL' || (s.grade_level && s.grade_level.includes(gradeFilter.replace('GL ', ''))));
+    return matchSearch && matchGrade;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding: 24px; color:#64748b;">No demo practice sessions found matching search.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((s, idx) => {
+    const vCount = parseInt(s.violations_count || 0);
+    let integrityTag = '';
+    if (vCount === 0) {
+      integrityTag = '<span style="display:inline-block; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#ecfdf5; color:#047857;">🛡️ Clean (0)</span>';
+    } else if (vCount < 3) {
+      integrityTag = `<span style="display:inline-block; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#fffbeb; color:#b45309;">⚠️ ${vCount} Strike${vCount>1?'s':''}</span>`;
+    } else {
+      integrityTag = `<span style="display:inline-block; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#fee2e2; color:#b91c1c;">🛑 Terminated (${vCount}/3)</span>`;
+    }
+
+    const timeSpent = s.time_taken_seconds ? `${Math.floor(s.time_taken_seconds / 60)}m ${s.time_taken_seconds % 60}s` : '-';
+    const scoreVal = s.status === 'in_progress' ? 
+      '<span style="color:#d97706; font-weight:600;">⏳ In Progress</span>' : 
+      `<strong>${s.correct_count || 0} / 40</strong>`;
+    const scorePct = s.status === 'in_progress' ? 
+      '<span style="color:#94a3b8;">-</span>' : 
+      `<strong style="font-size:1.05rem; color:#4338ca;">${s.score_percentage || 0}%</strong>`;
+
+    const candidateDisplayName = (s.candidate_name && s.candidate_name !== 'Demo Candidate') ?
+      `<strong>${s.candidate_name}</strong>` :
+      `<span style="color:#64748b; font-style:italic;">Guest Candidate</span>`;
+
+    return `
+      <tr>
+        <td style="font-weight:700; text-align:center;">${idx + 1}</td>
+        <td style="font-size:0.82rem; color:#475569;">${s.started_at_str || s.started_at || '-'}</td>
+        <td><code>${s.psn || 'N/A'}</code></td>
+        <td>${candidateDisplayName}</td>
+        <td>${s.mda || '-'}</td>
+        <td><span class="grade-tag">${s.grade_level || '-'}</span></td>
+        <td style="text-align:center; font-weight:700;">${s.answered_count || 0} / 40</td>
+        <td style="text-align:center;">${scoreVal}</td>
+        <td style="text-align:center;">${scorePct}</td>
+        <td style="text-align:center; font-size:0.82rem; color:#334155;">${timeSpent}</td>
+        <td style="text-align:center;">${integrityTag}</td>
+        <td style="font-size:0.78rem; color:#64748b;">${s.device_type || 'Desktop'}</td>
       </tr>
     `;
   }).join('');

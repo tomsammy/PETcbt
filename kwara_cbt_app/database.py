@@ -196,6 +196,32 @@ def init_db():
         ON CONFLICT (setting_key) DO NOTHING
         """)
 
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS demo_practice_logs (
+            id SERIAL PRIMARY KEY,
+            session_id VARCHAR(100) UNIQUE,
+            psn VARCHAR(50),
+            candidate_name VARCHAR(255),
+            mda VARCHAR(255),
+            grade_level VARCHAR(50),
+            device_type VARCHAR(50),
+            user_agent TEXT,
+            ip_address VARCHAR(100),
+            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            submitted_at TIMESTAMP,
+            total_questions INT DEFAULT 40,
+            answered_count INT DEFAULT 0,
+            correct_count INT DEFAULT 0,
+            score_percentage NUMERIC(6,2) DEFAULT 0.0,
+            time_taken_seconds INT DEFAULT 0,
+            violations_count INT DEFAULT 0,
+            violation_logs TEXT,
+            status VARCHAR(50) DEFAULT 'in_progress'
+        );
+        CREATE INDEX IF NOT EXISTS idx_demo_psn ON demo_practice_logs(psn);
+        CREATE INDEX IF NOT EXISTS idx_demo_started ON demo_practice_logs(started_at);
+        """)
+
         conn.commit()
 
         # Seed questions if empty
@@ -308,6 +334,32 @@ def init_db():
             conn.commit()
         except Exception as e:
             logger.warning(f"Could not auto-add amended columns to SQLite candidate_roster or submissions: {e}")
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS demo_practice_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT UNIQUE,
+            psn TEXT,
+            candidate_name TEXT,
+            mda TEXT,
+            grade_level TEXT,
+            device_type TEXT,
+            user_agent TEXT,
+            ip_address TEXT,
+            started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            submitted_at TIMESTAMP,
+            total_questions INTEGER DEFAULT 40,
+            answered_count INTEGER DEFAULT 0,
+            correct_count INTEGER DEFAULT 0,
+            score_percentage REAL DEFAULT 0.0,
+            time_taken_seconds INTEGER DEFAULT 0,
+            violations_count INTEGER DEFAULT 0,
+            violation_logs TEXT,
+            status TEXT DEFAULT 'in_progress'
+        );
+        """)
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_demo_psn ON demo_practice_logs(psn);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_demo_started ON demo_practice_logs(started_at);")
 
         conn.commit()
 

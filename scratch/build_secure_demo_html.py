@@ -267,16 +267,17 @@ html_template = """<!DOCTYPE html>
 
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
             <div class="form-group">
-              <label for="demo-input-name" style="font-size: 0.8rem; font-weight: 700;">Officer Name</label>
-              <input type="text" id="demo-input-name" class="form-control" value="Ahmad Toyin (Demo Candidate)" style="font-weight: 600;">
+              <label for="demo-input-psn" style="font-size: 0.8rem; font-weight: 700;">PSN (Staff Number)</label>
+              <input type="text" id="demo-input-psn" class="form-control" placeholder="Enter your 6-digit PSN e.g. 128439" value="" style="font-weight: 700; color: #004d40;">
+              <div id="demo-psn-verified-alert" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 6px 10px; font-size: 0.76rem; color: #065f46; margin-top: 4px;"></div>
             </div>
             <div class="form-group">
-              <label for="demo-input-psn" style="font-size: 0.8rem; font-weight: 700;">PSN</label>
-              <input type="text" id="demo-input-psn" class="form-control" value="DEMO-2026-001" style="font-weight: 700; color: #004d40;">
+              <label for="demo-input-name" style="font-size: 0.8rem; font-weight: 700;">Officer Name</label>
+              <input type="text" id="demo-input-name" class="form-control" placeholder="Auto-fills from PSN or enter name" value="" style="font-weight: 600;">
             </div>
             <div class="form-group">
               <label for="demo-input-mda" style="font-size: 0.8rem; font-weight: 700;">Ministry / MDA</label>
-              <input type="text" id="demo-input-mda" class="form-control" value="Ministry of Agriculture & Rural Development">
+              <input type="text" id="demo-input-mda" class="form-control" placeholder="Auto-fills from PSN" value="Ministry of Agriculture & Rural Development">
             </div>
             <div class="form-group">
               <label for="demo-input-gl" style="font-size: 0.8rem; font-weight: 700;">Grade Level</label>
@@ -1122,12 +1123,30 @@ html_template = """<!DOCTYPE html>
       const glSelect = document.getElementById('demo-input-gl').value;
       const timerSelect = parseInt(document.getElementById('demo-input-timer').value, 10);
 
-      demoState.candidate.name = nameInput || "Ahmad Toyin";
-      demoState.candidate.psn = psnInput || "DEMO-2026-001";
+      demoState.candidate.name = nameInput || "Ahmad Toyin (Demo Candidate)";
+      demoState.candidate.psn = psnInput || ("DEMO-" + Math.floor(100000 + Math.random() * 900000));
       demoState.candidate.mda = mdaInput || "Ministry of Agriculture & Rural Development";
       demoState.candidate.gl = glSelect || "14";
       demoState.totalDurationSeconds = timerSelect || 1200;
       demoState.remainingSeconds = demoState.totalDurationSeconds;
+      demoState.sessionId = "DEMO-SES-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7).toUpperCase();
+      demoState.deviceType = /Mobi|Android/i.test(navigator.userAgent) ? 'Mobile' : (/Tablet|iPad/i.test(navigator.userAgent) ? 'Tablet' : 'Desktop');
+
+      // Send telemetry start event
+      try {
+        fetch('/api/demo/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: demoState.sessionId,
+            psn: demoState.candidate.psn,
+            name: demoState.candidate.name,
+            mda: demoState.candidate.mda,
+            grade_level: demoState.candidate.gl,
+            device_type: demoState.deviceType
+          })
+        }).catch(err => console.warn('Demo start telemetry deferred:', err));
+      } catch (e) {}
 
       document.getElementById('demo-disp-name').textContent = demoState.candidate.name;
       document.getElementById('demo-disp-psn').textContent = `PSN: ${demoState.candidate.psn}`;
@@ -1484,6 +1503,31 @@ html_template = """<!DOCTYPE html>
         secContent.innerHTML = logHtml;
       }
 
+      // Send telemetry submit event
+      try {
+        const payload = {
+          session_id: demoState.sessionId,
+          psn: demoState.candidate.psn,
+          name: demoState.candidate.name,
+          mda: demoState.candidate.mda,
+          grade_level: demoState.candidate.gl,
+          device_type: demoState.deviceType,
+          total_questions: demoState.totalQuestions,
+          answered_count: Object.keys(demoState.answers).length,
+          correct_count: correctCount,
+          score_percentage: pct,
+          time_taken_seconds: elapsedSec,
+          violations_count: demoProctorEngine.violations,
+          violation_logs: demoProctorEngine.violationLogs.join('; '),
+          status: isTerminated ? 'terminated' : 'completed'
+        };
+        fetch('/api/demo/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(err => console.warn('Demo submit telemetry deferred:', err));
+      } catch (e) {}
+
       buildDemoReviewList();
 
       viewExam.classList.remove('active');
@@ -1547,6 +1591,46 @@ html_template = """<!DOCTYPE html>
       viewExam.classList.remove('active');
       viewWelcome.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 17. Real Candidate PSN Auto-Lookup for Demo Tracking
+    let demoLookupTimer = null;
+    const demoPsnInput = document.getElementById('demo-input-psn');
+    if (demoPsnInput) {
+      demoPsnInput.addEventListener('input', () => {
+        const val = demoPsnInput.value.trim();
+        const alertEl = document.getElementById('demo-psn-verified-alert');
+        if (val.length >= 5 && /^\\d+$/.test(val)) {
+          if (demoLookupTimer) clearTimeout(demoLookupTimer);
+          demoLookupTimer = setTimeout(async () => {
+            try {
+              const resp = await fetch(`/api/demo/candidate-lookup?psn=${encodeURIComponent(val)}`);
+              const data = await resp.json();
+              if (data.found) {
+                document.getElementById('demo-input-name').value = data.name;
+                document.getElementById('demo-input-mda').value = data.mda;
+                if (data.grade_level) {
+                  const cleanGl = data.grade_level.replace(/[^0-9]/g, '');
+                  const glEl = document.getElementById('demo-input-gl');
+                  if (glEl && glEl.querySelector(`option[value="${cleanGl}"]`)) {
+                    glEl.value = cleanGl;
+                  }
+                }
+                if (alertEl) {
+                  alertEl.style.display = 'block';
+                  alertEl.innerHTML = `✅ <strong>Verified Officer:</strong> ${data.name} &bull; ${data.mda} (${data.rank || 'Officer'}) &bull; Practice session will be recorded.`;
+                }
+              } else if (alertEl) {
+                alertEl.style.display = 'none';
+              }
+            } catch (err) {
+              console.warn('Candidate demo lookup error:', err);
+            }
+          }, 350);
+        } else if (alertEl) {
+          alertEl.style.display = 'none';
+        }
+      });
     }
   </script>
 </body>

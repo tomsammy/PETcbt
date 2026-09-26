@@ -714,6 +714,9 @@
             <a href="#" id="btn-download-csv" class="btn-csv">
               <span>📄 Download Results (CSV)</span>
             </a>
+            <a href="/api/admin/demo/excel" id="btn-download-demo-excel" class="btn-excel" style="background:#7c3aed; color:#fff;" title="Download Demo Practice Analytics and Candidate Attempt Logs">
+              <span>🎯 Download Demo Practice (Excel)</span>
+            </a>
             <button type="button" class="btn-ctrl" id="btn-return-portal" style="border-color:#cbd5e1;" onclick="navigateToExam()">
               <span>🏠 Portal Home</span>
             </button>
@@ -759,6 +762,10 @@
             <div class="kpi-val" id="kpi-pass" style="color: #10b981;">0 Passed</div>
             <div class="kpi-lbl">Qualified Candidates</div>
           </div>
+          <div class="kpi-card" style="border-left: 4px solid #7c3aed; background: #f5f3ff;">
+            <div class="kpi-val" id="kpi-demo-sessions" style="color: #6d28d9;">0</div>
+            <div class="kpi-lbl" id="kpi-demo-lbl" style="color: #7c3aed; font-weight:700;">Demo Practice (0 Unique)</div>
+          </div>
         </div>
 
         <!-- Admin Scratch Card Token Management Bar -->
@@ -785,13 +792,16 @@
           </div>
         </div>
 
-        <!-- Table View Switcher Tabs: Submissions vs Photocard Registrations -->
+        <!-- Table View Switcher Tabs: Submissions vs Photocard Registrations vs Demo Practice -->
         <div style="display:flex; gap:10px; margin-bottom:16px; border-bottom:2px solid #e2e8f0; padding-bottom:12px; flex-wrap:wrap;">
           <button type="button" class="btn-ctrl" id="tab-btn-submissions" style="padding:10px 20px; font-weight:700; border-color:#004d40; color:#004d40; background:#e6f4ea; cursor:pointer;" onclick="switchAdminTableView('submissions')">
             <span>📝 Exam Submissions (<span id="count-tab-submissions">0</span>)</span>
           </button>
           <button type="button" class="btn-ctrl" id="tab-btn-photocards" style="padding:10px 20px; font-weight:700; border-color:#cbd5e1; color:#475569; background:#fff; cursor:pointer;" onclick="switchAdminTableView('photocards')">
             <span>🪪 Verified Photocard Registrations (<span id="count-tab-photocards">0</span>)</span>
+          </button>
+          <button type="button" class="btn-ctrl" id="tab-btn-demo" style="padding:10px 20px; font-weight:700; border-color:#cbd5e1; color:#475569; background:#fff; cursor:pointer;" onclick="switchAdminTableView('demo')">
+            <span>🎯 Demo Practice Logs (<span id="count-tab-demo">0</span>)</span>
           </button>
         </div>
 
@@ -850,6 +860,34 @@
             <tbody id="admin-photocards-table-body">
               <tr>
                 <td colspan="9" style="text-align:center; padding: 24px; color:#64748b;">Loading verified registrations...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Demo Practice Logs Table -->
+        <div class="table-responsive" id="wrap-demo-table" style="display: none;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>S/N</th>
+                <th>Practice Date &amp; Time</th>
+                <th>PSN</th>
+                <th>Candidate Name</th>
+                <th>MDA</th>
+                <th>Proposed GL</th>
+                <th style="text-align:center;">Questions Attempted</th>
+                <th style="text-align:center;">Score (40)</th>
+                <th style="text-align:center;">Score (%)</th>
+                <th style="text-align:center;">Time Spent</th>
+                <th style="text-align:center;">Security Strikes</th>
+                <th>Device</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="admin-demo-table-body">
+              <tr>
+                <td colspan="13" style="text-align:center; padding: 24px; color:#64748b;">Loading demo practice logs...</td>
               </tr>
             </tbody>
           </table>
