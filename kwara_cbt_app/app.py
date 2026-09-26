@@ -234,7 +234,42 @@ def read_demo():
             with open(c, "r", encoding="utf-8") as f:
                 return f.read()
     return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - CBT Demo Examination</h1>"
- 
+
+@app.get("/orientation", response_class=HTMLResponse)
+@app.get("/orientation-slides", response_class=HTMLResponse)
+@app.get("/presentation", response_class=HTMLResponse)
+def read_orientation():
+    candidates = [
+        os.path.join(STATIC_DIR, "orientation.html"),
+        os.path.join(os.path.dirname(__file__), "static", "orientation.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "orientation.html"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "public", "orientation.html"),
+        os.path.join(os.getcwd(), "static", "orientation.html"),
+        os.path.join(os.getcwd(), "kwara_cbt_app", "static", "orientation.html"),
+        os.path.join(os.getcwd(), "public", "orientation.html")
+    ]
+    for c in candidates:
+        if os.path.exists(c):
+            with open(c, "r", encoding="utf-8") as f:
+                return f.read()
+    return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - Candidate Orientation Presentation</h1>"
+
+@app.get("/download-orientation-pptx")
+def download_orientation_pptx():
+    pptx_candidates = [
+        os.path.join(os.getcwd(), "Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx"),
+        os.path.join(os.path.dirname(__file__), "Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx"),
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx")
+    ]
+    for p in pptx_candidates:
+        if os.path.exists(p):
+            return FileResponse(
+                path=p,
+                media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                filename="Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx"
+            )
+    raise HTTPException(status_code=404, detail="PowerPoint orientation file not found.")
+
 # Router for all CBT Endpoints (supports both /api/* and /* paths)
 router = APIRouter()
 
