@@ -109,6 +109,7 @@ class SubmitExamRequest(BaseModel):
     grade_level: str
     mda: Optional[str] = "State Civil Service"
     paper_code: Optional[str] = None
+    token_code: Optional[str] = None
     answers: Dict[str, str] = {}
     time_taken_seconds: Optional[int] = 0
     violations_count: Optional[int] = 0
@@ -929,12 +930,14 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
     sub_row = cursor.fetchone()
     submitted_at = sub_row["submitted_at"] if sub_row else datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Mark exam token and candidate roster as completed/tested
+    # Mark exam token and candidate roster as completed/tested (strictly single-use lock)
     try:
         cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE assigned_to_psn = ? OR assigned_to_psn IN (SELECT psn FROM candidate_roster WHERE amended_psn = ?)", (data.psn.strip(), data.psn.strip()))
+        if getattr(data, "token_code", None) and str(data.token_code).strip():
+            cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE token_code = ?", (str(data.token_code).strip(),))
         cursor.execute("UPDATE candidate_roster SET registration_status = 'tested' WHERE psn = ? OR amended_psn = ?", (data.psn.strip(), data.psn.strip()))
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Error locking token on exam submission: {e}")
     
     conn.commit()
     conn.close()
@@ -1368,28 +1371,55 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
                 detail=f"This examination has already been completed for {cand_name} (PSN {psn}) on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
             )
         
-    # 4. Validate Token
+    # 4. Validate Token & Enforce Single-Use Restrictions
     cursor.execute("SELECT id, token_code, status, assigned_to_psn FROM exam_tokens WHERE token_code = ?", (token_code,))
     tok = cursor.fetchone()
     if not tok:
         conn.close()
         raise HTTPException(status_code=404, detail=f"Invalid Login PIN '{token_code}'. Please check your Login PIN slip.")
         
+    # Strictly enforce single-use: Reject completed tokens
+    if tok.get("status") == "completed" and not psn.startswith("999"):
+        conn.close()
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access Denied: This 5-digit Login PIN ({token_code}) has already been used and locked upon examination completion. Each Login PIN is strictly for single use."
+        )
+
     # Check if assigned to another PSN (Sandbox test accounts can re-use test tokens)
-    if tok["assigned_to_psn"] and tok["assigned_to_psn"] != psn and not psn.startswith("999"):
+    if tok.get("assigned_to_psn") and tok["assigned_to_psn"] != psn and not psn.startswith("999"):
         conn.close()
         raise HTTPException(
             status_code=403,
             detail=f"Access Denied: This 5-digit Login PIN ({token_code}) has already been activated by another officer."
         )
+
+    # Prevent candidate from consuming multiple different tokens
+    cursor.execute("""
+        SELECT token_code FROM exam_tokens 
+        WHERE assigned_to_psn = ? AND status = 'active'
+    """, (psn,))
+    existing_active = cursor.fetchone()
+    if existing_active and existing_active["token_code"] != token_code and not psn.startswith("999"):
+        conn.close()
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access Denied: You already have an active examination session bound to Login PIN '{existing_active['token_code']}'. Please continue using your assigned Login PIN."
+        )
         
     # If unassigned, bind atomically to this PSN (or re-bind if test account)
-    if not tok["assigned_to_psn"] or psn.startswith("999"):
+    if not tok.get("assigned_to_psn") or psn.startswith("999"):
         cursor.execute("""
             UPDATE exam_tokens
             SET assigned_to_psn = ?, status = 'active', activated_at = CURRENT_TIMESTAMP
-            WHERE token_code = ?
-        """, (psn, token_code))
+            WHERE token_code = ? AND (assigned_to_psn IS NULL OR assigned_to_psn = ?)
+        """, (psn, token_code, psn))
+        if cursor.rowcount == 0 and not psn.startswith("999"):
+            conn.close()
+            raise HTTPException(
+                status_code=409,
+                detail=f"Conflict: Login PIN ({token_code}) was concurrently claimed by another officer. Please use a fresh Login PIN."
+            )
         
     # 5. Fetch questions matching candidate's exam_code
     paper_code = cand["exam_code"]
@@ -1778,12 +1808,32 @@ def reset_candidate_for_retake(data: ResetCandidateRequest, auth: bool = Depends
         ))
         
     cursor.execute("DELETE FROM submissions WHERE psn = ?", (query_psn,))
+    cursor.execute("UPDATE exam_tokens SET status = 'unassigned', assigned_to_psn = NULL, activated_at = NULL WHERE assigned_to_psn = ?", (query_psn,))
+    cursor.execute("UPDATE candidate_roster SET registration_status = 'registered' WHERE psn = ? OR amended_psn = ?", (query_psn, query_psn))
     conn.commit()
     conn.close()
     
     return {
         "success": True,
-        "message": f"Officer with PSN {query_psn} has been unlocked for a CBT retake. Previous record archived safely."
+        "message": f"Officer with PSN {query_psn} has been unlocked for a CBT retake. Previous record archived safely and Login PIN unlinked."
+    }
+
+@router.post("/admin/reset-tokens")
+@router.post("/api/admin/reset-tokens")
+def reset_all_exam_tokens(auth: bool = Depends(verify_admin_auth)):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE exam_tokens 
+        SET status = 'unassigned', assigned_to_psn = NULL, activated_at = NULL
+    """)
+    reset_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return {
+        "success": True,
+        "message": f"All {reset_count} exam Login PINs have been successfully reset to unassigned and are available for single use.",
+        "tokens_reset": reset_count
     }
 
 @router.get("/results/excel")

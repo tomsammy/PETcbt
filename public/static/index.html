@@ -47,6 +47,14 @@
         <p>2026 Promotion Evaluation CBT Examination</p>
       </div>
     </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <a href="/orientation" target="_blank" class="header-demo-link" style="text-decoration: none; background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; font-size: 0.84rem; font-weight: 800; padding: 7px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.2s ease;">
+        <span>📽️ Orientation Slides</span>
+      </a>
+      <a href="/demo" target="_blank" class="header-demo-link" style="text-decoration: none; background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #065f46; font-size: 0.84rem; font-weight: 800; padding: 7px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.2s ease;">
+        <span>🎯 Demo CBT (Practice)</span>
+      </a>
+    </div>
   </header>
 
   <!-- Main Container -->
@@ -67,6 +75,32 @@
           <div class="alert-cta">👉 Click here to read the full examination directives & venue rules</div>
         </div>
       </div>
+
+      <!-- Dedicated Demo CBT Banner (Visible when exam portal is closed or for orientation) -->
+      <div id="closed-demo-banner" style="display: none; max-width: 680px; margin: 0 auto 20px auto; background: linear-gradient(135deg, #004d40 0%, #00695c 100%); color: #ffffff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(0,77,64,0.18);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+          <div style="flex: 1; min-width: 260px;">
+            <div style="font-size: 0.74rem; font-weight: 800; color: #fde047; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
+              📢 CBT EXAMINATION PORTAL IS CURRENTLY CLOSED FOR TESTING
+            </div>
+            <div style="font-size: 1.05rem; font-weight: 800; margin-bottom: 4px; color: #ffffff;">
+              Candidate Orientation & Official Demo CBT Examination
+            </div>
+            <p style="font-size: 0.85rem; color: #e0f2f1; margin: 0; line-height: 1.45;">
+              The live promotion exam has not yet commenced. View the step-by-step <strong>Orientation Presentation</strong> or experience the authentic <strong>Question Grid (40)</strong> on our interactive Demo page!
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="/orientation" target="_blank" class="btn-demo-cta" style="background: #ffffff; color: #004d40; border: 1.5px solid #a7f3d0; font-weight: 800; padding: 11px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; white-space: nowrap;">
+              <span>📽️ View Slides</span>
+            </a>
+            <a href="/demo" target="_blank" class="btn-demo-cta" style="background: #f59e0b; color: #000; font-weight: 800; padding: 11px 18px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; white-space: nowrap; box-shadow: 0 3px 8px rgba(0,0,0,0.2);">
+              <span>🎯 Launch Demo CBT</span> ➔
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div class="card-entry" style="max-width: 680px;">
         <div class="card-entry-header">
           <img src="/static/images/logo.png" alt="Kwara State Seal" class="hero-logo" onerror="this.style.display='none'">
@@ -93,12 +127,12 @@
                 <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
                   <span>ℹ️ Candidate Self-Service Clearance</span>
                 </div>
-                Enter your <strong>Public Service Number (PSN)</strong> and your <strong>Registration Clearance Code (Code 1, e.g. A-77253)</strong> to verify your records, upload your passport photograph, and generate your printable CBT Examination Photocard.
+                Enter your <strong>PSN</strong> and your <strong>Registration Clearance Code (Code 1, e.g. A-77253)</strong> to verify your records, upload your passport photograph, and generate your printable CBT Examination Photocard.
               </div>
 
               <form id="form-candidate-lookup">
                 <div class="form-group">
-                  <label for="reg-input-psn">Public Service Number (PSN) <span class="req">*</span></label>
+                  <label for="reg-input-psn">PSN <span class="req">*</span></label>
                   <input type="text" id="reg-input-psn" class="form-control" placeholder="e.g. 128439" required autocomplete="off">
                 </div>
 
@@ -136,7 +170,7 @@
                   </div>
 
                   <div class="form-group">
-                    <label for="reg-amended-psn">Public Service Number (PSN) <span class="req">*</span></label>
+                    <label for="reg-amended-psn">PSN <span class="req">*</span></label>
                     <input type="text" id="reg-amended-psn" class="form-control" required placeholder="e.g. 128439" style="font-weight: 700; color: #004d40;">
                     <small style="font-size: 0.75rem; color: #64748b;">Roster PSN: <span id="reg-orig-psn-lbl" style="font-weight: 600;">-</span> (Amend above if incorrect or changed)</small>
                   </div>
@@ -250,7 +284,7 @@
             </div>
           </div>
 
-          <!-- TAB 2: Take Examination Form (5-Digit Token) -->
+          <!-- TAB 2: Take Examination Form (Login PIN) -->
           <div id="tab-content-start" style="display:none;">
             <div class="info-banner" style="margin-top: 0;">
               <div style="font-size: 1.6rem;">⏱️</div>
@@ -259,8 +293,8 @@
                 <ul style="margin-top: 4px; margin-left: 18px; font-size: 0.85rem;">
                   <li>Duration: <strong>Strictly 20 Minutes</strong> (Live automatic countdown timer)</li>
                   <li>Questions: <strong>40 Cadre-Specific Multiple Choice Questions</strong> (2.5 marks each = 100 marks)</li>
-                  <li>Authentication: <strong>PSN + 5-Digit Scratch Card Token</strong> issued physically in the examination hall</li>
-                  <li>Token Binding: Token binds permanently to your PSN upon first login. Single attempt only.</li>
+                  <li>Authentication: <strong>PSN + 5-Digit Login PIN</strong> issued physically in the examination hall</li>
+                  <li>PIN Binding: Login PIN binds permanently to your PSN upon first login. Single attempt only.</li>
                   <li>🛡️ <strong>Anti-Cheating Proctor Active:</strong> Fullscreen mode is enforced. Screenshots, screen capture, and switching to other apps/tabs are strictly blocked (max 3 warnings before auto-submission).</li>
                 </ul>
               </div>
@@ -268,15 +302,15 @@
 
             <form id="form-token-exam">
               <div class="form-group">
-                <label for="token-exam-psn">Public Service Number (PSN) <span class="req">*</span></label>
+                <label for="token-exam-psn">PSN <span class="req">*</span></label>
                 <input type="text" id="token-exam-psn" class="form-control" placeholder="e.g. 128439" required autocomplete="off" style="font-size: 1.05rem; font-weight: 700;">
               </div>
 
               <div class="form-group">
-                <label for="token-exam-code">5-Digit Examination Scratch Card Token <span class="req">*</span></label>
+                <label for="token-exam-code">Login PIN (5-Digit) <span class="req">*</span></label>
                 <input type="text" id="token-exam-code" class="form-control token-code-input" placeholder="e.g. 65547" maxlength="10" required autocomplete="off">
                 <p style="font-size: 0.8rem; color: #64748b; margin-top: 6px; text-align: center;">
-                  Enter the 5-digit number on the scratch card slip issued to you in the CBT hall
+                  Enter the 5-digit Login PIN issued to you in the CBT hall
                 </p>
               </div>
 
@@ -535,6 +569,9 @@
           <button type="button" class="btn-ctrl btn-submit" id="btn-print-photocard" style="padding: 12px 28px; font-size: 1rem;" onclick="window.print()">
             <span>🖨️ Print CBT Photocard (PDF)</span>
           </button>
+          <a href="/demo" target="_blank" class="btn-ctrl" id="btn-photocard-demo" style="text-decoration:none; padding: 12px 22px; font-size: 1rem; border-color: #f59e0b; color: #92400e; background: #fffbeb; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+            <span>🎯 Practice with Demo CBT Exam</span>
+          </a>
           <button type="button" class="btn-ctrl" id="btn-proceed-exam-from-photocard" style="padding: 12px 24px; font-size: 1rem; border-color: #059669; color: #047857; background: #ecfdf5; font-weight: 700;" onclick="proceedToExamFromPhotocard()">
             <span>📝 Proceed to CBT Examination</span>
           </button>
@@ -677,6 +714,9 @@
             <a href="#" id="btn-download-csv" class="btn-csv">
               <span>📄 Download Results (CSV)</span>
             </a>
+            <a href="/api/admin/demo/excel" id="btn-download-demo-excel" class="btn-excel" style="background:#7c3aed; color:#fff;" title="Download Demo Practice Analytics and Candidate Attempt Logs">
+              <span>🎯 Download Demo Practice (Excel)</span>
+            </a>
             <button type="button" class="btn-ctrl" id="btn-return-portal" style="border-color:#cbd5e1;" onclick="navigateToExam()">
               <span>🏠 Portal Home</span>
             </button>
@@ -722,6 +762,10 @@
             <div class="kpi-val" id="kpi-pass" style="color: #10b981;">0 Passed</div>
             <div class="kpi-lbl">Qualified Candidates</div>
           </div>
+          <div class="kpi-card" style="border-left: 4px solid #7c3aed; background: #f5f3ff;">
+            <div class="kpi-val" id="kpi-demo-sessions" style="color: #6d28d9;">0</div>
+            <div class="kpi-lbl" id="kpi-demo-lbl" style="color: #7c3aed; font-weight:700;">Demo Practice (0 Unique)</div>
+          </div>
         </div>
 
         <!-- Admin Scratch Card Token Management Bar -->
@@ -742,19 +786,25 @@
             <a href="/api/admin/tokens/excel" id="btn-download-tokens" class="btn-ctrl" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d; font-weight:700; text-decoration:none; display:inline-flex; align-items:center;">
               <span>📥 Download Tokens Excel</span>
             </a>
+            <button type="button" class="btn-ctrl" style="background:#fff7ed; border-color:#fed7aa; color:#c2410c; font-weight:700;" onclick="confirmResetAllTokens()">
+              <span>♻️ Reset All PINs to Available</span>
+            </button>
             <button type="button" class="btn-ctrl" style="background:#fef2f2; border-color:#fca5a5; color:#991b1b; font-weight:700;" onclick="openAdminResetModal()">
               <span>🔄 Reset Candidate PSN</span>
             </button>
           </div>
         </div>
 
-        <!-- Table View Switcher Tabs: Submissions vs Photocard Registrations -->
+        <!-- Table View Switcher Tabs: Submissions vs Photocard Registrations vs Demo Practice -->
         <div style="display:flex; gap:10px; margin-bottom:16px; border-bottom:2px solid #e2e8f0; padding-bottom:12px; flex-wrap:wrap;">
           <button type="button" class="btn-ctrl" id="tab-btn-submissions" style="padding:10px 20px; font-weight:700; border-color:#004d40; color:#004d40; background:#e6f4ea; cursor:pointer;" onclick="switchAdminTableView('submissions')">
             <span>📝 Exam Submissions (<span id="count-tab-submissions">0</span>)</span>
           </button>
           <button type="button" class="btn-ctrl" id="tab-btn-photocards" style="padding:10px 20px; font-weight:700; border-color:#cbd5e1; color:#475569; background:#fff; cursor:pointer;" onclick="switchAdminTableView('photocards')">
             <span>🪪 Verified Photocard Registrations (<span id="count-tab-photocards">0</span>)</span>
+          </button>
+          <button type="button" class="btn-ctrl" id="tab-btn-demo" style="padding:10px 20px; font-weight:700; border-color:#cbd5e1; color:#475569; background:#fff; cursor:pointer;" onclick="switchAdminTableView('demo')">
+            <span>🎯 Demo Practice Logs (<span id="count-tab-demo">0</span>)</span>
           </button>
         </div>
 
@@ -813,6 +863,34 @@
             <tbody id="admin-photocards-table-body">
               <tr>
                 <td colspan="9" style="text-align:center; padding: 24px; color:#64748b;">Loading verified registrations...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Demo Practice Logs Table -->
+        <div class="table-responsive" id="wrap-demo-table" style="display: none;">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>S/N</th>
+                <th>Practice Date &amp; Time</th>
+                <th>PSN</th>
+                <th>Candidate Name</th>
+                <th>MDA</th>
+                <th>Proposed GL</th>
+                <th style="text-align:center;">Questions Attempted</th>
+                <th style="text-align:center;">Score (40)</th>
+                <th style="text-align:center;">Score (%)</th>
+                <th style="text-align:center;">Time Spent</th>
+                <th style="text-align:center;">Security Strikes</th>
+                <th>Device</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="admin-demo-table-body">
+              <tr>
+                <td colspan="13" style="text-align:center; padding: 24px; color:#64748b;">Loading demo practice logs...</td>
               </tr>
             </tbody>
           </table>

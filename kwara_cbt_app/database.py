@@ -1,5 +1,6 @@
 import os
 import shutil
+import json
 import re
 import logging
 from datetime import datetime
@@ -363,8 +364,95 @@ def init_db():
 
         conn.commit()
 
+    _ensure_and_reset_exam_tokens(conn, cursor)
     _sync_omitted_batch_3(conn, cursor)
     conn.close()
+
+def _ensure_and_reset_exam_tokens(conn, cursor):
+    """
+    Ensures exam_tokens table exists with all 3,500 master 5-digit Login PINs,
+    and executes an idempotent one-time reset ensuring 100% of tokens are 'unassigned'.
+    """
+    try:
+        if IS_POSTGRES:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS exam_tokens (
+                id SERIAL PRIMARY KEY,
+                token_code VARCHAR(10) UNIQUE NOT NULL,
+                status VARCHAR(20) DEFAULT 'unassigned',
+                assigned_to_psn VARCHAR(50),
+                activated_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_token_code ON exam_tokens(token_code);
+            CREATE INDEX IF NOT EXISTS idx_token_psn ON exam_tokens(assigned_to_psn);
+            """)
+        else:
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS exam_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                token_code TEXT UNIQUE NOT NULL,
+                status TEXT DEFAULT 'unassigned',
+                assigned_to_psn TEXT,
+                activated_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_token_code ON exam_tokens(token_code);
+            CREATE INDEX IF NOT EXISTS idx_token_psn ON exam_tokens(assigned_to_psn);
+            """)
+        conn.commit()
+
+        # Seed master tokens if count < 3500
+        cursor.execute("SELECT COUNT(*) AS cnt FROM exam_tokens")
+        row = cursor.fetchone()
+        current_cnt = row["cnt"] if isinstance(row, dict) else row[0]
+        
+        master_json_path = os.path.join(os.path.dirname(__file__), "master_tokens.json")
+        if current_cnt < 3500 and os.path.exists(master_json_path):
+            try:
+                with open(master_json_path, "r", encoding="utf-8") as f:
+                    tokens = json.load(f)
+                if IS_POSTGRES:
+                    cursor.executemany("""
+                        INSERT INTO exam_tokens (token_code, status)
+                        VALUES (?, 'unassigned')
+                        ON CONFLICT (token_code) DO NOTHING
+                    """, [(t,) for t in tokens])
+                else:
+                    cursor.executemany("""
+                        INSERT OR IGNORE INTO exam_tokens (token_code, status)
+                        VALUES (?, 'unassigned')
+                    """, [(t,) for t in tokens])
+                conn.commit()
+                logger.info(f"Seeded {len(tokens)} master exam tokens into database.")
+            except Exception as e:
+                logger.warning(f"Error seeding master tokens: {e}")
+
+        # Idempotent one-time reset to unassigned
+        cursor.execute("SELECT setting_value FROM system_settings WHERE setting_key = 'tokens_reset_v2'")
+        s_row = cursor.fetchone()
+        setting_val = s_row["setting_value"] if isinstance(s_row, dict) else (s_row[0] if s_row else None)
+
+        if setting_val != "done":
+            cursor.execute("""
+                UPDATE exam_tokens
+                SET status = 'unassigned', assigned_to_psn = NULL, activated_at = NULL
+            """)
+            if IS_POSTGRES:
+                cursor.execute("""
+                    INSERT INTO system_settings (setting_key, setting_value)
+                    VALUES ('tokens_reset_v2', 'done')
+                    ON CONFLICT (setting_key) DO UPDATE SET setting_value = 'done'
+                """)
+            else:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO system_settings (setting_key, setting_value)
+                    VALUES ('tokens_reset_v2', 'done')
+                """)
+            conn.commit()
+            logger.info("Successfully executed one-time reset: 100% of exam tokens set to 'unassigned'.")
+    except Exception as ex:
+        logger.warning(f"Could not verify/reset exam_tokens: {ex}")
 
 def _sync_omitted_batch_3(conn, cursor):
     omitted_candidates = [

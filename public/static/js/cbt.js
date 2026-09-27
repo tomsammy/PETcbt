@@ -1263,6 +1263,7 @@ if (tokenExamForm) {
 
       state.candidate = data.candidate;
       state.candidateId = data.candidate.psn;
+      state.tokenCode = tokenCode;
       state.questions = data.questions;
       state.currentIndex = 0;
       state.answers = {};
@@ -2108,6 +2109,7 @@ async function submitExam(isAuto = false) {
     grade_level: state.candidate.grade_level,
     mda: state.candidate.mda,
     paper_code: (state.candidate.paper_code || ""),
+    token_code: (state.tokenCode || (state.candidate && state.candidate.token_code) || null),
     answers: state.answers,
     time_taken_seconds: timeTaken,
     violations_count: (typeof proctorEngine !== 'undefined' ? proctorEngine.violations : 0),
@@ -2694,7 +2696,7 @@ async function openAdminTokensModal() {
       headers: { 'Authorization': `Bearer ${state.adminToken}` }
     });
     const data = await res.json();
-    const tokens = data.sample_tokens || [];
+    const tokens = data.sample_unassigned_tokens || data.sample_tokens || [];
 
     if (tokens.length === 0) {
       grid.innerHTML = `<div style="text-align: center; color: #64748b; padding: 24px; grid-column: 1 / -1;">No unassigned scratch tokens available in pool.</div>`;
@@ -2824,6 +2826,46 @@ async function executeAdminCandidateReset() {
       msg.style.color = '#991b1b';
       msg.textContent = `❌ Error: ${err.message}`;
     }
+  }
+}
+
+async function confirmResetAllTokens() {
+  const confirmed = await showConfirmModal(
+    'Reset All Examination Login PINs',
+    'Are you sure you want to reset ALL 3,500 Exam Login PINs (Code 2) to unassigned?\n\n' +
+    'This will clear all token assignments and mark 100% of the PINs as available for candidate single-use.',
+    {
+      type: 'warning',
+      confirmText: 'Yes, Reset All PINs',
+      cancelText: 'Cancel',
+      confirmBg: '#c2410c'
+    }
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    showRetryToast('⏳ Resetting all Exam Login PINs...');
+    const res = await fetch('/api/admin/reset-tokens', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.adminToken}`
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Could not reset Login PINs.');
+    }
+
+    showRetryToast(`✅ ${data.message || 'All Login PINs reset to unassigned.'}`);
+    if (typeof loadAdminTokens === 'function') loadAdminTokens();
+    if (typeof loadAdminTokensSummary === 'function') loadAdminTokensSummary();
+  } catch (err) {
+    alert(`❌ Failed to reset tokens: ${err.message}`);
   }
 }
 
