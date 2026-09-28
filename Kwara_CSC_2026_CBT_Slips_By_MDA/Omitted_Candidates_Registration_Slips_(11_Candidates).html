@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kwara CSC 2026 CBT - Registration Clearance Slips (Omitted Candidates)</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 6mm 6mm;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Screen-only Controls */
+    .no-print {
+      background: #004d40;
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+
+    .no-print h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .no-print p {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-print {
+      background: #f59e0b;
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease;
+    }
+    .btn-print:hover {
+      background: #d97706;
+      color: #fff;
+    }
+
+    /* Screen Wrapper */
+    .screen-wrapper {
+      max-width: 900px;
+      margin: 20px auto;
+    }
+
+    /* A4 PAGE CONTAINER: Exactly 10 Slips (2 Columns x 5 Rows) */
+    .page-container {
+      width: 198mm;
+      height: 284mm;
+      margin: 0 auto 20px auto;
+      background: #fff;
+      display: grid;
+      grid-template-columns: repeat(2, 95mm);
+      grid-template-rows: repeat(5, 52.8mm);
+      gap: 4mm 6mm;
+      padding: 2mm 0;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Individual Slip Card (Fits 52.8mm height x 95mm width) */
+    .slip-card {
+      background: #ffffff;
+      border: 1.5px dashed #004d40;
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .slip-card.blank-card {
+      border: 1px dashed #cbd5e1;
+      background: transparent;
+      visibility: hidden;
+    }
+
+    .slip-header {
+      text-align: center;
+      border-bottom: 1px solid #004d40;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+    }
+    .header-seal {
+      font-size: 7.5px;
+      font-weight: 900;
+      color: #004d40;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .header-sub {
+      font-size: 6.2px;
+      font-weight: 700;
+      color: #047857;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .name-block {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 3px;
+      padding: 2px 5px;
+      margin-bottom: 3px;
+    }
+    .lbl-small {
+      font-size: 5.5px;
+      font-weight: 800;
+      color: #166534;
+      text-transform: uppercase;
+      display: block;
+      line-height: 1;
+    }
+    .officer-name {
+      font-size: 9.8px;
+      font-weight: 900;
+      color: #004d40;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+
+    /* Extra Bold & Large Code 1 Box */
+    .code-box {
+      background: #fffbeb;
+      border: 1.8px dashed #d97706;
+      border-radius: 4px;
+      padding: 1px 4px;
+      text-align: center;
+      margin-bottom: 3px;
+    }
+    .code-title {
+      font-size: 6px;
+      font-weight: 900;
+      color: #92400e;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+    .code-val {
+      font-size: 1.38rem;
+      font-weight: 900;
+      color: #78350f;
+      letter-spacing: 0.14em;
+      font-family: "Consolas", "Courier New", Courier, monospace;
+      line-height: 1.05;
+      margin: 1px 0;
+    }
+
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.2px;
+      margin-bottom: 2px;
+    }
+    .details-table td {
+      padding: 1px 2px;
+      vertical-align: middle;
+      line-height: 1.15;
+    }
+    .td-lbl {
+      font-weight: 700;
+      color: #475569;
+      width: 18%;
+    }
+    .td-val {
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .psn-highlight {
+      color: #004d40;
+      font-size: 8.5px;
+      font-weight: 900;
+    }
+
+    .instruction-box {
+      background: #f8fafc;
+      border-left: 2.5px solid #004d40;
+      padding: 2px 4px;
+      font-size: 6px;
+      color: #334155;
+      line-height: 1.2;
+      border-radius: 0 2px 2px 0;
+      margin-bottom: 2px;
+    }
+
+    .slip-footer strong {
+      color: #004d40;
+      font-weight: 800;
+    }
+    .slip-footer {
+      border-top: 0.8px dashed #cbd5e1;
+      padding-top: 1.5px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 5.8px;
+      color: #64748b;
+      line-height: 1;
+    }
+
+    /* Print Optimizations: Exactly 10 Slips per Sheet */
+    @media print {
+      body {
+        background: #fff;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .screen-wrapper {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .page-container {
+        box-shadow: none;
+        margin: 0;
+        width: 198mm;
+        height: 284mm;
+        page-break-after: always;
+        break-after: page;
+      }
+      .slip-card {
+        border: 1.5px dashed #004d40 !important;
+      }
+      .code-box {
+        border: 1.8px dashed #d97706 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print">
+    <div>
+      <h1>KWARA STATE CIVIL SERVICE COMMISSION</h1>
+      <p>2026 Promotion Evaluation CBT &bull; Candidate Registration Clearance Slips (Omitted Candidates &bull; 10 Slips Per Page)</p>
+    </div>
+    <div class="controls-group">
+      <button class="btn-print" onclick="window.print()">🖨️ Print All Slips (PDF / Paper)</button>
+    </div>
+  </div>
+
+  <div class="screen-wrapper">
+<!-- PAGE 1 -->
+<div class="page-container">
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Babatunde Lateefat Bimbo</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">A-41616</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">127577</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Chief Nursing Officer <strong>(GL 14)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (127577)</strong> + <strong>Code 1 (A-41616)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-127577</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Abdulraheem Kulu</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">A-25246</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">127611</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Chief Nursing Supt. <strong>(GL 14)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (127611)</strong> + <strong>Code 1 (A-25246)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-127611</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Ayinla Oluwakemi Dorcas</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">A-84353</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">128337</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Chief Nursing Supt. <strong>(GL 14)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128337)</strong> + <strong>Code 1 (A-84353)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-128337</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Dr. Nurudeen Mariam Abisola</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">B-62325</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">137120</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Senior Medical Officer II <strong>(GL 13)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (137120)</strong> + <strong>Code 1 (B-62325)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-137120</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Ahmed Gado Mohammed</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">B-83145</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">127564</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Asst. Chief Nursing Supt. <strong>(GL 13)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (127564)</strong> + <strong>Code 1 (B-83145)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-127564</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Abolarin Kamilat Omotolani</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">B-99584</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">132028</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Prin. Nursing Supt. I <strong>(GL 12)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (132028)</strong> + <strong>Code 1 (B-99584)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-132028</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Adekeye Abiola Latifat</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">B-29798</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">132319</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Prin. Health Record Tech. I <strong>(GL 12)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (132319)</strong> + <strong>Code 1 (B-29798)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-132319</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Mohammed Bilikis Olanike</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">B-31906</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">132100</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Prin. Health Record Tech. I <strong>(GL 12)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (132100)</strong> + <strong>Code 1 (B-31906)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-132100</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Usman Worubata Saidu</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">B-11905</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">132006</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Prin. Health Record Tech. I <strong>(GL 12)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (132006)</strong> + <strong>Code 1 (B-11905)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-132006</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Oyedepo O. Bukola</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">B-25572</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">127511</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">MOF</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Asst. Chief Executive Officer (Acct) <strong>(GL 13)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (127511)</strong> + <strong>Code 1 (B-25572)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-127511</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page-container">
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION &bull; ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Ogunwoye Adekunle</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">C-98594</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">137416</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">MOF</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Senior Accountant <strong>(GL 10)</strong></td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (137416)</strong> + <strong>Code 1 (C-98594)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-137416</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+
+      <div class="slip-card blank-card">
+      </div>
+</div>
+
+
+  </div>
+</body>
+</html>

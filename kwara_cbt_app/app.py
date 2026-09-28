@@ -400,8 +400,9 @@ def demo_candidate_lookup(psn: str = Query(...)):
         SELECT name, amended_name, mda, proposed_gl, amended_gl, proposed_rank, amended_rank
         FROM candidate_roster
         WHERE psn = ? OR amended_psn = ?
+        ORDER BY CASE WHEN psn = ? THEN 1 ELSE 2 END, registered_at DESC NULLS LAST
         LIMIT 1
-    """, (clean_psn, clean_psn))
+    """, (clean_psn, clean_psn, clean_psn))
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -932,10 +933,13 @@ def submit_exam(data: SubmitExamRequest, background_tasks: BackgroundTasks = Bac
 
     # Mark exam token and candidate roster as completed/tested (strictly single-use lock)
     try:
-        cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE assigned_to_psn = ? OR assigned_to_psn IN (SELECT psn FROM candidate_roster WHERE amended_psn = ?)", (data.psn.strip(), data.psn.strip()))
         if getattr(data, "token_code", None) and str(data.token_code).strip():
             cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE token_code = ?", (str(data.token_code).strip(),))
-        cursor.execute("UPDATE candidate_roster SET registration_status = 'tested' WHERE psn = ? OR amended_psn = ?", (data.psn.strip(), data.psn.strip()))
+        cursor.execute("UPDATE exam_tokens SET status = 'completed' WHERE assigned_to_psn = ?", (data.psn.strip(),))
+        if getattr(data, "candidate_id", None):
+            cursor.execute("UPDATE candidate_roster SET registration_status = 'tested' WHERE id = ?", (data.candidate_id,))
+        else:
+            cursor.execute("UPDATE candidate_roster SET registration_status = 'tested' WHERE psn = ?", (data.psn.strip(),))
     except Exception as e:
         logger.warning(f"Error locking token on exam submission: {e}")
     
@@ -1282,8 +1286,8 @@ def get_candidate_photocard(psn: str, code_1: Optional[str] = Query(None)):
                    phone, email, passport_photo, registration_status, registered_at
             FROM candidate_roster
             WHERE psn = ? OR amended_psn = ?
-            ORDER BY registered_at DESC NULLS LAST
-        """, (query_psn, query_psn))
+            ORDER BY CASE WHEN psn = ? THEN 1 ELSE 2 END, registered_at DESC NULLS LAST
+        """, (query_psn, query_psn, query_psn))
     
     row = cursor.fetchone()
     conn.close()
@@ -1328,8 +1332,8 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
             SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, proposed_rank, amended_rank, proposed_gl, group_category, email, passport_photo, code_1
             FROM candidate_roster
             WHERE psn = ? OR amended_psn = ?
-            ORDER BY registered_at DESC NULLS LAST
-        """, (psn, psn))
+            ORDER BY CASE WHEN psn = ? THEN 1 ELSE 2 END, registered_at DESC NULLS LAST
+        """, (psn, psn, psn))
         cand = cursor.fetchone()
     
     if not cand:

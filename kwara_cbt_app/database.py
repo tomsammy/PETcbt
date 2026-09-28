@@ -366,6 +366,7 @@ def init_db():
 
     _ensure_and_reset_exam_tokens(conn, cursor)
     _sync_omitted_batch_3(conn, cursor)
+    _sync_state_audit_psn_swap(conn, cursor)
     conn.close()
 
 def _ensure_and_reset_exam_tokens(conn, cursor):
@@ -488,6 +489,32 @@ def _sync_omitted_batch_3(conn, cursor):
         conn.commit()
     except Exception as e:
         logger.warning(f"Could not auto-sync omitted batch 3 candidates: {e}")
+
+def _sync_state_audit_psn_swap(conn, cursor):
+    """
+    Safely ensures the PSN swap between Yinusa .O. Lukman (true PSN 128618)
+    and Martins Halimat .H. (true PSN 128619) is permanently preserved in both Postgres and SQLite.
+    """
+    try:
+        cursor.execute("SELECT id, psn, code_1 FROM candidate_roster WHERE code_1 IN ('B-75007', 'B-75556')")
+        rows = cursor.fetchall()
+        cands = {}
+        for r in rows:
+            code = r["code_1"] if isinstance(r, dict) else r[2]
+            psn_val = r["psn"] if isinstance(r, dict) else r[1]
+            cands[code] = psn_val
+            
+        y_psn = cands.get("B-75007")
+        m_psn = cands.get("B-75556")
+        
+        if y_psn == "128619" or m_psn == "128618":
+            cursor.execute("UPDATE candidate_roster SET psn = 'TEMP_SWAP_128618' WHERE code_1 = 'B-75556'")
+            cursor.execute("UPDATE candidate_roster SET psn = '128618', amended_psn = '128619' WHERE code_1 = 'B-75007'")
+            cursor.execute("UPDATE candidate_roster SET psn = '128619', amended_psn = '128618' WHERE code_1 = 'B-75556'")
+            conn.commit()
+            logger.info("Successfully synchronized State Audit PSN swap: Yinusa (128618), Martins (128619)")
+    except Exception as e:
+        logger.warning(f"Could not auto-sync State Audit PSN swap: {e}")
 
 def get_setting(key: str, default: str = "") -> str:
     try:

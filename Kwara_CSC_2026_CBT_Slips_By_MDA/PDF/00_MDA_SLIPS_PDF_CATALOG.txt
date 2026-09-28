@@ -1,0 +1,44 @@
+===============================================================================================
+KWARA STATE CIVIL SERVICE COMMISSION
+2026 PROMOTION EVALUATION CBT EXAMINATION
+CODE 1 CANDIDATE ONBOARDING & CLEARANCE REGISTRATION SLIPS (PDF FORMAT)
+Official Portal URL: kwaracsc.ng
+Layout: Exactly 10 Slips Per A4 Page (Standard A4 Portrait, Ready to Print)
+Generated Date: 2026-09-17 15:54:21
+===============================================================================================
+
+S/N  | PDF Document File Name                               | Pages    | File Size  | Portal URL Status
+-----------------------------------------------------------------------------------------------
+ALL  | 00_ALL_2494_CANDIDATES_SLIPS_(10_Per_Page).pdf       | 250 pgs  | 48247.0 KB | Verified (kwaracsc.ng)
+01   | BOS_Registration_Slips_(149_Candidates).pdf          | 15 pgs   | 2936.3 KB  | Verified (kwaracsc.ng)
+02   | HMB_Registration_Slips_(276_Candidates).pdf          | 28 pgs   | 5374.3 KB  | Verified (kwaracsc.ng)
+03   | KWGIS_Registration_Slips_(101_Candidates).pdf        | 11 pgs   | 2015.9 KB  | Verified (kwaracsc.ng)
+04   | KWSUTH_Registration_Slips_(113_Candidates).pdf       | 12 pgs   | 2247.7 KB  | Verified (kwaracsc.ng)
+05   | LGA_Registration_Slips_(47_Candidates).pdf           | 5 pgs    | 965.8 KB   | Verified (kwaracsc.ng)
+06   | MARD_Registration_Slips_(81_Candidates).pdf          | 9 pgs    | 1628.4 KB  | Verified (kwaracsc.ng)
+07   | MBIT_Registration_Slips_(157_Candidates).pdf         | 16 pgs   | 3087.9 KB  | Verified (kwaracsc.ng)
+08   | MENV_Registration_Slips_(56_Candidates).pdf          | 6 pgs    | 1141.1 KB  | Verified (kwaracsc.ng)
+09   | MHUD_Registration_Slips_(50_Candidates).pdf          | 5 pgs    | 1023.8 KB  | Verified (kwaracsc.ng)
+10   | MLGCAandCD_Registration_Slips_(77_Candidates).pdf    | 8 pgs    | 1548.4 KB  | Verified (kwaracsc.ng)
+11   | MOC_Registration_Slips_(91_Candidates).pdf           | 10 pgs   | 1821.0 KB  | Verified (kwaracsc.ng)
+12   | MOEHCD_Registration_Slips_(181_Candidates).pdf       | 19 pgs   | 3545.3 KB  | Verified (kwaracsc.ng)
+13   | MOE_Registration_Slips_(56_Candidates).pdf           | 6 pgs    | 1140.6 KB  | Verified (kwaracsc.ng)
+14   | MOF_Registration_Slips_(109_Candidates).pdf          | 11 pgs   | 2165.6 KB  | Verified (kwaracsc.ng)
+15   | MOH_Registration_Slips_(43_Candidates).pdf           | 5 pgs    | 889.8 KB   | Verified (kwaracsc.ng)
+16   | MOJ_Registration_Slips_(31_Candidates).pdf           | 4 pgs    | 656.2 KB   | Verified (kwaracsc.ng)
+17   | MOL_Registration_Slips_(24_Candidates).pdf           | 3 pgs    | 521.2 KB   | Verified (kwaracsc.ng)
+18   | MOPED_Registration_Slips_(50_Candidates).pdf         | 5 pgs    | 1021.5 KB  | Verified (kwaracsc.ng)
+19   | MOTE_Registration_Slips_(58_Candidates).pdf          | 6 pgs    | 1178.8 KB  | Verified (kwaracsc.ng)
+20   | MOT_Registration_Slips_(36_Candidates).pdf           | 4 pgs    | 752.7 KB   | Verified (kwaracsc.ng)
+21   | MOW_Registration_Slips_(72_Candidates).pdf           | 8 pgs    | 1451.2 KB  | Verified (kwaracsc.ng)
+22   | MSD_Registration_Slips_(36_Candidates).pdf           | 4 pgs    | 751.3 KB   | Verified (kwaracsc.ng)
+23   | MSMD_Registration_Slips_(18_Candidates).pdf          | 2 pgs    | 403.3 KB   | Verified (kwaracsc.ng)
+24   | MWA_Registration_Slips_(8_Candidates).pdf            | 1 pgs    | 212.4 KB   | Verified (kwaracsc.ng)
+25   | MWR_Registration_Slips_(34_Candidates).pdf           | 4 pgs    | 714.0 KB   | Verified (kwaracsc.ng)
+26   | MYD_Registration_Slips_(18_Candidates).pdf           | 2 pgs    | 403.9 KB   | Verified (kwaracsc.ng)
+27   | OHOS_Registration_Slips_(389_Candidates).pdf         | 39 pgs   | 7572.3 KB  | Verified (kwaracsc.ng)
+28   | PHCDA_Registration_Slips_(85_Candidates).pdf         | 9 pgs    | 1700.8 KB  | Verified (kwaracsc.ng)
+29   | State_Audit_Registration_Slips_(48_Candidates).pdf   | 5 pgs    | 983.8 KB   | Verified (kwaracsc.ng)
+-----------------------------------------------------------------------------------------------
+SUMMARY: 29 Individual MDAs + 1 Master Bulk PDF | 512 Total A4 Pages Generated
+===============================================================================================
