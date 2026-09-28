@@ -366,6 +366,7 @@ def init_db():
 
     _ensure_and_reset_exam_tokens(conn, cursor)
     _sync_omitted_batch_3(conn, cursor)
+    _sync_omitted_batch_4(conn, cursor)
     _sync_state_audit_psn_swap(conn, cursor)
     conn.close()
 
@@ -489,6 +490,36 @@ def _sync_omitted_batch_3(conn, cursor):
         conn.commit()
     except Exception as e:
         logger.warning(f"Could not auto-sync omitted batch 3 candidates: {e}")
+
+def _sync_omitted_batch_4(conn, cursor):
+    omitted_candidates = [
+        ("128538", "Oderinde Mojisola", "A-28682", "PHCDA", "PHCDA/A1", "Chief (CHEW)", "14", "GROUP A", "Tuesday, 29th September 2026", "Session 2", "11:00 AM - 12:00 PM", "10:30 AM", "08060219715", "128538@cbt.kw.gov.ng"),
+        ("141137", "Alonge Bosede Comfort", "D-38420", "HMB", "HMB/D1", "Higher Pharmacy Tech.", "8", "GROUP D", "Wednesday, 30th September 2026", "Session 3", "12:00 PM - 01:00 PM", "11:30 AM", "08111451961", "141137@cbt.kw.gov.ng"),
+        ("130593", "Adeoye Kudirat Jumoke", "C-77952", "HMB", "HMB/C3", "Prin. Nursing Supt II", "10", "GROUP C", "Wednesday, 30th September 2026", "Session 1", "10:00 AM - 11:00 AM", "09:30 AM", "08130443684", "130593@cbt.kw.gov.ng")
+    ]
+    try:
+        for psn, name, code_1, mda, exam_code, rank, gl, grp, edate, b_sess, b_time, acc_time, phone, email in omitted_candidates:
+            cursor.execute("SELECT id FROM candidate_roster WHERE psn = ?", (psn,))
+            row = cursor.fetchone()
+            if not row:
+                cursor.execute("""
+                    INSERT INTO candidate_roster (
+                        psn, name, code_1, mda, exam_code, proposed_rank, proposed_gl,
+                        group_category, exam_date, batch_session, batch_time,
+                        accreditation_time, test_duration_minutes, phone, email, registration_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 20, ?, ?, 'unverified')
+                """, (psn, name, code_1, mda, exam_code, rank, gl, grp, edate, b_sess, b_time, acc_time, phone, email))
+            else:
+                cursor.execute("""
+                    UPDATE candidate_roster SET
+                        name = ?, code_1 = ?, mda = ?, exam_code = ?, proposed_rank = ?, proposed_gl = ?,
+                        group_category = ?, exam_date = ?, batch_session = ?, batch_time = ?,
+                        accreditation_time = ?, phone = ?, email = ?
+                    WHERE psn = ?
+                """, (name, code_1, mda, exam_code, rank, gl, grp, edate, b_sess, b_time, acc_time, phone, email, psn))
+        conn.commit()
+    except Exception as e:
+        logger.warning(f"Could not auto-sync omitted batch 4 candidates: {e}")
 
 def _sync_state_audit_psn_swap(conn, cursor):
     """

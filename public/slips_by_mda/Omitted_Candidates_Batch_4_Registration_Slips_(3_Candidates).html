@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Omitted Candidates Batch 4 - CBT Registration Clearance Slips</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 6mm 6mm;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Screen-only Controls */
+    .no-print {
+      background: #004d40;
+      color: #fff;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    }
+
+    .no-print h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+    .no-print p {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .controls-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-print {
+      background: #f59e0b;
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease;
+    }
+    .btn-print:hover {
+      background: #d97706;
+      color: #fff;
+    }
+
+    .btn-back {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .btn-back:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* Screen Wrapper */
+    .screen-wrapper {
+      max-width: 900px;
+      margin: 20px auto;
+    }
+
+    /* A4 PAGE CONTAINER: Exactly 10 Slips (2 Columns x 5 Rows) */
+    .page-container {
+      width: 198mm;
+      height: 284mm;
+      margin: 0 auto 20px auto;
+      background: #fff;
+      display: grid;
+      grid-template-columns: repeat(2, 95mm);
+      grid-template-rows: repeat(5, 52.8mm);
+      gap: 4mm 6mm;
+      padding: 2mm 0;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      page-break-after: always;
+      break-after: page;
+    }
+
+    /* Individual Slip Card (Fits 52.8mm height x 95mm width) */
+    .slip-card {
+      background: #ffffff;
+      border: 1.5px dashed #004d40;
+      border-radius: 6px;
+      padding: 4px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .slip-card.blank-card {
+      border: 1px dashed #cbd5e1;
+      background: transparent;
+      visibility: hidden;
+    }
+
+    .slip-header {
+      text-align: center;
+      border-bottom: 1px solid #004d40;
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+    }
+    .header-seal {
+      font-size: 7.5px;
+      font-weight: 900;
+      color: #004d40;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .header-sub {
+      font-size: 6.2px;
+      font-weight: 700;
+      color: #0284c7;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .name-block {
+      background: #f8fafc;
+      border-left: 3px solid #004d40;
+      padding: 2px 5px;
+      margin-bottom: 3px;
+    }
+    .lbl-small {
+      font-size: 6.5px;
+      text-transform: uppercase;
+      color: #64748b;
+      font-weight: 700;
+      display: block;
+      line-height: 1;
+    }
+    .officer-name {
+      font-size: 9.5px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .code-box {
+      background: #ecfdf5;
+      border: 1.2px solid #059669;
+      border-radius: 4px;
+      padding: 2px 4px;
+      text-align: center;
+      margin-bottom: 3px;
+    }
+    .code-title {
+      font-size: 6.5px;
+      font-weight: 800;
+      color: #065f46;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .code-val {
+      font-size: 13.5px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #004d40;
+      line-height: 1.1;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 7.2px;
+      margin-bottom: 2px;
+    }
+    .details-table td {
+      padding: 1px 2px;
+      vertical-align: middle;
+    }
+    .td-lbl {
+      color: #64748b;
+      font-weight: 700;
+      width: 28%;
+    }
+    .td-val {
+      color: #0f172a;
+      font-weight: 800;
+    }
+    .psn-highlight {
+      font-family: monospace;
+      font-size: 8.5px;
+      font-weight: 900;
+      color: #004d40;
+    }
+
+    .instruction-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 3px;
+      padding: 2px 4px;
+      font-size: 6.2px;
+      color: #92400e;
+      line-height: 1.15;
+    }
+    .instruction-box strong {
+      color: #78350f;
+    }
+
+    .slip-footer {
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 1.5px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 5.8px;
+      color: #94a3b8;
+      font-weight: 600;
+      margin-top: 1.5px;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .screen-wrapper {
+        margin: 0;
+        max-width: none;
+      }
+      .page-container {
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print">
+    <div>
+      <h1>OMITTED CANDIDATES BATCH 4 • CBT ONBOARDING CLEARANCE SLIPS</h1>
+      <p>3 Officers Added • 10 Slips Per A4 Sheet (Standard 2x5 Grid) • Print Ready</p>
+    </div>
+    <div class="controls-group">
+      <button class="btn-print" onclick="window.print()">🖨️ Print Slips (A4)</button>
+      <a href="/" class="btn-back">&larr; Return to CBT Portal</a>
+    </div>
+  </div>
+
+  <div class="screen-wrapper">
+    <div class="page-container">
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Oderinde Mojisola</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">A-28682</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">128538</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">PHCDA</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Chief (CHEW) <strong>(GL 14)</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Exam Date & Session:</td>
+            <td class="td-val" colspan="3">Tuesday, 29th September 2026 • Session 2</td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (128538)</strong> + <strong>Code 1 (A-28682)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-128538</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Alonge Bosede Comfort</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">D-38420</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">141137</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Higher Pharmacy Tech. <strong>(GL 8)</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Exam Date & Session:</td>
+            <td class="td-val" colspan="3">Wednesday, 30th September 2026 • Session 3</td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (141137)</strong> + <strong>Code 1 (D-38420)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-141137</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card">
+        <div class="slip-header">
+          <div class="header-seal">KWARA STATE CIVIL SERVICE COMMISSION</div>
+          <div class="header-sub">2026 PROMOTION EVALUATION • ONBOARDING CLEARANCE SLIP</div>
+        </div>
+
+        <div class="name-block">
+          <span class="lbl-small">OFFICER FULL NAME:</span>
+          <div class="officer-name">Adeoye Kudirat Jumoke</div>
+        </div>
+
+        <div class="code-box">
+          <div class="code-title">🔑 REGISTRATION CLEARANCE CODE (CODE 1)</div>
+          <div class="code-val">C-77952</div>
+        </div>
+
+        <table class="details-table">
+          <tr>
+            <td class="td-lbl">PSN:</td>
+            <td class="td-val psn-highlight">130593</td>
+            <td class="td-lbl">MDA:</td>
+            <td class="td-val">HMB</td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Cadre / Proposed GL:</td>
+            <td class="td-val" colspan="3">Prin. Nursing Supt II <strong>(GL 10)</strong></td>
+          </tr>
+          <tr>
+            <td class="td-lbl">Exam Date & Session:</td>
+            <td class="td-val" colspan="3">Wednesday, 30th September 2026 • Session 1</td>
+          </tr>
+        </table>
+
+        <div class="instruction-box">
+          <strong>How to Register:</strong> Visit portal: <strong>kwaracsc.ng</strong> &rarr; <strong>Verification & Photocard</strong> &rarr; Enter <strong>PSN (130593)</strong> + <strong>Code 1 (C-77952)</strong> &rarr; Upload photo & print Photocard.
+        </div>
+
+        <div class="slip-footer">
+          <span>Ref: KWS-CSC-REG-130593</span>
+          <span>Portal: <strong>kwaracsc.ng</strong> &bull; Kwara CSC</span>
+        </div>
+      </div>
+
+      <div class="slip-card blank-card"></div>
+
+      <div class="slip-card blank-card"></div>
+
+      <div class="slip-card blank-card"></div>
+
+      <div class="slip-card blank-card"></div>
+
+      <div class="slip-card blank-card"></div>
+
+      <div class="slip-card blank-card"></div>
+
+      <div class="slip-card blank-card"></div>
+
+    </div>
+  </div>
+</body>
+</html>
