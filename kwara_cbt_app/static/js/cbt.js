@@ -2150,28 +2150,78 @@ async function loadAdminRegistrations() {
 function switchAdminTableView(targetView) {
   state.adminTableView = targetView;
   const tabSub = document.getElementById('tab-btn-submissions');
+  const tabCand = document.getElementById('tab-btn-candidates');
   const tabPhoto = document.getElementById('tab-btn-photocards');
+  const tabTok = document.getElementById('tab-btn-tokens');
+
   const wrapSub = document.getElementById('wrap-submissions-table');
+  const wrapCand = document.getElementById('wrap-candidates-panel');
   const wrapPhoto = document.getElementById('wrap-photocards-table');
+  const wrapTok = document.getElementById('wrap-tokens-panel');
+  const filterBar = document.getElementById('admin-table-filter-bar');
 
-  // Reset tabs
-  if (tabSub) { tabSub.style.borderColor = '#cbd5e1'; tabSub.style.color = '#475569'; tabSub.style.background = '#fff'; }
-  if (tabPhoto) { tabPhoto.style.borderColor = '#cbd5e1'; tabPhoto.style.color = '#475569'; tabPhoto.style.background = '#fff'; }
+  // Reset all tabs
+  [tabSub, tabCand, tabPhoto, tabTok].forEach(t => {
+    if (t) {
+      t.classList.remove('active');
+      t.style.borderColor = '#cbd5e1';
+      t.style.color = '#475569';
+      t.style.background = '#fff';
+    }
+  });
 
-  // Hide table wrappers
+  // Hide all panels
   if (wrapSub) wrapSub.style.display = 'none';
+  if (wrapCand) wrapCand.style.display = 'none';
   if (wrapPhoto) wrapPhoto.style.display = 'none';
+  if (wrapTok) wrapTok.style.display = 'none';
+  if (filterBar) filterBar.style.display = 'none';
 
   if (targetView === 'submissions') {
-    if (tabSub) { tabSub.style.borderColor = '#004d40'; tabSub.style.color = '#004d40'; tabSub.style.background = '#e6f4ea'; }
+    if (tabSub) {
+      tabSub.classList.add('active');
+      tabSub.style.borderColor = '#004d40';
+      tabSub.style.color = '#004d40';
+      tabSub.style.background = '#e6f4ea';
+    }
     if (wrapSub) wrapSub.style.display = 'block';
+    if (filterBar) filterBar.style.display = 'flex';
     renderAdminTable();
+  } else if (targetView === 'candidates') {
+    if (tabCand) {
+      tabCand.classList.add('active');
+      tabCand.style.borderColor = '#004d40';
+      tabCand.style.color = '#004d40';
+      tabCand.style.background = '#e6f4ea';
+    }
+    if (wrapCand) wrapCand.style.display = 'block';
+    setTimeout(() => {
+      const inp = document.getElementById('admin-cand-search-input');
+      if (inp) inp.focus();
+    }, 100);
   } else if (targetView === 'photocards') {
-    if (tabPhoto) { tabPhoto.style.borderColor = '#0284c7'; tabPhoto.style.color = '#0369a1'; tabPhoto.style.background = '#f0f9ff'; }
+    if (tabPhoto) {
+      tabPhoto.classList.add('active');
+      tabPhoto.style.borderColor = '#0284c7';
+      tabPhoto.style.color = '#0369a1';
+      tabPhoto.style.background = '#f0f9ff';
+    }
     if (wrapPhoto) wrapPhoto.style.display = 'block';
+    if (filterBar) filterBar.style.display = 'flex';
     renderAdminPhotocardsTable();
     if (!state.adminRegistrations || state.adminRegistrations.length === 0) {
       loadAdminRegistrations();
+    }
+  } else if (targetView === 'tokens') {
+    if (tabTok) {
+      tabTok.classList.add('active');
+      tabTok.style.borderColor = '#0d9488';
+      tabTok.style.color = '#0f766e';
+      tabTok.style.background = '#f0fdfa';
+    }
+    if (wrapTok) wrapTok.style.display = 'block';
+    if (typeof loadAdminTokens === 'function') {
+      loadAdminTokens();
     }
   }
 }
@@ -2200,7 +2250,7 @@ function renderAdminTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 24px; color:#64748b;">No candidate submissions found.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 24px; color:#64748b;">No candidate submissions found.</td></tr>`;
     return;
   }
 
@@ -2235,6 +2285,11 @@ function renderAdminTable() {
           <br>${integrityTag}
         </td>
         <td style="font-size:0.8rem; color:#64748b;">${s.submitted_at}</td>
+        <td style="text-align:center;">
+          <button type="button" class="btn-table-manage" onclick="switchToCandidateManager('${s.psn}')" title="Inspect profile, edit details, or view/edit 40 questions">
+            <span>🪪 Manage</span>
+          </button>
+        </td>
       </tr>
     `;
   }).join('');
@@ -2258,7 +2313,7 @@ function renderAdminPhotocardsTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding: 24px; color:#64748b;">No photocard registrations found matching search.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 24px; color:#64748b;">No photocard registrations found matching search.</td></tr>`;
     return;
   }
 
@@ -2278,9 +2333,689 @@ function renderAdminPhotocardsTable() {
         <td>${r.proposed_rank || ''} <span class="grade-tag">${r.proposed_gl || ''}</span></td>
         <td><span class="badge-cadre">${r.exam_code}</span></td>
         <td style="font-size:0.8rem; color:#065f46; font-weight:600;">✅ ${r.registered_at_str || r.registered_at}</td>
+        <td style="text-align:center;">
+          <button type="button" class="btn-table-manage" onclick="switchToCandidateManager('${r.psn}')" title="Inspect profile, edit details, or view/edit 40 questions">
+            <span>🪪 Manage</span>
+          </button>
+        </td>
       </tr>
     `;
   }).join('');
+}
+
+// -------------------------------------------------------------
+// Candidate Search & Management Tools
+// -------------------------------------------------------------
+function switchToCandidateManager(psn) {
+  switchAdminTableView('candidates');
+  const inp = document.getElementById('admin-cand-search-input');
+  if (inp) inp.value = psn;
+  executeAdminCandidateSearch(psn);
+}
+
+function quickSearchCandidate(psn) {
+  const inp = document.getElementById('admin-cand-search-input');
+  if (inp) inp.value = psn;
+  executeAdminCandidateSearch(psn);
+}
+
+async function executeAdminCandidateSearch(explicitPsn) {
+  const inp = document.getElementById('admin-cand-search-input');
+  const psn = (explicitPsn || (inp ? inp.value : '')).trim();
+  if (!psn) {
+    showAlertModal('PSN Required', 'Please enter a candidate PSN to search.', 'warning');
+    return;
+  }
+
+  const emptyEl = document.getElementById('admin-cand-empty-state');
+  const loadEl = document.getElementById('admin-cand-loading');
+  const profEl = document.getElementById('admin-cand-profile');
+
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (profEl) profEl.style.display = 'none';
+  if (loadEl) loadEl.style.display = 'block';
+
+  try {
+    const res = await fetch(`/api/admin/candidate/${encodeURIComponent(psn)}`, {
+      headers: {
+        'Authorization': `Bearer ${state.adminToken}`
+      }
+    });
+
+    if (res.status === 401) {
+      state.adminToken = null;
+      sessionStorage.removeItem('kws_admin_token');
+      openAdminLoginModal();
+      return;
+    }
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || `Candidate with PSN '${psn}' not found.`);
+    }
+
+    state.currentAdminCandidate = data.candidate;
+    state.currentAdminToken = data.token;
+    state.currentAdminSubmission = data.submission;
+
+    renderCandidateProfileCard(data);
+
+    if (loadEl) loadEl.style.display = 'none';
+    if (profEl) profEl.style.display = 'block';
+  } catch (err) {
+    if (loadEl) loadEl.style.display = 'none';
+    if (emptyEl) emptyEl.style.display = 'block';
+    showAlertModal('Candidate Not Found', err.message, 'warning');
+  }
+}
+
+function renderCandidateProfileCard(data) {
+  const c = data.candidate;
+  const tok = data.token;
+  const sub = data.submission;
+
+  // Photo
+  const photoImg = document.getElementById('cand-profile-photo');
+  const photoFallback = document.getElementById('cand-profile-avatar-fallback');
+  if (c.passport_photo && c.passport_photo.length > 50) {
+    if (photoImg) {
+      photoImg.src = c.passport_photo;
+      photoImg.style.display = 'block';
+    }
+    if (photoFallback) photoFallback.style.display = 'none';
+  } else {
+    if (photoImg) photoImg.style.display = 'none';
+    if (photoFallback) photoFallback.style.display = 'flex';
+  }
+
+  // Name & Badges
+  const nameEl = document.getElementById('cand-profile-name');
+  const verifiedName = c.amended_name && c.amended_name !== c.name ? 
+    `${c.amended_name} <small style="font-size:0.8rem; color:#64748b; font-weight:normal;">(Roster: ${c.name})</small>` : 
+    (c.name || 'Candidate');
+  if (nameEl) nameEl.innerHTML = verifiedName;
+
+  const statusBadge = document.getElementById('cand-profile-status-badge');
+  if (statusBadge) {
+    const isReg = c.registration_status === 'registered' || c.registered_at;
+    statusBadge.textContent = isReg ? 'Verified / Photocard Ready' : 'Pending Verification';
+    statusBadge.style.background = isReg ? '#dcfce7' : '#fef3c7';
+    statusBadge.style.color = isReg ? '#166534' : '#92400e';
+  }
+
+  const psnEl = document.getElementById('cand-profile-psn');
+  if (psnEl) psnEl.textContent = c.amended_psn || c.psn || 'N/A';
+
+  const mdaEl = document.getElementById('cand-profile-mda');
+  if (mdaEl) mdaEl.textContent = c.mda || 'N/A';
+
+  const groupEl = document.getElementById('cand-profile-group');
+  if (groupEl) groupEl.textContent = c.amended_group || c.group_category || 'N/A';
+
+  const rankEl = document.getElementById('cand-profile-rank');
+  if (rankEl) rankEl.textContent = c.amended_rank || c.proposed_rank || 'N/A';
+
+  const glEl = document.getElementById('cand-profile-gl');
+  if (glEl) glEl.textContent = `Grade Level ${c.amended_gl || c.proposed_gl || 'N/A'}`;
+
+  const paperEl = document.getElementById('cand-profile-paper');
+  if (paperEl) paperEl.textContent = data.assigned_paper || c.amended_exam_code || c.exam_code || 'OHOS/B1';
+
+  const schedEl = document.getElementById('cand-profile-schedule');
+  const dateStr = c.exam_date || 'Tuesday, 29th September 2026';
+  const timeStr = c.batch_time ? ` (${c.batch_session || ''}: ${c.batch_time})` : '';
+  if (schedEl) schedEl.textContent = `${dateStr}${timeStr}`;
+
+  const code1El = document.getElementById('cand-profile-code1');
+  if (code1El) code1El.textContent = c.code_1 || 'N/A';
+
+  const contactEl = document.getElementById('cand-profile-contact');
+  if (contactEl) {
+    contactEl.innerHTML = `Phone: <strong>${c.phone || 'N/A'}</strong> &bull; Email: <strong>${c.email || 'N/A'}</strong>`;
+  }
+
+  // Token Info
+  const tokInfoEl = document.getElementById('cand-profile-token-info');
+  if (tokInfoEl) {
+    if (tok && tok.token_code) {
+      let statusColor = tok.status === 'completed' ? '#7c3aed' : (tok.status === 'active' ? '#2563eb' : '#059669');
+      tokInfoEl.innerHTML = `<span style="font-family:monospace; letter-spacing:0.12em; background:#f1f5f9; padding:2px 8px; border-radius:6px; border:1px solid #cbd5e1;">${tok.token_code}</span> <span style="font-size:0.8rem; font-weight:700; color:${statusColor}; text-transform:uppercase;">[${tok.status}]</span>`;
+    } else {
+      tokInfoEl.innerHTML = `<span style="color:#64748b; font-size:0.9rem; font-weight:500;">No Login PIN bound yet (Auto-binds upon login)</span>`;
+    }
+  }
+
+  // Submission Info
+  const subInfoEl = document.getElementById('cand-profile-submission-info');
+  if (subInfoEl) {
+    if (sub && sub.score_percentage !== undefined) {
+      let scoreColor = sub.score_percentage >= 50 ? '#047857' : '#b91c1c';
+      subInfoEl.innerHTML = `<span style="color:${scoreColor}; font-weight:800;">${sub.score_percentage}% (${sub.correct_count * 2}/100)</span> &bull; <small style="font-weight:600; color:#475569;">${sub.grade_remark || ''}</small>`;
+    } else {
+      subInfoEl.innerHTML = `<span style="color:#64748b; font-size:0.9rem; font-weight:500;">Not Yet Submitted (Active / Ready)</span>`;
+    }
+  }
+}
+
+function clearAdminCandidateSearch() {
+  const inp = document.getElementById('admin-cand-search-input');
+  if (inp) inp.value = '';
+  state.currentAdminCandidate = null;
+  state.currentAdminToken = null;
+  state.currentAdminSubmission = null;
+  const emptyEl = document.getElementById('admin-cand-empty-state');
+  const loadEl = document.getElementById('admin-cand-loading');
+  const profEl = document.getElementById('admin-cand-profile');
+  if (emptyEl) emptyEl.style.display = 'block';
+  if (loadEl) loadEl.style.display = 'none';
+  if (profEl) profEl.style.display = 'none';
+}
+
+function viewCandidatePhotocardDirect() {
+  if (!state.currentAdminCandidate) return;
+  const psn = state.currentAdminCandidate.amended_psn || state.currentAdminCandidate.psn;
+  window.open(`/candidate/photocard/${psn}`, '_blank');
+}
+
+function triggerResetFromCandidateCard() {
+  if (!state.currentAdminCandidate) return;
+  const psn = state.currentAdminCandidate.amended_psn || state.currentAdminCandidate.psn;
+  openAdminResetModal();
+  const psnInp = document.getElementById('admin-reset-psn');
+  if (psnInp) psnInp.value = psn;
+}
+
+// -------------------------------------------------------------
+// Candidate Edit Details Modal
+// -------------------------------------------------------------
+function openEditCandidateModal() {
+  if (!state.currentAdminCandidate) return;
+  const c = state.currentAdminCandidate;
+
+  document.getElementById('edit-cand-original-psn').value = c.psn || '';
+  document.getElementById('edit-cand-name').value = c.amended_name || c.name || '';
+  document.getElementById('edit-cand-psn').value = c.amended_psn || c.psn || '';
+  document.getElementById('edit-cand-mda').value = c.mda || '';
+  document.getElementById('edit-cand-rank').value = c.amended_rank || c.proposed_rank || '';
+  document.getElementById('edit-cand-gl').value = c.amended_gl || c.proposed_gl || '';
+  document.getElementById('edit-cand-group').value = c.amended_group || c.group_category || '';
+  document.getElementById('edit-cand-paper').value = c.amended_exam_code || c.exam_code || '';
+  document.getElementById('edit-cand-code1').value = c.code_1 || '';
+  document.getElementById('edit-cand-batch').value = c.batch_session || '';
+  document.getElementById('edit-cand-time').value = c.batch_time || '';
+  document.getElementById('edit-cand-accred').value = c.accreditation_time || '';
+  document.getElementById('edit-cand-phone').value = c.phone || '';
+  document.getElementById('edit-cand-email').value = c.email || '';
+
+  const msg = document.getElementById('admin-edit-msg');
+  if (msg) msg.style.display = 'none';
+
+  const modal = document.getElementById('admin-edit-candidate-modal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeEditCandidateModal() {
+  const modal = document.getElementById('admin-edit-candidate-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function saveCandidateDetails() {
+  const origPsn = document.getElementById('edit-cand-original-psn').value.trim();
+  const name = document.getElementById('edit-cand-name').value.trim();
+  const newPsn = document.getElementById('edit-cand-psn').value.trim();
+  const mda = document.getElementById('edit-cand-mda').value.trim();
+  const rank = document.getElementById('edit-cand-rank').value.trim();
+  const gl = document.getElementById('edit-cand-gl').value.trim();
+  const group = document.getElementById('edit-cand-group').value.trim();
+  const paper = document.getElementById('edit-cand-paper').value.trim();
+  const code1 = document.getElementById('edit-cand-code1').value.trim();
+  const batch = document.getElementById('edit-cand-batch').value.trim();
+  const btime = document.getElementById('edit-cand-time').value.trim();
+  const accred = document.getElementById('edit-cand-accred').value.trim();
+  const phone = document.getElementById('edit-cand-phone').value.trim();
+  const email = document.getElementById('edit-cand-email').value.trim();
+
+  const msg = document.getElementById('admin-edit-msg');
+  const btn = document.getElementById('btn-save-cand-details');
+
+  if (!origPsn || !name || !newPsn || !mda) {
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.background = '#fee2e2';
+      msg.style.color = '#991b1b';
+      msg.textContent = 'Name, PSN, and MDA are required fields.';
+    }
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `<span>Saving Changes...</span>`;
+
+  try {
+    const payload = {
+      original_psn: origPsn,
+      name: name,
+      new_psn: newPsn,
+      mda: mda,
+      proposed_rank: rank,
+      proposed_gl: gl,
+      exam_code: paper,
+      group_category: group,
+      batch_session: batch,
+      batch_time: btime,
+      accreditation_time: accred,
+      phone: phone,
+      email: email,
+      code_1: code1
+    };
+
+    const res = await fetch('/api/admin/candidate/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.adminToken}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Could not update candidate details.');
+    }
+
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.background = '#dcfce7';
+      msg.style.color = '#166534';
+      msg.textContent = `✅ Success: Candidate profile updated for PSN ${newPsn}.`;
+    }
+
+    executeAdminCandidateSearch(newPsn);
+    loadAdminSubmissions();
+    loadAdminRegistrations();
+
+    setTimeout(() => {
+      closeEditCandidateModal();
+    }, 1200);
+  } catch (err) {
+    if (msg) {
+      msg.style.display = 'block';
+      msg.style.background = '#fee2e2';
+      msg.style.color = '#991b1b';
+      msg.textContent = `❌ Error: ${err.message}`;
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<span>💾 Save Candidate Details</span>`;
+  }
+}
+
+// -------------------------------------------------------------
+// Questions Inspector & Editor Modal
+// -------------------------------------------------------------
+async function openCandidateQuestionsModal(optionalPsn) {
+  const psn = optionalPsn || (state.currentAdminCandidate ? (state.currentAdminCandidate.amended_psn || state.currentAdminCandidate.psn) : null);
+  if (!psn) {
+    showAlertModal('Select Candidate', 'Please search for or select an officer first.', 'warning');
+    return;
+  }
+
+  const modal = document.getElementById('admin-questions-modal');
+  const titleEl = document.getElementById('admin-qmodal-title');
+  const subEl = document.getElementById('admin-qmodal-subtitle');
+  const listEl = document.getElementById('admin-qmodal-list');
+  const navEl = document.getElementById('admin-qmodal-nav');
+  const counterEl = document.getElementById('admin-qmodal-counter');
+  const saveStatus = document.getElementById('admin-qmodal-save-status');
+
+  if (modal) modal.classList.add('active');
+  if (saveStatus) saveStatus.style.display = 'none';
+
+  if (listEl) {
+    listEl.innerHTML = `
+      <div style="text-align: center; color: #64748b; padding: 40px;">
+        <div class="spinner-small" style="margin: 0 auto 12px auto; width: 32px; height: 32px; border-width: 3px;"></div>
+        Fetching all 40 questions assigned to PSN <strong>${psn}</strong>...
+      </div>
+    `;
+  }
+  if (navEl) navEl.innerHTML = '';
+
+  try {
+    const res = await fetch(`/api/admin/candidate/${encodeURIComponent(psn)}/questions`, {
+      headers: {
+        'Authorization': `Bearer ${state.adminToken}`
+      }
+    });
+
+    if (res.status === 401) {
+      state.adminToken = null;
+      sessionStorage.removeItem('kws_admin_token');
+      openAdminLoginModal();
+      return;
+    }
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Could not load examination questions.');
+    }
+
+    state.currentPaperQuestions = data.questions || [];
+    state.currentQuestionsMetadata = data;
+
+    if (titleEl) {
+      titleEl.innerHTML = `📚 Assigned Examination Questions (${data.total_questions || 40} Questions)`;
+    }
+    if (subEl) {
+      const c = data.candidate || {};
+      subEl.innerHTML = `Officer: <strong>${c.name || psn}</strong> (PSN: <code>${c.psn || psn}</code>) &bull; Cadre Paper: <strong style="color:#fff; background:#004d40; padding:2px 8px; border-radius:4px;">${data.paper_code || 'General'}</strong> &bull; MDA: <strong>${c.mda || ''}</strong>`;
+    }
+    if (counterEl) {
+      counterEl.textContent = `${data.total_questions || 40} Questions Loaded`;
+    }
+
+    renderQuestionsModalNavigator(state.currentPaperQuestions);
+    renderQuestionsModalList(state.currentPaperQuestions);
+  } catch (err) {
+    if (listEl) {
+      listEl.innerHTML = `
+        <div style="text-align: center; color: #dc2626; padding: 30px; background: #fee2e2; border-radius: 10px;">
+          ❌ Failed to load questions: ${err.message}
+        </div>
+      `;
+    }
+  }
+}
+
+function closeCandidateQuestionsModal() {
+  const modal = document.getElementById('admin-questions-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function renderQuestionsModalNavigator(questions) {
+  const navEl = document.getElementById('admin-qmodal-nav');
+  if (!navEl) return;
+
+  navEl.innerHTML = questions.map((q, idx) => `
+    <button type="button" class="q-nav-pill ${idx === 0 ? 'active' : ''}" id="q-nav-pill-${idx + 1}" onclick="jumpToQuestionCard(${idx + 1})" title="Question ${idx + 1}">
+      ${idx + 1}
+    </button>
+  `).join('');
+}
+
+function jumpToQuestionCard(qNum) {
+  const card = document.getElementById(`admin-q-card-${qNum}`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.borderColor = '#00796b';
+    card.style.boxShadow = '0 0 0 3px rgba(0, 121, 107, 0.25)';
+    setTimeout(() => {
+      card.style.boxShadow = '';
+    }, 1500);
+  }
+
+  document.querySelectorAll('.q-nav-pill').forEach(p => p.classList.remove('active'));
+  const pill = document.getElementById(`q-nav-pill-${qNum}`);
+  if (pill) pill.classList.add('active');
+}
+
+function renderQuestionsModalList(questions) {
+  const listEl = document.getElementById('admin-qmodal-list');
+  if (!listEl) return;
+
+  if (!questions || questions.length === 0) {
+    listEl.innerHTML = `<div style="text-align: center; color: #64748b; padding: 40px;">No questions found.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = questions.map((q, idx) => {
+    const qNum = idx + 1;
+    const correctKey = (q.correct_answer || 'A').toUpperCase().trim();
+    const sourceTable = q.table || 'cbt_questions';
+
+    return `
+      <div class="admin-question-card" id="admin-q-card-${qNum}" data-qindex="${idx}" data-qid="${q.id}" data-table="${sourceTable}">
+        <div class="admin-question-header">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="admin-qnum-badge">Q${qNum}</span>
+            <span style="font-size:0.75rem; color:#64748b; font-weight:600;">DB ID: #${q.id} &bull; Table: <code>${sourceTable}</code></span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.75rem; font-weight:800; color:#475569; text-transform:uppercase;">Correct Key:</span>
+              <div class="key-selector-group">
+                ${['A', 'B', 'C', 'D'].map(k => `
+                  <button type="button" class="key-choice-btn ${correctKey === k ? 'selected' : ''}" onclick="selectQuestionKey(${idx}, '${k}')" id="key-btn-${idx}-${k}">
+                    ${k}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <button type="button" class="btn-ctrl" style="padding:5px 14px; font-size:0.78rem; font-weight:700; background:#e6f4ea; border-color:#86efac; color:#065f46;" id="btn-save-q-${idx}" onclick="saveSingleQuestion(${idx})">
+              <span>💾 Save Q${qNum}</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label style="font-size:0.75rem; font-weight:800; color:#475569; text-transform:uppercase; margin-bottom:4px; display:block;">Question Text</label>
+          <textarea class="form-control question-text-input" id="q-text-${idx}" rows="2" style="font-size:0.95rem; font-weight:500; resize:vertical; line-height:1.45;" oninput="markQuestionModified(${idx})">${escapeHtml(q.question_text || '')}</textarea>
+        </div>
+
+        <div class="admin-q-opt-grid">
+          ${['A', 'B', 'C', 'D'].map(k => {
+            const optVal = q[`option_${k.toLowerCase()}`] || '';
+            const isCorrect = (correctKey === k);
+            return `
+              <div class="admin-q-opt-wrap ${isCorrect ? 'correct' : ''}" id="opt-wrap-${idx}-${k}">
+                <span class="admin-q-opt-badge">${k}</span>
+                <input type="text" class="admin-q-opt-input" id="opt-input-${idx}-${k}" value="${escapeHtml(optVal)}" oninput="markQuestionModified(${idx})" placeholder="Option ${k} text...">
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function markQuestionModified(qIndex) {
+  const pill = document.getElementById(`q-nav-pill-${qIndex + 1}`);
+  if (pill) pill.classList.add('modified');
+}
+
+function selectQuestionKey(qIndex, key) {
+  ['A', 'B', 'C', 'D'].forEach(k => {
+    const btn = document.getElementById(`key-btn-${qIndex}-${k}`);
+    const wrap = document.getElementById(`opt-wrap-${qIndex}-${k}`);
+    if (btn) {
+      if (k === key) btn.classList.add('selected');
+      else btn.classList.remove('selected');
+    }
+    if (wrap) {
+      if (k === key) wrap.classList.add('correct');
+      else wrap.classList.remove('correct');
+    }
+  });
+
+  if (state.currentPaperQuestions && state.currentPaperQuestions[qIndex]) {
+    state.currentPaperQuestions[qIndex].correct_answer = key;
+  }
+  markQuestionModified(qIndex);
+}
+
+async function saveSingleQuestion(qIndex) {
+  const card = document.getElementById(`admin-q-card-${qIndex + 1}`);
+  if (!card) return;
+
+  const qId = parseInt(card.dataset.qid);
+  const table = card.dataset.table || 'cbt_questions';
+  const text = (document.getElementById(`q-text-${qIndex}`).value || '').trim();
+  const optA = (document.getElementById(`opt-input-${qIndex}-A`).value || '').trim();
+  const optB = (document.getElementById(`opt-input-${qIndex}-B`).value || '').trim();
+  const optC = (document.getElementById(`opt-input-${qIndex}-C`).value || '').trim();
+  const optD = (document.getElementById(`opt-input-${qIndex}-D`).value || '').trim();
+
+  let correctKey = 'A';
+  ['A', 'B', 'C', 'D'].forEach(k => {
+    const btn = document.getElementById(`key-btn-${qIndex}-${k}`);
+    if (btn && btn.classList.contains('selected')) correctKey = k;
+  });
+
+  const saveBtn = document.getElementById(`btn-save-q-${qIndex}`);
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = `<span>Saving...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/question/update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.adminToken}`
+      },
+      body: JSON.stringify({
+        question_id: qId,
+        table_name: table,
+        question_text: text,
+        option_a: optA,
+        option_b: optB,
+        option_c: optC,
+        option_d: optD,
+        correct_answer: correctKey
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Could not update question.');
+    }
+
+    if (saveBtn) {
+      saveBtn.innerHTML = `<span>✅ Saved!</span>`;
+      saveBtn.style.background = '#bbf7d0';
+      setTimeout(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = `<span>💾 Save Q${qIndex + 1}</span>`;
+        saveBtn.style.background = '#e6f4ea';
+      }, 1800);
+    }
+
+    const pill = document.getElementById(`q-nav-pill-${qIndex + 1}`);
+    if (pill) pill.classList.remove('modified');
+  } catch (err) {
+    showAlertModal('Save Error', err.message, 'error');
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `<span>💾 Save Q${qIndex + 1}</span>`;
+    }
+  }
+}
+
+async function saveAllQuestionsModal() {
+  if (!state.currentPaperQuestions || state.currentPaperQuestions.length === 0) return;
+
+  const btn = document.getElementById('btn-batch-save-questions');
+  const statusEl = document.getElementById('admin-qmodal-save-status');
+
+  const questionsPayload = [];
+  for (let idx = 0; idx < state.currentPaperQuestions.length; idx++) {
+    const card = document.getElementById(`admin-q-card-${idx + 1}`);
+    if (!card) continue;
+    const qId = parseInt(card.dataset.qid);
+    const table = card.dataset.table || 'cbt_questions';
+    const text = (document.getElementById(`q-text-${idx}`).value || '').trim();
+    const optA = (document.getElementById(`opt-input-${idx}-A`).value || '').trim();
+    const optB = (document.getElementById(`opt-input-${idx}-B`).value || '').trim();
+    const optC = (document.getElementById(`opt-input-${idx}-C`).value || '').trim();
+    const optD = (document.getElementById(`opt-input-${idx}-D`).value || '').trim();
+
+    let correctKey = 'A';
+    ['A', 'B', 'C', 'D'].forEach(k => {
+      const b = document.getElementById(`key-btn-${idx}-${k}`);
+      if (b && b.classList.contains('selected')) correctKey = k;
+    });
+
+    questionsPayload.push({
+      question_id: qId,
+      table_name: table,
+      question_text: text,
+      option_a: optA,
+      option_b: optB,
+      option_c: optC,
+      option_d: optD,
+      correct_answer: correctKey
+    });
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>Saving 40 Questions...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/questions/batch-update', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${state.adminToken}`
+      },
+      body: JSON.stringify({ questions: questionsPayload })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Batch questions update failed.');
+    }
+
+    if (statusEl) {
+      statusEl.style.display = 'inline-block';
+      statusEl.textContent = `✅ Successfully saved all ${data.count || 40} questions!`;
+      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+    }
+
+    document.querySelectorAll('.q-nav-pill').forEach(p => p.classList.remove('modified'));
+
+    showAlertModal('Questions Saved', `All ${data.count || 40} examination questions have been successfully saved to the official database.`, 'success');
+  } catch (err) {
+    showAlertModal('Save Error', err.message, 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span>💾 Save All 40 Questions</span>`;
+    }
+  }
+}
+
+function filterQuestionsModalList() {
+  const query = (document.getElementById('admin-qmodal-search').value || '').toLowerCase().trim();
+  const cards = document.querySelectorAll('.admin-question-card');
+  let matchCount = 0;
+
+  cards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    const matches = !query || text.includes(query);
+    card.style.display = matches ? 'block' : 'none';
+    if (matches) matchCount++;
+  });
+
+  const counterEl = document.getElementById('admin-qmodal-counter');
+  if (counterEl) {
+    counterEl.textContent = query ? `${matchCount} of ${cards.length} matching` : `${cards.length} Questions Loaded`;
+  }
 }
 
 
@@ -2507,6 +3242,8 @@ document.addEventListener('keydown', (e) => {
     closeSubmitModal();
     closeExitModal();
     closeAdminLoginModal();
+    closeEditCandidateModal();
+    closeCandidateQuestionsModal();
     return;
   }
 

@@ -162,6 +162,35 @@ class StartExamWithTokenRequest(BaseModel):
     token_code: str
     code_1: Optional[str] = None
 
+class CandidateUpdateAdminRequest(BaseModel):
+    original_psn: str
+    name: Optional[str] = None
+    new_psn: Optional[str] = None
+    mda: Optional[str] = None
+    proposed_rank: Optional[str] = None
+    proposed_gl: Optional[str] = None
+    exam_code: Optional[str] = None
+    batch_session: Optional[str] = None
+    batch_time: Optional[str] = None
+    accreditation_time: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    code_1: Optional[str] = None
+    group_category: Optional[str] = None
+
+class QuestionUpdateAdminRequest(BaseModel):
+    question_id: int
+    table_name: Optional[str] = "cbt_questions"
+    question_text: str
+    option_a: str
+    option_b: str
+    option_c: str
+    option_d: str
+    correct_answer: str
+
+class BatchQuestionUpdateAdminRequest(BaseModel):
+    questions: list[QuestionUpdateAdminRequest]
+
 def verify_admin_auth(
     request: Request,
     authorization: Optional[str] = Header(None),
@@ -496,6 +525,7 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
     
     rows = []
     matched_paper = clean_paper
+    source_table = "cbt_questions"
 
     # 1. Exact paper_code match with normalization variants
     if clean_paper:
@@ -504,7 +534,7 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
         alt_paper3 = clean_paper.replace("&CD", "")
         alt_paper4 = clean_paper.replace("/AI", "/A1").replace("-AI", "-A1")
         cursor.execute("""
-            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            SELECT id, paper_code, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
             FROM cbt_questions
             WHERE paper_code = ? OR paper_code = ? OR paper_code = ? OR paper_code = ? OR paper_code = ?
             ORDER BY question_number ASC
@@ -515,7 +545,7 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
     # 2. Same MDA match
     if not rows and clean_mda:
         cursor.execute("""
-            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            SELECT id, paper_code, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
             FROM cbt_questions
             WHERE mda = ?
             ORDER BY question_number ASC
@@ -528,7 +558,7 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
     # 3. Same Group Category in OHOS (Civil Service General)
     if not rows and clean_group:
         cursor.execute("""
-            SELECT id, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
+            SELECT id, paper_code, question_number, question_text, option_a, option_b, option_c, option_d, correct_answer
             FROM cbt_questions
             WHERE mda = 'OHOS' AND group_category = ?
             ORDER BY question_number ASC
@@ -548,6 +578,7 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
         """)
         rows = cursor.fetchall()
         matched_paper = "Civil Service General"
+        source_table = "questions"
 
     rows = [dict(r) for r in rows]
 
@@ -555,6 +586,9 @@ def fetch_cbt_questions(cursor, paper_code, mda, group_category):
     renumbered = []
     for idx, r in enumerate(rows[:40], start=1):
         r["question_number"] = idx
+        r["table"] = source_table
+        if "paper_code" not in r or not r["paper_code"]:
+            r["paper_code"] = matched_paper
         renumbered.append(r)
 
     return renumbered, matched_paper
@@ -1568,6 +1602,400 @@ def reset_all_exam_tokens(auth: dict = Depends(verify_superadmin_auth)):
         "success": True,
         "message": f"All {reset_count} exam Login PINs have been successfully reset to unassigned and are available for single use.",
         "tokens_reset": reset_count
+    }
+
+@router.get("/admin/candidate/{psn}")
+@router.get("/api/admin/candidate/{psn}")
+def get_admin_candidate(psn: str, auth: dict = Depends(verify_admin_auth)):
+    query_psn = psn.strip()
+    if not query_psn:
+        raise HTTPException(status_code=400, detail="PSN is required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, psn, amended_psn, name, amended_name, code_1, mda, exam_code, amended_exam_code,
+               proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group,
+               exam_date, batch_session, batch_time, accreditation_time, test_duration_minutes,
+               phone, email, passport_photo, registration_status, registered_at
+        FROM candidate_roster
+        WHERE psn = ? OR amended_psn = ?
+        ORDER BY CASE WHEN psn = ? THEN 1 ELSE 2 END
+        LIMIT 1
+    """, (query_psn, query_psn, query_psn))
+    cand_row = cursor.fetchone()
+    
+    if not cand_row:
+        cursor.execute("SELECT id, name, psn, email, grade_level, mda, created_at FROM candidates WHERE psn = ?", (query_psn,))
+        c_old = cursor.fetchone()
+        if c_old:
+            cand_row = {
+                "id": c_old["id"],
+                "psn": c_old["psn"],
+                "amended_psn": None,
+                "name": c_old["name"],
+                "amended_name": None,
+                "code_1": "N/A",
+                "mda": c_old["mda"],
+                "exam_code": "OHOS/B1",
+                "amended_exam_code": None,
+                "proposed_rank": "Candidate",
+                "amended_rank": None,
+                "proposed_gl": c_old["grade_level"],
+                "amended_gl": None,
+                "group_category": "GROUP B",
+                "amended_group": None,
+                "exam_date": "N/A",
+                "batch_session": "N/A",
+                "batch_time": "N/A",
+                "accreditation_time": "N/A",
+                "test_duration_minutes": 20,
+                "phone": "N/A",
+                "email": c_old["email"],
+                "passport_photo": None,
+                "registration_status": "registered",
+                "registered_at": c_old.get("created_at")
+            }
+        else:
+            conn.close()
+            raise HTTPException(status_code=404, detail=f"No candidate record found for PSN '{query_psn}'.")
+
+    # Fetch token info
+    cursor.execute("""
+        SELECT id, token_code, status, assigned_to_psn, activated_at
+        FROM exam_tokens
+        WHERE assigned_to_psn = ?
+        ORDER BY id DESC LIMIT 1
+    """, (query_psn,))
+    tok_row = cursor.fetchone()
+
+    # Fetch submission record
+    cursor.execute("""
+        SELECT id, candidate_name, psn, email, grade_level, mda,
+               total_questions, correct_count, score_percentage, grade_remark,
+               time_taken_seconds, submitted_at,
+               COALESCE(violations_count, 0) as violations_count, security_flags
+        FROM submissions
+        WHERE psn = ?
+        ORDER BY id DESC LIMIT 1
+    """, (query_psn,))
+    sub_row = cursor.fetchone()
+
+    # Also resolve assigned paper code and questions count
+    actual_psn = cand_row.get("amended_psn") or cand_row["psn"]
+    paper_code = cand_row.get("amended_exam_code") or cand_row.get("exam_code") or ""
+    mda_name = cand_row.get("mda") or ""
+    grp_cat = (cand_row.get("amended_group") or cand_row.get("group_category") or "").replace("GROUP ", "").strip()
+    
+    q_rows, loaded_paper = fetch_cbt_questions(cursor, paper_code, mda_name, grp_cat)
+    conn.close()
+
+    cand_dict = dict(cand_row)
+    if cand_dict.get("registered_at") and hasattr(cand_dict["registered_at"], "strftime"):
+        cand_dict["registered_at_str"] = cand_dict["registered_at"].strftime("%d-%b-%Y %I:%M %p")
+    else:
+        cand_dict["registered_at_str"] = str(cand_dict.get("registered_at") or "Not Registered")
+
+    sub_dict = dict(sub_row) if sub_row else None
+    if sub_dict and sub_dict.get("submitted_at") and hasattr(sub_dict["submitted_at"], "strftime"):
+        sub_dict["submitted_at_str"] = sub_dict["submitted_at"].strftime("%d-%b-%Y %I:%M %p")
+
+    return {
+        "success": True,
+        "candidate": cand_dict,
+        "token": dict(tok_row) if tok_row else None,
+        "submission": sub_dict,
+        "assigned_paper": loaded_paper,
+        "assigned_questions_count": len(q_rows)
+    }
+
+@router.post("/admin/candidate/update")
+@router.post("/api/admin/candidate/update")
+def update_candidate_details(data: CandidateUpdateAdminRequest, auth: dict = Depends(verify_superadmin_auth)):
+    orig_psn = data.original_psn.strip()
+    if not orig_psn:
+        raise HTTPException(status_code=400, detail="Original candidate PSN is required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT id, psn, amended_psn, name FROM candidate_roster WHERE psn = ? OR amended_psn = ?", (orig_psn, orig_psn))
+    row = cursor.fetchone()
+    if not row:
+        cursor.execute("SELECT id, psn, name FROM candidates WHERE psn = ?", (orig_psn,))
+        c_old = cursor.fetchone()
+        if not c_old:
+            conn.close()
+            raise HTTPException(status_code=404, detail=f"No candidate found with PSN '{orig_psn}'.")
+
+    new_psn = (data.new_psn or "").strip() or orig_psn
+    
+    # If PSN is changing, check uniqueness
+    if new_psn != orig_psn:
+        cursor.execute("SELECT id FROM candidate_roster WHERE (psn = ? OR amended_psn = ?) AND id != ?", (new_psn, new_psn, row["id"] if row else -1))
+        conflict = cursor.fetchone()
+        if conflict:
+            conn.close()
+            raise HTTPException(status_code=400, detail=f"Cannot change PSN to {new_psn}: already assigned to another candidate.")
+
+    # Update candidate_roster
+    if row:
+        cursor.execute("""
+            UPDATE candidate_roster SET
+                psn = ?,
+                amended_psn = NULL,
+                name = COALESCE(?, name),
+                amended_name = COALESCE(?, amended_name),
+                mda = COALESCE(?, mda),
+                proposed_rank = COALESCE(?, proposed_rank),
+                amended_rank = COALESCE(?, amended_rank),
+                proposed_gl = COALESCE(?, proposed_gl),
+                amended_gl = COALESCE(?, amended_gl),
+                exam_code = COALESCE(?, exam_code),
+                amended_exam_code = COALESCE(?, amended_exam_code),
+                group_category = COALESCE(?, group_category),
+                batch_session = COALESCE(?, batch_session),
+                batch_time = COALESCE(?, batch_time),
+                accreditation_time = COALESCE(?, accreditation_time),
+                phone = COALESCE(?, phone),
+                email = COALESCE(?, email),
+                code_1 = COALESCE(?, code_1)
+            WHERE id = ?
+        """, (
+            new_psn,
+            data.name.strip() if data.name else None,
+            data.name.strip() if data.name else None,
+            data.mda.strip() if data.mda else None,
+            data.proposed_rank.strip() if data.proposed_rank else None,
+            data.proposed_rank.strip() if data.proposed_rank else None,
+            data.proposed_gl.strip() if data.proposed_gl else None,
+            data.proposed_gl.strip() if data.proposed_gl else None,
+            data.exam_code.strip() if data.exam_code else None,
+            data.exam_code.strip() if data.exam_code else None,
+            data.group_category.strip() if data.group_category else None,
+            data.batch_session.strip() if data.batch_session else None,
+            data.batch_time.strip() if data.batch_time else None,
+            data.accreditation_time.strip() if data.accreditation_time else None,
+            data.phone.strip() if data.phone else None,
+            data.email.strip() if data.email else None,
+            data.code_1.strip() if data.code_1 else None,
+            row["id"]
+        ))
+        
+    # Synchronize cascades across linked tables
+    if new_psn != orig_psn:
+        cursor.execute("UPDATE exam_tokens SET assigned_to_psn = ? WHERE assigned_to_psn = ?", (new_psn, orig_psn))
+        cursor.execute("UPDATE submissions SET psn = ? WHERE psn = ?", (new_psn, orig_psn))
+        cursor.execute("UPDATE candidates SET psn = ? WHERE psn = ?", (new_psn, orig_psn))
+        
+    if data.name:
+        cursor.execute("UPDATE submissions SET candidate_name = ? WHERE psn = ?", (data.name.strip(), new_psn))
+        cursor.execute("UPDATE candidates SET name = ? WHERE psn = ?", (data.name.strip(), new_psn))
+    if data.mda:
+        cursor.execute("UPDATE submissions SET mda = ? WHERE psn = ?", (data.mda.strip(), new_psn))
+        cursor.execute("UPDATE candidates SET mda = ? WHERE psn = ?", (data.mda.strip(), new_psn))
+    if data.proposed_gl:
+        cursor.execute("UPDATE submissions SET grade_level = ? WHERE psn = ?", (data.proposed_gl.strip(), new_psn))
+        cursor.execute("UPDATE candidates SET grade_level = ? WHERE psn = ?", (data.proposed_gl.strip(), new_psn))
+    if data.email:
+        cursor.execute("UPDATE submissions SET email = ? WHERE psn = ?", (data.email.strip(), new_psn))
+        cursor.execute("UPDATE candidates SET email = ? WHERE psn = ?", (data.email.strip(), new_psn))
+        
+    conn.commit()
+    conn.close()
+    
+    return {
+        "success": True,
+        "message": f"Candidate profile for PSN {new_psn} successfully updated.",
+        "psn": new_psn
+    }
+
+@router.get("/admin/candidate/{psn}/questions")
+@router.get("/api/admin/candidate/{psn}/questions")
+def get_candidate_questions_admin(psn: str, auth: dict = Depends(verify_admin_auth)):
+    query_psn = psn.strip()
+    if not query_psn:
+        raise HTTPException(status_code=400, detail="PSN is required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, psn, amended_psn, name, amended_name, mda, exam_code, amended_exam_code,
+               proposed_rank, amended_rank, proposed_gl, amended_gl, group_category, amended_group
+        FROM candidate_roster
+        WHERE psn = ? OR amended_psn = ?
+        ORDER BY CASE WHEN psn = ? THEN 1 ELSE 2 END
+        LIMIT 1
+    """, (query_psn, query_psn, query_psn))
+    cand = cursor.fetchone()
+    
+    if not cand:
+        cursor.execute("SELECT id, name, psn, grade_level, mda FROM candidates WHERE psn = ?", (query_psn,))
+        c_old = cursor.fetchone()
+        if c_old:
+            cand = {
+                "id": c_old["id"],
+                "psn": c_old["psn"],
+                "name": c_old["name"],
+                "amended_name": None,
+                "mda": c_old["mda"],
+                "exam_code": "OHOS/B1",
+                "proposed_rank": "Candidate",
+                "proposed_gl": c_old["grade_level"],
+                "group_category": "GROUP B"
+            }
+        else:
+            conn.close()
+            raise HTTPException(status_code=404, detail=f"No candidate found with PSN '{query_psn}'.")
+
+    paper_code = cand.get("amended_exam_code") or cand.get("exam_code") or ""
+    mda = cand.get("mda") or ""
+    grp_cat = (cand.get("amended_group") or cand.get("group_category") or "").replace("GROUP ", "").strip()
+
+    q_rows, loaded_paper = fetch_cbt_questions(cursor, paper_code, mda, grp_cat)
+    conn.close()
+
+    if not q_rows:
+        raise HTTPException(status_code=404, detail=f"No questions found for candidate {query_psn} (Assigned Paper: {paper_code}).")
+
+    candidate_display = {
+        "name": cand.get("amended_name") or cand["name"],
+        "psn": cand["psn"],
+        "mda": cand["mda"],
+        "proposed_rank": cand.get("amended_rank") or cand.get("proposed_rank"),
+        "proposed_gl": cand.get("amended_gl") or cand.get("proposed_gl"),
+        "exam_code": paper_code
+    }
+
+    return {
+        "success": True,
+        "candidate": candidate_display,
+        "paper_code": loaded_paper,
+        "total_questions": len(q_rows),
+        "questions": q_rows
+    }
+
+@router.get("/admin/paper/{paper_code:path}/questions")
+@router.get("/api/admin/paper/{paper_code:path}/questions")
+def get_paper_questions_admin(paper_code: str, auth: dict = Depends(verify_admin_auth)):
+    clean_paper = paper_code.strip()
+    if not clean_paper:
+        raise HTTPException(status_code=400, detail="Paper code is required.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    q_rows, loaded_paper = fetch_cbt_questions(cursor, clean_paper, "", "")
+    conn.close()
+
+    if not q_rows:
+        raise HTTPException(status_code=404, detail=f"No questions found for paper code '{clean_paper}'.")
+
+    return {
+        "success": True,
+        "paper_code": loaded_paper,
+        "total_questions": len(q_rows),
+        "questions": q_rows
+    }
+
+@router.post("/admin/question/update")
+@router.post("/api/admin/question/update")
+def update_question_admin(data: QuestionUpdateAdminRequest, auth: dict = Depends(verify_superadmin_auth)):
+    key = data.correct_answer.strip().upper()
+    if key not in ["A", "B", "C", "D"]:
+        raise HTTPException(status_code=400, detail="Correct answer key must be one of: 'A', 'B', 'C', 'D'.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    target_table = "questions" if data.table_name == "questions" else "cbt_questions"
+    cursor.execute(f"SELECT id FROM {target_table} WHERE id = ?", (data.question_id,))
+    if not cursor.fetchone():
+        alt_table = "questions" if target_table == "cbt_questions" else "cbt_questions"
+        cursor.execute(f"SELECT id FROM {alt_table} WHERE id = ?", (data.question_id,))
+        if cursor.fetchone():
+            target_table = alt_table
+        else:
+            conn.close()
+            raise HTTPException(status_code=404, detail=f"Question ID {data.question_id} not found.")
+
+    cursor.execute(f"""
+        UPDATE {target_table}
+        SET question_text = ?,
+            option_a = ?,
+            option_b = ?,
+            option_c = ?,
+            option_d = ?,
+            correct_answer = ?
+        WHERE id = ?
+    """, (
+        data.question_text.strip(),
+        data.option_a.strip(),
+        data.option_b.strip(),
+        data.option_c.strip(),
+        data.option_d.strip(),
+        key,
+        data.question_id
+    ))
+    
+    conn.commit()
+    conn.close()
+    
+    return {
+        "success": True,
+        "message": f"Question #{data.question_id} updated successfully.",
+        "question_id": data.question_id,
+        "correct_answer": key
+    }
+
+@router.post("/admin/questions/batch-update")
+@router.post("/api/admin/questions/batch-update")
+def batch_update_questions_admin(data: BatchQuestionUpdateAdminRequest, auth: dict = Depends(verify_superadmin_auth)):
+    if not data.questions:
+        raise HTTPException(status_code=400, detail="No questions provided for update.")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    updated_count = 0
+    for q in data.questions:
+        key = q.correct_answer.strip().upper()
+        if key not in ["A", "B", "C", "D"]:
+            conn.close()
+            raise HTTPException(status_code=400, detail=f"Question #{q.question_id}: Correct answer must be 'A', 'B', 'C', or 'D'.")
+            
+        target_table = "questions" if q.table_name == "questions" else "cbt_questions"
+        cursor.execute(f"SELECT id FROM {target_table} WHERE id = ?", (q.question_id,))
+        if not cursor.fetchone():
+            target_table = "questions" if target_table == "cbt_questions" else "cbt_questions"
+            
+        cursor.execute(f"""
+            UPDATE {target_table}
+            SET question_text = ?,
+                option_a = ?,
+                option_b = ?,
+                option_c = ?,
+                option_d = ?,
+                correct_answer = ?
+            WHERE id = ?
+        """, (
+            q.question_text.strip(),
+            q.option_a.strip(),
+            q.option_b.strip(),
+            q.option_c.strip(),
+            q.option_d.strip(),
+            key,
+            q.question_id
+        ))
+        updated_count += 1
+        
+    conn.commit()
+    conn.close()
+    
+    return {
+        "success": True,
+        "message": f"Successfully updated {updated_count} questions.",
+        "count": updated_count
     }
 
 @router.get("/results/excel")
