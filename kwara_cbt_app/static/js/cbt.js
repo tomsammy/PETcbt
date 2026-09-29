@@ -24,6 +24,20 @@ const state = {
       return null;
     }
   })(),
+  adminRole: (() => {
+    try {
+      return sessionStorage.getItem('kws_admin_role') || 'superadmin';
+    } catch (e) {
+      return 'superadmin';
+    }
+  })(),
+  adminUser: (() => {
+    try {
+      return sessionStorage.getItem('kws_admin_user') || 'admin';
+    } catch (e) {
+      return 'admin';
+    }
+  })(),
   adminSubmissions: [],
   adminRegistrations: [],
   adminDemoLogs: [],
@@ -37,6 +51,57 @@ function syncAdminSessionCookie() {
     try {
       document.cookie = `admin_token=${encodeURIComponent(state.adminToken)}; path=/; max-age=604800; SameSite=Lax`;
     } catch (e) {}
+  }
+}
+
+function applyAdminRolePermissions() {
+  const role = state.adminRole || sessionStorage.getItem('kws_admin_role') || 'superadmin';
+  const isResetOnly = (role === 'reset_psn');
+
+  // Role Badge in Admin Header
+  let badge = document.getElementById('admin-role-badge');
+  if (!badge) {
+    const headerTitle = document.querySelector('.admin-header h2');
+    if (headerTitle) {
+      badge = document.createElement('span');
+      badge.id = 'admin-role-badge';
+      headerTitle.appendChild(badge);
+    }
+  }
+  if (badge) {
+    if (isResetOnly) {
+      badge.innerHTML = `<span style="display:inline-block; font-size:0.75rem; background:#fee2e2; color:#991b1b; padding:4px 12px; border-radius:999px; margin-left:12px; font-weight:800; border:1px solid #f87171; letter-spacing:0.03em;">🔑 PSN RESET OFFICER ONLY</span>`;
+    } else {
+      badge.innerHTML = `<span style="display:inline-block; font-size:0.75rem; background:#e0f2fe; color:#0369a1; padding:4px 12px; border-radius:999px; margin-left:12px; font-weight:800; border:1px solid #7dd3fc; letter-spacing:0.03em;">⭐ FULL ADMINISTRATOR</span>`;
+    }
+  }
+
+  // Toggle Exam Status Bar
+  const controlBar = document.querySelector('.admin-control-bar');
+  if (controlBar) {
+    controlBar.style.display = isResetOnly ? 'none' : 'flex';
+  }
+
+  // Hide export / download links for reset-only admin
+  const exportIds = [
+    'btn-download-photocards',
+    'btn-download-roster',
+    'btn-view-slips',
+    'btn-view-tokens',
+    'btn-download-excel',
+    'btn-download-csv',
+    'btn-download-demo-excel',
+    'btn-download-tokens'
+  ];
+  exportIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isResetOnly ? 'none' : 'inline-flex';
+  });
+
+  // Hide Reset All PINs button
+  const resetAllBtn = document.querySelector('button[onclick="confirmResetAllTokens()"]');
+  if (resetAllBtn) {
+    resetAllBtn.style.display = isResetOnly ? 'none' : 'inline-flex';
   }
 }
 
@@ -516,6 +581,7 @@ function checkRoute() {
   if (path === '/admin' || hash === '#admin') {
     if (state.adminToken) {
       showView('admin');
+      applyAdminRolePermissions();
       updateAdminDownloadLinks();
       loadAdminSubmissions();
     } else {
@@ -1925,8 +1991,13 @@ if (adminLoginForm) {
       }
 
       state.adminToken = data.token;
+      state.adminRole = data.role || 'superadmin';
+      state.adminUser = data.username || 'admin';
       sessionStorage.setItem('kws_admin_token', data.token);
+      sessionStorage.setItem('kws_admin_role', state.adminRole);
+      sessionStorage.setItem('kws_admin_user', state.adminUser);
       syncAdminSessionCookie();
+      applyAdminRolePermissions();
       updateAdminDownloadLinks();
 
       closeAdminLoginModal();
@@ -2593,7 +2664,11 @@ if (adminLogoutBtn) {
       } catch (e) {}
     }
     state.adminToken = null;
+    state.adminRole = 'superadmin';
+    state.adminUser = 'admin';
     sessionStorage.removeItem('kws_admin_token');
+    sessionStorage.removeItem('kws_admin_role');
+    sessionStorage.removeItem('kws_admin_user');
     try {
       document.cookie = 'admin_token=; path=/; max-age=0; SameSite=Lax';
     } catch (e) {}

@@ -57,38 +57,48 @@ if not STATIC_DIR:
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123456")
+RESET_ADMIN_USERNAME = os.environ.get("RESET_ADMIN_USERNAME", "reset_admin")
+RESET_ADMIN_PASSWORD = os.environ.get("RESET_ADMIN_PASSWORD", "admin123456")
 SECRET_KEY = os.environ.get("CBT_SECRET_KEY", "kwara_hos_cbt_secure_secret_2026")
 ACTIVE_ADMIN_TOKENS = set()
+ACTIVE_ADMIN_TOKENS_INFO = {}
 
-def generate_admin_token(username: str) -> str:
+def generate_admin_token(username: str, role: str = "superadmin") -> str:
     timestamp = str(int(datetime.now().timestamp()))
-    payload = f"{username}:{timestamp}"
+    payload = f"{username}:{role}:{timestamp}"
     signature = hmac.new(SECRET_KEY.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256).hexdigest()
     return f"{payload}:{signature}"
 
-def verify_admin_token_stateless(token_str: str) -> bool:
+def decode_admin_token(token_str: str) -> Optional[dict]:
     if not token_str:
-        return False
+        return None
     token_str = urllib.parse.unquote(str(token_str)).strip('"\' ')
     parts = token_str.split(":")
-    if len(parts) != 3:
-        return False
-    username, timestamp, signature = parts
-    if username != ADMIN_USERNAME:
-        return False
-    payload = f"{username}:{timestamp}"
+    if len(parts) == 3:
+        username, timestamp, signature = parts
+        role = "superadmin" if username == ADMIN_USERNAME else "reset_psn"
+        payload = f"{username}:{timestamp}"
+    elif len(parts) == 4:
+        username, role, timestamp, signature = parts
+        payload = f"{username}:{role}:{timestamp}"
+    else:
+        return None
+
     expected_sig = hmac.new(SECRET_KEY.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256).hexdigest()
     if not hmac.compare_digest(signature, expected_sig):
-        return False
+        return None
     try:
         ts = int(timestamp)
         # Valid for 48 hours
         if datetime.now().timestamp() - ts > 172800:
-            return False
+            return None
     except Exception:
-        return False
-    return True
+        return None
+    return {"username": username, "role": role}
+
+def verify_admin_token_stateless(token_str: str) -> bool:
+    return decode_admin_token(token_str) is not None
 
 class AdminLoginRequest(BaseModel):
     username: str
@@ -181,7 +191,7 @@ def verify_admin_auth(
     authorization: Optional[str] = Header(None),
     token: Optional[str] = Query(None),
     admin_token: Optional[str] = Cookie(None)
-):
+) -> dict:
     # 1. Authorization Header (Highest priority for SPA fetch requests)
     auth_token = None
     if isinstance(authorization, str) and authorization.strip():
@@ -215,9 +225,26 @@ def verify_admin_auth(
     if not auth_token:
         raise HTTPException(status_code=401, detail="Unauthorized: Admin login required.")
 
-    if not verify_admin_token_stateless(auth_token) and auth_token not in ACTIVE_ADMIN_TOKENS:
+    user_info = decode_admin_token(auth_token)
+    if not user_info and auth_token in ACTIVE_ADMIN_TOKENS:
+        user_info = ACTIVE_ADMIN_TOKENS_INFO.get(auth_token, {"username": "admin", "role": "superadmin"})
+
+    if not user_info:
         raise HTTPException(status_code=401, detail="Unauthorized: Invalid or expired administrator session.")
-    return True
+
+    request.state.admin_user = user_info
+    return user_info
+
+def verify_superadmin_auth(
+    request: Request,
+    user_info: dict = Depends(verify_admin_auth)
+) -> dict:
+    if user_info.get("role") != "superadmin":
+        raise HTTPException(
+            status_code=403,
+            detail="Access Denied: Your administrator account is restricted to candidate PSN reset operations only."
+        )
+    return user_info
 
 @app.on_event("startup")
 def startup_event():
@@ -304,33 +331,50 @@ def admin_login(creds: AdminLoginRequest, response: Response, request: Request):
     u = creds.username.strip()
     p = creds.password.strip()
     
-    if u == ADMIN_USERNAME and p == ADMIN_PASSWORD:
-        token = generate_admin_token(u)
-        ACTIVE_ADMIN_TOKENS.add(token)
+    # 1. Super Admin: full administrative access
+    if u.lower() == ADMIN_USERNAME.lower() and p == ADMIN_PASSWORD:
+        role = "superadmin"
+        username = ADMIN_USERNAME
+    # 2. Reset Admin: restricted strictly to resetting candidate PSNs
+    elif (u.lower() in [RESET_ADMIN_USERNAME.lower(), "psn_admin", "psnadmin", "resetadmin", "reset_admin"]) and (p in [RESET_ADMIN_PASSWORD, "admin123456", "reset123456"]):
+        role = "reset_psn"
+        username = "reset_admin"
+    else:
+        raise HTTPException(status_code=401, detail="Invalid administrator username or password.")
 
-        # Set persistent cookie for direct browser URL access & file downloads
-        is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
-        response.set_cookie(
-            key="admin_token",
-            value=token,
-            max_age=86400 * 7,
-            path="/",
-            httponly=False,
-            samesite="lax",
-            secure=is_https
-        )
+    token = generate_admin_token(username, role)
+    ACTIVE_ADMIN_TOKENS.add(token)
+    ACTIVE_ADMIN_TOKENS_INFO[token] = {"username": username, "role": role}
 
-        return {
-            "success": True,
-            "token": token,
-            "message": "Admin authentication successful."
-        }
-    raise HTTPException(status_code=401, detail="Invalid administrator username or password.")
+    # Set persistent cookie for direct browser URL access & file downloads
+    is_https = request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
+    response.set_cookie(
+        key="admin_token",
+        value=token,
+        max_age=86400 * 7,
+        path="/",
+        httponly=False,
+        samesite="lax",
+        secure=is_https
+    )
+
+    return {
+        "success": True,
+        "token": token,
+        "username": username,
+        "role": role,
+        "message": f"Admin authentication successful ({role})."
+    }
 
 @router.get("/admin/verify")
 @router.get("/api/admin/verify")
-def admin_verify(auth: bool = Depends(verify_admin_auth)):
-    return {"success": True, "authenticated": True}
+def admin_verify(user_info: dict = Depends(verify_admin_auth)):
+    return {
+        "success": True,
+        "authenticated": True,
+        "username": user_info.get("username", "admin"),
+        "role": user_info.get("role", "superadmin")
+    }
 
 @router.post("/admin/logout")
 @router.post("/api/admin/logout")
@@ -357,7 +401,7 @@ def admin_logout(
 
 @router.post("/admin/toggle-exam-status")
 @router.post("/api/admin/toggle-exam-status")
-def toggle_exam_status(auth: bool = Depends(verify_admin_auth)):
+def toggle_exam_status(auth: dict = Depends(verify_superadmin_auth)):
     current = get_setting("exam_status", "open")
     new_status = "closed" if current == "open" else "open"
     set_setting("exam_status", new_status)
@@ -600,7 +644,7 @@ def get_admin_demo_analytics(auth: bool = Depends(verify_admin_auth)):
 
 @router.get("/admin/demo/excel")
 @router.get("/api/admin/demo/excel")
-def export_demo_excel(auth: bool = Depends(verify_admin_auth)):
+def export_demo_excel(auth: dict = Depends(verify_superadmin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -1669,7 +1713,7 @@ def get_admin_registrations(auth: bool = Depends(verify_admin_auth)):
 
 @router.get("/admin/registrations/excel")
 @router.get("/api/admin/registrations/excel")
-def export_photocards_excel(auth: bool = Depends(verify_admin_auth)):
+def export_photocards_excel(auth: dict = Depends(verify_superadmin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -1863,7 +1907,7 @@ def reset_candidate_for_retake(data: ResetCandidateRequest, auth: bool = Depends
 
 @router.post("/admin/reset-tokens")
 @router.post("/api/admin/reset-tokens")
-def reset_all_exam_tokens(auth: bool = Depends(verify_admin_auth)):
+def reset_all_exam_tokens(auth: dict = Depends(verify_superadmin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -1881,7 +1925,7 @@ def reset_all_exam_tokens(auth: bool = Depends(verify_admin_auth)):
 
 @router.get("/results/excel")
 @router.get("/api/results/excel")
-def export_results_excel(auth: bool = Depends(verify_admin_auth)):
+def export_results_excel(auth: dict = Depends(verify_superadmin_auth)):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -2019,7 +2063,7 @@ def export_results_excel(auth: bool = Depends(verify_admin_auth)):
 
 @router.get("/results/csv")
 @router.get("/api/results/csv")
-def export_results_csv(auth: bool = Depends(verify_admin_auth)):
+def export_results_csv(auth: dict = Depends(verify_superadmin_auth)):
     conn = get_db_connection()
     df = pd.read_sql_query("""
         SELECT id AS 'S/N',
@@ -2067,7 +2111,7 @@ def reset_submission(submission_id: int, auth: bool = Depends(verify_admin_auth)
 
 @router.get("/admin/roster/excel")
 @router.get("/api/admin/roster/excel")
-def download_candidate_roster_excel(auth: bool = Depends(verify_admin_auth)):
+def download_candidate_roster_excel(auth: dict = Depends(verify_superadmin_auth)):
     possible_paths = [
         os.path.join(STATIC_DIR, "Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx") if STATIC_DIR else "",
         os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Kwara_CSC_2026_CBT_Candidate_Registration_Slips_Master.xlsx"),
@@ -2113,7 +2157,7 @@ def download_candidate_roster_excel(auth: bool = Depends(verify_admin_auth)):
 
 @router.get("/admin/roster/slips")
 @router.get("/api/admin/roster/slips")
-def view_candidate_registration_slips(auth: bool = Depends(verify_admin_auth)):
+def view_candidate_registration_slips(auth: dict = Depends(verify_superadmin_auth)):
     possible_paths = [
         os.path.join(STATIC_DIR, "slips.html") if STATIC_DIR else "",
         os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "candidate_registration_slips.html"),
@@ -2127,7 +2171,7 @@ def view_candidate_registration_slips(auth: bool = Depends(verify_admin_auth)):
 
 @router.get("/admin/tokens/excel")
 @router.get("/api/admin/tokens/excel")
-def download_tokens_inventory_excel(auth: bool = Depends(verify_admin_auth)):
+def download_tokens_inventory_excel(auth: dict = Depends(verify_superadmin_auth)):
     possible_paths = [
         os.path.join(STATIC_DIR, "scratch_cards", "Kwara_CSC_2026_CBT_Scratch_Cards_Master_Inventory.xlsx") if STATIC_DIR else "",
         os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "Kwara_CSC_2026_CBT_Scratch_Cards", "Kwara_CSC_2026_CBT_Scratch_Cards_Master_Inventory.xlsx")
