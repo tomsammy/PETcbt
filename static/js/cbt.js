@@ -3423,14 +3423,12 @@ function closeHomepageInstructionsModal() {
   }
 }
 
-// Automatically display instructions modal as homepage loads and initialize proctorEngine
+// Initialize proctorEngine on page load (automatic popup on load disabled)
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    openHomepageInstructionsModal();
     if (typeof proctorEngine !== 'undefined') proctorEngine.init();
   });
 } else {
   // If DOM is already interactive or complete
-  setTimeout(openHomepageInstructionsModal, 150);
   if (typeof proctorEngine !== 'undefined') proctorEngine.init();
 }
