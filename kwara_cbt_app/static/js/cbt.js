@@ -1312,7 +1312,7 @@ if (tokenExamForm) {
 const proctorEngine = {
   active: false,
   violations: 0,
-  maxViolations: 3,
+  maxViolations: 999,
   violationLogs: [],
   hasLeftWindow: false,
   isFullscreenActive: false,
@@ -1322,202 +1322,30 @@ const proctorEngine = {
   blurCheckTimer: null,
 
   init() {
-    // 1. Mobile & Desktop App-switching & tab-switching listeners
-    window.addEventListener('blur', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      // Immediate blackout protects against Snipping Tool, Alt+Tab, and background capture
-      this.showCurtain();
-      
-      // 180ms verification to prevent transient scroll-edge touch glitches on mobile
-      if (this.blurCheckTimer) clearTimeout(this.blurCheckTimer);
-      this.blurCheckTimer = setTimeout(() => {
-        if (document.visibilityState === 'hidden' || !document.hasFocus()) {
-          this.hasLeftWindow = true;
-        } else {
-          // Transient blur (e.g. rapid touch near edge) - restore screen smoothly
-          if (!this.hasLeftWindow && (!document.getElementById('security-violation-modal') || !document.getElementById('security-violation-modal').classList.contains('active'))) {
-            this.hideCurtain();
-          }
-        }
-      }, 180);
-    });
-
-    window.addEventListener('focus', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (this.hasLeftWindow) {
-        this.recordViolation('Switched to another application or window');
-      }
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      if (!this.active || state.isSubmitted) return;
-      if (document.visibilityState === 'hidden') {
-        this.showCurtain();
-        this.hasLeftWindow = true;
-      } else if (document.visibilityState === 'visible') {
-        if (this.hasLeftWindow) {
-          this.recordViolation('Switched browser tab or minimized examination window');
-        }
-      }
-    });
-
-    // Mobile OS lifecycle (Crucial for iOS Safari & Android when Home gesture is swiped)
-    window.addEventListener('pagehide', () => {
-      if (!this.active || state.isSubmitted) return;
-      this.showCurtain();
-      this.hasLeftWindow = true;
-    });
-
-    window.addEventListener('pageshow', () => {
-      if (!this.active || state.isSubmitted) return;
-      if (this.hasLeftWindow) {
-        this.recordViolation('Returned from home screen or background');
-      }
-    });
-
-    // 2. Fullscreen change listener (guards against false alarms on devices without HTML fullscreen like iPhone)
-    const handleFs = () => {
-      if (!this.active || state.isSubmitted) return;
-      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-      if (isFs) {
-        this.isFullscreenActive = true;
-      } else if (this.isFullscreenActive) {
-        // Fullscreen was previously active and was exited
-        this.isFullscreenActive = false;
-        this.showCurtain();
-        this.recordViolation('Exited secure fullscreen examination mode');
-      }
-    };
-    document.addEventListener('fullscreenchange', handleFs);
-    document.addEventListener('webkitfullscreenchange', handleFs);
-
-    // 3. Multi-touch screenshot gesture blocking on mobile (e.g. 3-finger swipe on Xiaomi/Samsung/Oppo)
-    window.addEventListener('touchstart', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (e.touches && e.touches.length >= 3) {
-        e.preventDefault();
-        this.showCurtain();
-        this.showToast('⚠️ Multi-finger gesture screenshot blocked.');
-      }
-    }, { passive: false });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (e.touches && e.touches.length >= 3) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    // 4. Desktop & External Keyboard Screenshot & Hotkey Blocking
-    window.addEventListener('keydown', (e) => {
-      if (!this.active || state.isSubmitted) return;
-
-      // PrintScreen key
-      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.wipeClipboard();
-        this.flashBlackout();
-        this.showToast('⚠️ SCREENSHOT BLOCKED: Taking screenshots is strictly prohibited.');
-        this.logIncident('PrintScreen key pressed');
-        return false;
-      }
-
-      // Windows Snipping Tool (Win + Shift + S) or Mac (Cmd + Shift + 3/4/5)
-      if ((e.shiftKey && (e.metaKey || e.ctrlKey || e.altKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) ||
-          (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key))) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.wipeClipboard();
-        this.flashBlackout();
-        this.showToast('⚠️ SCREEN CAPTURE BLOCKED: Snipping tool is disabled.');
-        this.logIncident('Snipping shortcut triggered');
-        return false;
-      }
-
-      // Print Dialog (Ctrl + P / Cmd + P)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.keyCode === 80)) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showToast('⚠️ PRINTING BLOCKED: Examination pages cannot be printed.');
-        this.logIncident('Print shortcut attempted');
-        return false;
-      }
-
-      // Save Page (Ctrl + S / Cmd + S)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showToast('⚠️ SAVE BLOCKED: Saving exam content is prohibited.');
-        return false;
-      }
-
-      // Developer Tools & View Source (F12, Ctrl+Shift+I/J/C, Ctrl+U)
-      if (e.key === 'F12' || e.keyCode === 123 ||
-          ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
-          ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U'))) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showToast('⚠️ ACTION BLOCKED: Developer tools are disabled.');
-        this.logIncident('Dev tools shortcut attempted');
-        return false;
-      }
-    }, true);
-
-    window.addEventListener('keyup', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.wipeClipboard();
-      }
-    }, true);
-
-    // 5. Long-press and Context Menu (Disables text selection / image download on mobile)
-    document.addEventListener('contextmenu', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      this.showToast('⚠️ Context menu and text selection are disabled.');
-      return false;
-    }, true);
-
-    document.addEventListener('copy', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      this.showToast('⚠️ Copy and paste functions are disabled.');
-      return false;
-    }, true);
-
-    document.addEventListener('cut', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      return false;
-    }, true);
-
-    document.addEventListener('dragstart', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      return false;
-    }, true);
+    // Proctoring & application-switching restrictions completely disabled per Commission directive.
+    // Candidates are permitted to navigate away, switch apps, answer incoming calls, and return freely.
+    this.hideCurtain();
+    this.closeViolationModal();
   },
 
   async start(candidate) {
-    this.active = true;
+    this.active = false;
     this.violations = 0;
     this.violationLogs = [];
     this.hasLeftWindow = false;
     this.isFullscreenActive = false;
 
-    // Apply proctor classes
-    document.body.classList.add('exam-proctored');
+    // Remove any restrictive classes
+    document.body.classList.remove('exam-proctored');
     const examView = document.getElementById('view-exam');
-    if (examView) examView.classList.add('exam-proctored');
+    if (examView) examView.classList.remove('exam-proctored');
 
     this.updateWatermark(candidate);
     this.updateSecurityBadge();
-    this.enterFullscreen();
+    this.hideCurtain();
+    this.closeViolationModal();
 
-    // Keep phone screen awake during examination
+    // Keep phone screen awake during examination if supported
     await this.requestWakeLock();
   },
 
@@ -1531,22 +1359,14 @@ const proctorEngine = {
     this.releaseWakeLock();
     this.hideCurtain();
     this.closeViolationModal();
-
-    if (document.fullscreenElement || document.webkitFullscreenElement) {
-      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
-    }
   },
 
   async requestWakeLock() {
     try {
       if ('wakeLock' in navigator && navigator.wakeLock.request) {
         this.wakeLock = await navigator.wakeLock.request('screen');
-        console.log('Mobile Screen Wake Lock active - screen will not dim or sleep.');
       }
-    } catch (err) {
-      console.warn('Wake Lock request skipped:', err);
-    }
+    } catch (err) {}
   },
 
   releaseWakeLock() {
@@ -1558,23 +1378,12 @@ const proctorEngine = {
   },
 
   enterFullscreen() {
-    const docEl = document.documentElement;
-    const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-    if (rfs) {
-      rfs.call(docEl).then(() => {
-        this.isFullscreenActive = true;
-      }).catch(err => {
-        console.warn('Fullscreen entry deferred/declined:', err);
-      });
-    }
+    // Non-mandatory; no restrictions or warnings
   },
 
   showCurtain() {
-    const curtain = document.getElementById('security-curtain');
-    if (curtain) {
-      curtain.style.display = 'flex';
-      curtain.classList.add('active');
-    }
+    // Completely disabled
+    this.hideCurtain();
   },
 
   hideCurtain() {
@@ -1585,151 +1394,39 @@ const proctorEngine = {
     }
   },
 
-  flashBlackout() {
-    this.showCurtain();
-    setTimeout(() => {
-      if (!this.hasLeftWindow && (!document.getElementById('security-violation-modal') || !document.getElementById('security-violation-modal').classList.contains('active'))) {
-        this.hideCurtain();
-      }
-    }, 1200);
-  },
-
-  wipeClipboard() {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText('⚠️ Screenshots and screen capture are strictly prohibited by Kwara State Civil Service Commission.').catch(() => {});
-      }
-    } catch (e) {}
-  },
+  flashBlackout() {},
+  wipeClipboard() {},
 
   recordViolation(reason) {
-    this.hasLeftWindow = false;
-    this.violations++;
-    const timestamp = new Date().toLocaleTimeString();
-    const logEntry = `${timestamp} - ${reason}`;
-    this.violationLogs.push(logEntry);
-    console.warn(`[SECURITY VIOLATION ${this.violations}/${this.maxViolations}]:`, logEntry);
-
-    this.sendTelemetry(reason);
-    this.updateSecurityBadge();
-    this.showViolationModal(reason);
+    // Disabled: candidates can switch apps and navigate freely without strikes
   },
 
-  sendTelemetry(reason) {
-    try {
-      if (state.candidate && state.candidate.psn) {
-        fetch('/api/exam/log-security-incident', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            psn: state.candidate.psn,
-            incident_type: 'app_switch',
-            details: reason,
-            warning_level: this.violations
-          })
-        }).catch(() => {});
-      }
-    } catch(e) {}
-  },
-
-  logIncident(incident) {
-    const timestamp = new Date().toLocaleTimeString();
-    this.violationLogs.push(`${timestamp} - ${incident}`);
-    this.sendTelemetry(incident);
-  },
+  sendTelemetry(reason) {},
+  logIncident(incident) {},
 
   showViolationModal(reason) {
-    const modal = document.getElementById('security-violation-modal');
-    if (!modal) return;
-
-    const countEl = document.getElementById('sec-violation-count');
-    const titleEl = document.getElementById('sec-violation-title');
-    const badgeEl = document.getElementById('sec-violation-badge');
-    const msgEl = document.getElementById('sec-violation-msg');
-    const actionsEl = document.getElementById('sec-violation-actions');
-    const psnEl = document.getElementById('sec-candidate-psn');
-
-    if (psnEl && state.candidate) {
-      psnEl.textContent = state.candidate.amended_psn || state.candidate.psn || '-';
-    }
-
-    if (countEl) countEl.textContent = this.violations;
-
-    if (this.violations === 1) {
-      titleEl.textContent = 'SECURITY WARNING (STRIKE 1)';
-      titleEl.style.color = '#b45309';
-      badgeEl.style.background = '#fef3c7';
-      badgeEl.style.color = '#92400e';
-      badgeEl.innerHTML = `⚠️ Warning 1 of ${this.maxViolations}`;
-      msgEl.innerHTML = `You navigated away from the examination window (<em>${reason}</em>).<br><br>Switching to another application, opening new browser tabs, or attempting screen capture is <strong>strictly prohibited</strong>. This incident has been logged with your candidate record.<br><br>Please return to the examination immediately.`;
-      actionsEl.innerHTML = `
-        <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="proctorEngine.resumeExam()">
-          <span>🛡️ Return to Examination</span>
-        </button>
-      `;
-    } else if (this.violations === 2) {
-      titleEl.textContent = 'FINAL WARNING (STRIKE 2)';
-      titleEl.style.color = '#dc2626';
-      badgeEl.style.background = '#fee2e2';
-      badgeEl.style.color = '#b91c1c';
-      badgeEl.innerHTML = `🚨 Warning 2 of ${this.maxViolations} (FINAL WARNING)`;
-      msgEl.innerHTML = `Another unauthorized window switch was detected (<em>${reason}</em>).<br><br><strong style="color: #b91c1c;">You have only ONE warning remaining!</strong><br><br>Any further attempt to exit, switch applications, or minimize this window will result in <strong>IMMEDIATE EXAM TERMINATION and automatic submission</strong> to the Civil Service Commission.`;
-      actionsEl.innerHTML = `
-        <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #b91c1c;" onclick="proctorEngine.resumeExam()">
-          <span>⚠️ I Understand - Resume Exam (Final Chance)</span>
-        </button>
-      `;
-    } else {
-      // Strike 3: Disqualification & Auto-Submission
-      titleEl.textContent = 'EXAMINATION TERMINATED (STRIKE 3)';
-      titleEl.style.color = '#7f1d1d';
-      badgeEl.style.background = '#7f1d1d';
-      badgeEl.style.color = '#ffffff';
-      badgeEl.innerHTML = `🛑 Maximum Violations Exceeded (3 of ${this.maxViolations})`;
-      msgEl.innerHTML = `You have exceeded the maximum allowable application-switching violations.<br><br>In compliance with Kwara State Civil Service Commission anti-cheating regulations, <strong>your examination has been locked and automatically submitted</strong> with a security infraction report.`;
-      actionsEl.innerHTML = `
-        <div style="font-weight: 700; color: #dc2626; padding: 12px; font-size: 0.95rem;">
-          ⏳ Locking examination and saving final evaluation...
-        </div>
-      `;
-
-      // Auto submit after 2.5 seconds
-      setTimeout(() => {
-        this.closeViolationModal();
-        this.hideCurtain();
-        submitExam(true);
-      }, 2500);
-    }
-
-    modal.classList.add('active');
+    this.closeViolationModal();
   },
 
   resumeExam() {
     this.closeViolationModal();
     this.hideCurtain();
-    this.enterFullscreen();
   },
 
   closeViolationModal() {
     const modal = document.getElementById('security-violation-modal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
   },
 
   updateSecurityBadge() {
     const badge = document.getElementById('exam-security-badge');
     const text = document.getElementById('security-status-text');
     if (!badge || !text) return;
-
-    if (this.violations === 0) {
-      badge.className = 'security-status-badge secure';
-      text.textContent = '🛡️ Shield: Active (0/3)';
-    } else if (this.violations === 1) {
-      badge.className = 'security-status-badge warning';
-      text.textContent = '⚠️ Warning (1/3)';
-    } else if (this.violations >= 2) {
-      badge.className = 'security-status-badge danger';
-      text.textContent = `🚨 Warning (${this.violations}/3)`;
-    }
+    badge.className = 'security-status-badge secure';
+    text.textContent = '🟢 Exam In Progress';
   },
 
   updateWatermark(candidate) {
@@ -1749,20 +1446,7 @@ const proctorEngine = {
   },
 
   showToast(msg) {
-    let toast = document.getElementById('cbt-security-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'cbt-security-toast';
-      toast.className = 'security-toast';
-      document.body.appendChild(toast);
-    }
-    toast.innerHTML = `<span style="font-size:1.2rem;">🛡️</span> <span>${msg}</span>`;
-    toast.style.display = 'flex';
-
-    if (this.toastTimer) clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => {
-      toast.style.display = 'none';
-    }, 3500);
+    // Quietly ignore or minimal non-intrusive notification
   }
 };
 
@@ -2112,8 +1796,8 @@ async function submitExam(isAuto = false) {
     token_code: (state.tokenCode || (state.candidate && state.candidate.token_code) || null),
     answers: state.answers,
     time_taken_seconds: timeTaken,
-    violations_count: (typeof proctorEngine !== 'undefined' ? proctorEngine.violations : 0),
-    security_flags: (typeof proctorEngine !== 'undefined' ? proctorEngine.violationLogs.join('; ') : '')
+    violations_count: 0,
+    security_flags: ''
   };
 
   pendingSubmissionPayload = payload;

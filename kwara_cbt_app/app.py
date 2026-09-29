@@ -735,14 +735,17 @@ def start_exam(data: StartExamRequest):
     cursor = conn.cursor()
     
     # Check if this PSN has already completed an exam
-    cursor.execute("SELECT id, submitted_at, score_percentage FROM submissions WHERE psn = ?", (psn,))
+    cursor.execute("SELECT id, submitted_at, score_percentage, violations_count, security_flags FROM submissions WHERE psn = ?", (psn,))
     existing_sub = cursor.fetchone()
     if existing_sub:
-        conn.close()
-        raise HTTPException(
-            status_code=400,
-            detail=f"The CBT Examination is closed for this record. Officer with PSN {psn} has already taken this test on {existing_sub['submitted_at']} (Score: {existing_sub['score_percentage']}%). You cannot take the examination again."
-        )
+        if (existing_sub.get("violations_count") and existing_sub["violations_count"] > 0) or existing_sub.get("security_flags"):
+            cursor.execute("DELETE FROM submissions WHERE id = ?", (existing_sub["id"],))
+        else:
+            conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail=f"The CBT Examination is closed for this record. Officer with PSN {psn} has already taken this test on {existing_sub['submitted_at']} (Score: {existing_sub['score_percentage']}%). You cannot take the examination again."
+            )
     
     # Register candidate
     cursor.execute("""
@@ -1363,17 +1366,42 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
     if not psn.startswith("999"):
         cand_name = cand.get("amended_name") or cand.get("name") or ""
         cursor.execute("""
-            SELECT id, submitted_at, score_percentage 
+            SELECT id, candidate_id, candidate_name, psn, email, grade_level, mda,
+                   total_questions, correct_count, score_percentage, grade_remark,
+                   time_taken_seconds, submitted_at, answers_json, violations_count, security_flags
             FROM submissions 
             WHERE psn = ? AND (candidate_name = ? OR candidate_id = ?)
+            ORDER BY id DESC
         """, (psn, cand_name, cand["id"]))
         sub = cursor.fetchone()
         if sub:
-            conn.close()
-            raise HTTPException(
-                status_code=400,
-                detail=f"This examination has already been completed for {cand_name} (PSN {psn}) on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
+            # Check if this was a premature strike auto-submit or if candidate was terminated by security violation!
+            is_violation_auto_submit = bool(
+                (sub.get("violations_count") and sub["violations_count"] > 0) or
+                sub.get("security_flags")
             )
+            if is_violation_auto_submit:
+                logger.info(f"Auto-archiving premature violation submission {sub['id']} for PSN {psn}")
+                cursor.execute("""
+                    INSERT INTO archived_submissions (
+                        original_submission_id, candidate_id, candidate_name, psn, email,
+                        grade_level, mda, total_questions, correct_count, score_percentage,
+                        grade_remark, time_taken_seconds, submitted_at, answers_json, reason
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    sub["id"], sub.get("candidate_id"), sub.get("candidate_name"), sub.get("psn"), sub.get("email"),
+                    sub.get("grade_level"), sub.get("mda"), sub.get("total_questions"), sub.get("correct_count"),
+                    sub.get("score_percentage"), sub.get("grade_remark"), sub.get("time_taken_seconds"),
+                    sub.get("submitted_at"), str(sub.get("answers_json")), "Auto-archived: browser navigation / proctor violation lockout cleared"
+                ))
+                cursor.execute("DELETE FROM submissions WHERE id = ?", (sub["id"],))
+                cursor.execute("UPDATE candidate_roster SET registration_status = 'registered' WHERE psn = ? OR amended_psn = ?", (psn, psn))
+            else:
+                conn.close()
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"This examination has already been completed for {cand_name} (PSN {psn}) on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
+                )
         
     # 4. Validate Token & Enforce Single-Use Restrictions
     cursor.execute("SELECT id, token_code, status, assigned_to_psn FROM exam_tokens WHERE token_code = ?", (token_code,))
@@ -1382,13 +1410,17 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
         conn.close()
         raise HTTPException(status_code=404, detail=f"Invalid Login PIN '{token_code}'. Please check your Login PIN slip.")
         
-    # Strictly enforce single-use: Reject completed tokens
+    # Strictly enforce single-use: Reject completed tokens UNLESS it belongs to this candidate who is re-logging in after navigating away
     if tok.get("status") == "completed" and not psn.startswith("999"):
-        conn.close()
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access Denied: This 5-digit Login PIN ({token_code}) has already been used and locked upon examination completion. Each Login PIN is strictly for single use."
-        )
+        if tok.get("assigned_to_psn") == psn:
+            # Re-activate token for this candidate so they can continue/retake
+            cursor.execute("UPDATE exam_tokens SET status = 'active' WHERE id = ?", (tok["id"],))
+        else:
+            conn.close()
+            raise HTTPException(
+                status_code=403,
+                detail=f"Access Denied: This 5-digit Login PIN ({token_code}) has already been used and locked upon examination completion. Each Login PIN is strictly for single use."
+            )
 
     # Check if assigned to another PSN (Sandbox test accounts can re-use test tokens)
     if tok.get("assigned_to_psn") and tok["assigned_to_psn"] != psn and not psn.startswith("999"):
@@ -1398,18 +1430,23 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
             detail=f"Access Denied: This 5-digit Login PIN ({token_code}) has already been activated by another officer."
         )
 
-    # Prevent candidate from consuming multiple different tokens
+    # If candidate is assigned a different active token:
     cursor.execute("""
-        SELECT token_code FROM exam_tokens 
+        SELECT id, token_code FROM exam_tokens 
         WHERE assigned_to_psn = ? AND status = 'active'
     """, (psn,))
-    existing_active = cursor.fetchone()
-    if existing_active and existing_active["token_code"] != token_code and not psn.startswith("999"):
-        conn.close()
-        raise HTTPException(
-            status_code=403,
-            detail=f"Access Denied: You already have an active examination session bound to Login PIN '{existing_active['token_code']}'. Please continue using your assigned Login PIN."
-        )
+    existing_actives = cursor.fetchall()
+    for existing_active in existing_actives:
+        if existing_active["token_code"] != token_code and not psn.startswith("999"):
+            # If the user entered their assigned token or a valid unassigned token, deactivate/unlink the old one
+            if not tok.get("assigned_to_psn") or tok.get("assigned_to_psn") == psn:
+                cursor.execute("UPDATE exam_tokens SET status = 'unassigned', assigned_to_psn = NULL WHERE id = ?", (existing_active["id"],))
+            else:
+                conn.close()
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Access Denied: You already have an active examination session bound to Login PIN '{existing_active['token_code']}'. Please continue using your assigned Login PIN."
+                )
         
     # If unassigned, bind atomically to this PSN (or re-bind if test account)
     if not tok.get("assigned_to_psn") or psn.startswith("999"):
@@ -1424,6 +1461,8 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
                 status_code=409,
                 detail=f"Conflict: Login PIN ({token_code}) was concurrently claimed by another officer. Please use a fresh Login PIN."
             )
+    elif tok.get("assigned_to_psn") == psn:
+        cursor.execute("UPDATE exam_tokens SET status = 'active' WHERE id = ?", (tok["id"],))
         
     # 5. Fetch questions matching candidate's exam_code
     paper_code = cand["exam_code"]
