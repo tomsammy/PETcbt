@@ -1538,7 +1538,7 @@ function startTimer() {
       updateDisplay();
       showAlertModal(
         'Time Expired',
-        'Your 20-minute allotted time has concluded. Your test is being automatically submitted and graded now.',
+        'Your 20-minute allotted time has concluded. Your test is being automatically submitted and recorded now.',
         'timer'
       );
       submitExam(true);

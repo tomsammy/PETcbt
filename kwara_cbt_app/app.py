@@ -435,7 +435,7 @@ def start_exam(data: StartExamRequest):
             conn.close()
             raise HTTPException(
                 status_code=400,
-                detail=f"The CBT Examination is closed for this record. Officer with PSN {psn} has already taken this test on {existing_sub['submitted_at']} (Score: {existing_sub['score_percentage']}%). You cannot take the examination again."
+                detail=f"The CBT Examination is concluded for this record. Officer with PSN {psn} has already taken this test on {existing_sub['submitted_at']}. You cannot take the examination again."
             )
     
     # Register candidate
@@ -1091,7 +1091,7 @@ def start_exam_with_token(data: StartExamWithTokenRequest):
                 conn.close()
                 raise HTTPException(
                     status_code=400,
-                    detail=f"This examination has already been completed for {cand_name} (PSN {psn}) on {sub['submitted_at']} (Score: {sub['score_percentage']}%). Retakes are restricted."
+                    detail=f"This examination has already been completed and recorded for {cand_name} (PSN {psn}) on {sub['submitted_at']}. Retakes are strictly restricted."
                 )
         
     # 4. Validate Token & Enforce Single-Use Restrictions
