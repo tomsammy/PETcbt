@@ -15,7 +15,7 @@ logger = logging.getLogger("kwara_cbt")
 
 from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, Header, Query, Cookie, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import pandas as pd
@@ -162,30 +162,6 @@ class StartExamWithTokenRequest(BaseModel):
     token_code: str
     code_1: Optional[str] = None
 
-class DemoStartRequest(BaseModel):
-    session_id: str
-    psn: Optional[str] = "DEMO-CANDIDATE"
-    name: Optional[str] = "Demo Officer"
-    mda: Optional[str] = "Civil Service"
-    grade_level: Optional[str] = "12"
-    device_type: Optional[str] = "Desktop"
-
-class DemoSubmitRequest(BaseModel):
-    session_id: str
-    psn: Optional[str] = "DEMO-CANDIDATE"
-    name: Optional[str] = "Demo Officer"
-    mda: Optional[str] = "Civil Service"
-    grade_level: Optional[str] = "12"
-    device_type: Optional[str] = "Desktop"
-    total_questions: int = 40
-    answered_count: int = 0
-    correct_count: int = 0
-    score_percentage: float = 0.0
-    time_taken_seconds: int = 0
-    violations_count: int = 0
-    violation_logs: Optional[str] = ""
-    status: str = "completed"
-
 def verify_admin_auth(
     request: Request,
     authorization: Optional[str] = Header(None),
@@ -268,59 +244,21 @@ def read_index():
                 return f.read()
     return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - 2026 Promotion Evaluation CBT Examination</h1>"
 
-@app.get("/demo", response_class=HTMLResponse)
-@app.get("/demo-cbt", response_class=HTMLResponse)
-@app.get("/practice", response_class=HTMLResponse)
+@app.get("/demo")
+@app.get("/demo-cbt")
+@app.get("/practice")
 def read_demo():
-    candidates = [
-        os.path.join(STATIC_DIR, "demo.html"),
-        os.path.join(os.path.dirname(__file__), "static", "demo.html"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "demo.html"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "public", "demo.html"),
-        os.path.join(os.getcwd(), "static", "demo.html"),
-        os.path.join(os.getcwd(), "kwara_cbt_app", "static", "demo.html"),
-        os.path.join(os.getcwd(), "public", "demo.html")
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            with open(c, "r", encoding="utf-8") as f:
-                return f.read()
-    return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - CBT Demo Examination</h1>"
+    return RedirectResponse(url="/", status_code=302)
 
-@app.get("/orientation", response_class=HTMLResponse)
-@app.get("/orientation-slides", response_class=HTMLResponse)
-@app.get("/presentation", response_class=HTMLResponse)
+@app.get("/orientation")
+@app.get("/orientation-slides")
+@app.get("/presentation")
 def read_orientation():
-    candidates = [
-        os.path.join(STATIC_DIR, "orientation.html"),
-        os.path.join(os.path.dirname(__file__), "static", "orientation.html"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "orientation.html"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "public", "orientation.html"),
-        os.path.join(os.getcwd(), "static", "orientation.html"),
-        os.path.join(os.getcwd(), "kwara_cbt_app", "static", "orientation.html"),
-        os.path.join(os.getcwd(), "public", "orientation.html")
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            with open(c, "r", encoding="utf-8") as f:
-                return f.read()
-    return "<h1>KWARA STATE CIVIL SERVICE COMMISSION - Candidate Orientation Presentation</h1>"
+    return RedirectResponse(url="/", status_code=302)
 
 @app.get("/download-orientation-pptx")
 def download_orientation_pptx():
-    pptx_candidates = [
-        os.path.join(os.getcwd(), "Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx"),
-        os.path.join(os.path.dirname(__file__), "Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx"),
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), "Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx")
-    ]
-    for p in pptx_candidates:
-        if os.path.exists(p):
-            return FileResponse(
-                path=p,
-                media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                filename="Kwara_CSC_2026_CBT_Candidate_Orientation_Guide.pptx"
-            )
-    raise HTTPException(status_code=404, detail="PowerPoint orientation file not found.")
+    return RedirectResponse(url="/", status_code=302)
 
 # Router for all CBT Endpoints (supports both /api/* and /* paths)
 router = APIRouter()
@@ -435,326 +373,35 @@ def get_exam_info():
 @router.get("/demo/candidate-lookup")
 @router.get("/api/demo/candidate-lookup")
 def demo_candidate_lookup(psn: str = Query(...)):
-    clean_psn = psn.strip()
-    if not clean_psn:
-        return {"found": False}
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT name, amended_name, mda, proposed_gl, amended_gl, proposed_rank, amended_rank
-        FROM candidate_roster
-        WHERE psn = ? OR amended_psn = ?
-        ORDER BY CASE WHEN psn = ? THEN 1 ELSE 2 END, registered_at DESC NULLS LAST
-        LIMIT 1
-    """, (clean_psn, clean_psn, clean_psn))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        c_name = row.get("amended_name") or row.get("name") or ""
-        c_mda = row.get("mda") or "Kwara State Civil Service"
-        c_gl = row.get("amended_gl") or row.get("proposed_gl") or "12"
-        c_rank = row.get("amended_rank") or row.get("proposed_rank") or "Officer"
-        return {
-            "found": True,
-            "name": c_name.strip(),
-            "mda": c_mda.strip(),
-            "grade_level": c_gl.strip(),
-            "rank": c_rank.strip()
-        }
-    return {"found": False}
+    return {"found": False, "message": "Demo examination has been decommissioned."}
 
 @router.post("/demo/start")
 @router.post("/api/demo/start")
-def demo_start(data: DemoStartRequest, request: Request):
-    client_ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("""
-            INSERT INTO demo_practice_logs (
-                session_id, psn, candidate_name, mda, grade_level,
-                device_type, user_agent, ip_address, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'in_progress')
-        """, (
-            data.session_id.strip(),
-            (data.psn or "DEMO-CANDIDATE").strip(),
-            (data.name or "Demo Officer").strip(),
-            (data.mda or "Civil Service").strip(),
-            (data.grade_level or "12").strip(),
-            (data.device_type or "Desktop").strip(),
-            user_agent[:500],
-            client_ip[:50]
-        ))
-        conn.commit()
-    except Exception as e:
-        logger.warning(f"Error in demo_start: {e}")
-    finally:
-        conn.close()
-    return {"success": True, "session_id": data.session_id}
+def demo_start(request: Request):
+    raise HTTPException(status_code=404, detail="Demo examination has been decommissioned.")
 
 @router.post("/demo/submit")
 @router.post("/api/demo/submit")
-def demo_submit(data: DemoSubmitRequest, request: Request):
-    client_ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-    now_ts = datetime.now()
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT id FROM demo_practice_logs WHERE session_id = ?", (data.session_id.strip(),))
-        existing = cursor.fetchone()
-        if existing:
-            cursor.execute("""
-                UPDATE demo_practice_logs SET
-                    psn = ?,
-                    candidate_name = ?,
-                    mda = ?,
-                    grade_level = ?,
-                    device_type = ?,
-                    submitted_at = ?,
-                    total_questions = ?,
-                    answered_count = ?,
-                    correct_count = ?,
-                    score_percentage = ?,
-                    time_taken_seconds = ?,
-                    violations_count = ?,
-                    violation_logs = ?,
-                    status = ?
-                WHERE session_id = ?
-            """, (
-                (data.psn or "DEMO-CANDIDATE").strip(),
-                (data.name or "Demo Officer").strip(),
-                (data.mda or "Civil Service").strip(),
-                (data.grade_level or "12").strip(),
-                (data.device_type or "Desktop").strip(),
-                now_ts,
-                data.total_questions,
-                data.answered_count,
-                data.correct_count,
-                data.score_percentage,
-                data.time_taken_seconds,
-                data.violations_count,
-                data.violation_logs or "",
-                (data.status or "completed").strip(),
-                data.session_id.strip()
-            ))
-        else:
-            cursor.execute("""
-                INSERT INTO demo_practice_logs (
-                    session_id, psn, candidate_name, mda, grade_level,
-                    device_type, user_agent, ip_address, started_at, submitted_at,
-                    total_questions, answered_count, correct_count, score_percentage,
-                    time_taken_seconds, violations_count, violation_logs, status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                data.session_id.strip(),
-                (data.psn or "DEMO-CANDIDATE").strip(),
-                (data.name or "Demo Officer").strip(),
-                (data.mda or "Civil Service").strip(),
-                (data.grade_level or "12").strip(),
-                (data.device_type or "Desktop").strip(),
-                user_agent[:500],
-                client_ip[:50],
-                now_ts,
-                now_ts,
-                data.total_questions,
-                data.answered_count,
-                data.correct_count,
-                data.score_percentage,
-                data.time_taken_seconds,
-                data.violations_count,
-                data.violation_logs or "",
-                (data.status or "completed").strip()
-            ))
-        conn.commit()
-    except Exception as e:
-        logger.warning(f"Error in demo_submit: {e}")
-    finally:
-        conn.close()
-    return {"success": True, "message": "Demo practice evaluation successfully logged."}
+def demo_submit(request: Request):
+    raise HTTPException(status_code=404, detail="Demo examination has been decommissioned.")
 
 @router.get("/admin/demo-analytics")
 @router.get("/api/admin/demo-analytics")
-def get_admin_demo_analytics(auth: bool = Depends(verify_admin_auth)):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) AS total FROM demo_practice_logs")
-    r_total = cursor.fetchone()
-    total_sessions = r_total.get("total") if isinstance(r_total, dict) else r_total[0]
-
-    cursor.execute("SELECT COUNT(*) AS completed FROM demo_practice_logs WHERE status != 'in_progress'")
-    r_comp = cursor.fetchone()
-    completed_sessions = r_comp.get("completed") if isinstance(r_comp, dict) else r_comp[0]
-
-    cursor.execute("""
-        SELECT COUNT(DISTINCT psn) AS unique_cands 
-        FROM demo_practice_logs 
-        WHERE psn IS NOT NULL AND psn != '' AND psn NOT LIKE 'DEMO%'
-    """)
-    r_uniq = cursor.fetchone()
-    unique_candidates = r_uniq.get("unique_cands") if isinstance(r_uniq, dict) else r_uniq[0]
-
-    cursor.execute("""
-        SELECT 
-            AVG(score_percentage) AS avg_score,
-            AVG(time_taken_seconds) AS avg_time,
-            SUM(violations_count) AS total_viols
-        FROM demo_practice_logs 
-        WHERE status != 'in_progress'
-    """)
-    r_metrics = cursor.fetchone()
-    avg_score = round(float(r_metrics.get("avg_score") or 0.0), 2)
-    avg_time = int(round(float(r_metrics.get("avg_time") or 0.0)))
-    total_violations = int(r_metrics.get("total_viols") or 0)
-
-    cursor.execute("""
-        SELECT id, session_id, psn, candidate_name, mda, grade_level, device_type,
-               started_at, submitted_at, answered_count, correct_count, score_percentage,
-               time_taken_seconds, violations_count, status
-        FROM demo_practice_logs
-        ORDER BY id DESC
-        LIMIT 200
-    """)
-    rows = cursor.fetchall()
-    conn.close()
-
-    logs = []
-    for r in rows:
-        d = dict(r)
-        if isinstance(d.get("started_at"), datetime):
-            d["started_at_str"] = d["started_at"].strftime("%Y-%m-%d %H:%M:%S")
-        else:
-            d["started_at_str"] = str(d.get("started_at") or "N/A")
-        if isinstance(d.get("submitted_at"), datetime):
-            d["submitted_at_str"] = d["submitted_at"].strftime("%Y-%m-%d %H:%M:%S")
-        else:
-            d["submitted_at_str"] = str(d.get("submitted_at") or "-")
-        logs.append(d)
-
+def get_admin_demo_analytics(auth: dict = Depends(verify_admin_auth)):
     return {
-        "total_sessions": total_sessions,
-        "completed_sessions": completed_sessions,
-        "unique_candidates": unique_candidates,
-        "average_score": avg_score,
-        "average_time_seconds": avg_time,
-        "total_violations": total_violations,
-        "logs": logs
+        "total_sessions": 0,
+        "completed_sessions": 0,
+        "unique_candidates": 0,
+        "average_score": 0,
+        "average_time_seconds": 0,
+        "total_violations": 0,
+        "logs": []
     }
 
 @router.get("/admin/demo/excel")
 @router.get("/api/admin/demo/excel")
 def export_demo_excel(auth: dict = Depends(verify_superadmin_auth)):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, started_at, submitted_at, psn, candidate_name, mda, grade_level,
-               device_type, answered_count, correct_count, total_questions, score_percentage,
-               time_taken_seconds, violations_count, violation_logs, status
-        FROM demo_practice_logs
-        ORDER BY id DESC
-    """)
-    rows = cursor.fetchall()
-    conn.close()
-
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Demo Practice Audit"
-    ws.views.sheetView[0].showGridLines = True
-
-    font_title = Font(name="Calibri", size=15, bold=True, color="004D40")
-    font_sub = Font(name="Calibri", size=11, bold=True, color="475569")
-    font_header = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-    font_data = Font(name="Calibri", size=10)
-    font_bold = Font(name="Calibri", size=10, bold=True)
-    fill_header = PatternFill(start_color="004D40", end_color="004D40", fill_type="solid")
-    fill_alt = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
-    align_center = Alignment(horizontal="center", vertical="center")
-    align_left = Alignment(horizontal="left", vertical="center")
-    border_thin = Border(
-        left=Side(style="thin", color="CBD5E1"),
-        right=Side(style="thin", color="CBD5E1"),
-        top=Side(style="thin", color="CBD5E1"),
-        bottom=Side(style="thin", color="CBD5E1")
-    )
-
-    ws.merge_cells("A1:M1")
-    ws["A1"] = "KWARA STATE CIVIL SERVICE COMMISSION"
-    ws["A1"].font = font_title
-    ws["A1"].alignment = align_center
-
-    ws.merge_cells("A2:M2")
-    ws["A2"] = "2026 Promotion Evaluation CBT — Candidate Demo Practice & Orientation Audit Report"
-    ws["A2"].font = font_sub
-    ws["A2"].alignment = align_center
-
-    ws.merge_cells("A3:M3")
-    ws["A3"] = f"Report Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} • Total Practice Records: {len(rows)}"
-    ws["A3"].font = Font(name="Calibri", size=9, italic=True, color="64748B")
-    ws["A3"].alignment = align_center
-
-    headers = [
-        "S/N", "Practice Timestamp", "PSN", "Candidate Name", "Ministry / Agency (MDA)",
-        "Proposed GL", "Questions Attempted", "Score (40)", "Score (%)", "Time Spent",
-        "Security Strikes", "Device Type", "Session Status"
-    ]
-
-    row_idx = 5
-    for col_idx, h in enumerate(headers, start=1):
-        cell = ws.cell(row=row_idx, column=col_idx, value=h)
-        cell.font = font_header
-        cell.fill = fill_header
-        cell.alignment = align_center
-        cell.border = border_thin
-
-    for sn, r in enumerate(rows, start=1):
-        row_idx += 1
-        d = dict(r)
-        st_time = d.get("started_at")
-        st_str = st_time.strftime("%Y-%m-%d %H:%M") if isinstance(st_time, datetime) else str(st_time or "")
-        dur_secs = d.get("time_taken_seconds") or 0
-        dur_str = f"{dur_secs // 60}m {dur_secs % 60}s" if dur_secs > 0 else "-"
-        is_alt = (sn % 2 == 0)
-        row_fill = fill_alt if is_alt else None
-
-        values = [
-            sn,
-            st_str,
-            d.get("psn") or "-",
-            d.get("candidate_name") or "-",
-            d.get("mda") or "-",
-            d.get("grade_level") or "-",
-            f"{d.get('answered_count', 0)} / {d.get('total_questions', 40)}",
-            f"{d.get('correct_count', 0)} / {d.get('total_questions', 40)}",
-            f"{float(d.get('score_percentage') or 0.0):.1f}%",
-            dur_str,
-            d.get("violations_count", 0),
-            d.get("device_type") or "Desktop",
-            (d.get("status") or "completed").capitalize()
-        ]
-
-        for col_idx, val in enumerate(values, start=1):
-            cell = ws.cell(row=row_idx, column=col_idx, value=val)
-            cell.font = font_bold if col_idx in [3, 4, 9] else font_data
-            if row_fill:
-                cell.fill = row_fill
-            cell.border = border_thin
-            cell.alignment = align_center if col_idx in [1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13] else align_left
-
-    for col in ws.columns:
-        max_len = max(len(str(cell.value or "")) for cell in col)
-        col_letter = get_column_letter(col[0].column)
-        ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
-
-    buf = io.BytesIO()
-    wb.save(buf)
-    buf.seek(0)
-    filename = f"Kwara_CSC_2026_CBT_Demo_Practice_Report_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
-    return Response(
-        content=buf.getvalue(),
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
-    )
+    return RedirectResponse(url="/", status_code=302)
 
 @router.post("/start-exam")
 @router.post("/api/start-exam")

@@ -47,14 +47,6 @@
         <p>2026 Promotion Evaluation CBT Examination</p>
       </div>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <a href="/orientation" target="_blank" class="header-demo-link" style="text-decoration: none; background: #fffbeb; border: 1.5px solid #fde68a; color: #92400e; font-size: 0.84rem; font-weight: 800; padding: 7px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.2s ease;">
-        <span>📽️ Orientation Slides</span>
-      </a>
-      <a href="/demo" target="_blank" class="header-demo-link" style="text-decoration: none; background: #ecfdf5; border: 1.5px solid #a7f3d0; color: #065f46; font-size: 0.84rem; font-weight: 800; padding: 7px 16px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.2s ease;">
-        <span>🎯 Demo CBT (Practice)</span>
-      </a>
-    </div>
   </header>
 
   <!-- Main Container -->
@@ -73,31 +65,6 @@
             All candidates must arrive with their <strong>fully charged smartphone (Android or iOS)</strong>, <strong>active data subscription</strong>, <strong>updated web browser</strong> (Chrome, Opera Mini, Firefox, Safari, Edge, etc.), and <strong>printed photocard only</strong>. <strong>Strictly no loitering</strong> within the venue.
           </div>
           <div class="alert-cta">👉 Click here to read the full examination directives & venue rules</div>
-        </div>
-      </div>
-
-      <!-- Dedicated Demo CBT Banner (Visible when exam portal is closed or for orientation) -->
-      <div id="closed-demo-banner" style="display: none; max-width: 680px; margin: 0 auto 20px auto; background: linear-gradient(135deg, #004d40 0%, #00695c 100%); color: #ffffff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 4px 14px rgba(0,77,64,0.18);">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
-          <div style="flex: 1; min-width: 260px;">
-            <div style="font-size: 0.74rem; font-weight: 800; color: #fde047; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">
-              📢 CBT EXAMINATION PORTAL IS CURRENTLY CLOSED FOR TESTING
-            </div>
-            <div style="font-size: 1.05rem; font-weight: 800; margin-bottom: 4px; color: #ffffff;">
-              Candidate Orientation & Official Demo CBT Examination
-            </div>
-            <p style="font-size: 0.85rem; color: #e0f2f1; margin: 0; line-height: 1.45;">
-              The live promotion exam has not yet commenced. View the step-by-step <strong>Orientation Presentation</strong> or experience the authentic <strong>Question Grid (40)</strong> on our interactive Demo page!
-            </p>
-          </div>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="/orientation" target="_blank" class="btn-demo-cta" style="background: #ffffff; color: #004d40; border: 1.5px solid #a7f3d0; font-weight: 800; padding: 11px 16px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; white-space: nowrap;">
-              <span>📽️ View Slides</span>
-            </a>
-            <a href="/demo" target="_blank" class="btn-demo-cta" style="background: #f59e0b; color: #000; font-weight: 800; padding: 11px 18px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; white-space: nowrap; box-shadow: 0 3px 8px rgba(0,0,0,0.2);">
-              <span>🎯 Launch Demo CBT</span> ➔
-            </a>
-          </div>
         </div>
       </div>
 
@@ -569,9 +536,6 @@
           <button type="button" class="btn-ctrl btn-submit" id="btn-print-photocard" style="padding: 12px 28px; font-size: 1rem;" onclick="window.print()">
             <span>🖨️ Print CBT Photocard (PDF)</span>
           </button>
-          <a href="/demo" target="_blank" class="btn-ctrl" id="btn-photocard-demo" style="text-decoration:none; padding: 12px 22px; font-size: 1rem; border-color: #f59e0b; color: #92400e; background: #fffbeb; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-            <span>🎯 Practice with Demo CBT Exam</span>
-          </a>
           <button type="button" class="btn-ctrl" id="btn-proceed-exam-from-photocard" style="padding: 12px 24px; font-size: 1rem; border-color: #059669; color: #047857; background: #ecfdf5; font-weight: 700;" onclick="proceedToExamFromPhotocard()">
             <span>📝 Proceed to CBT Examination</span>
           </button>
@@ -713,10 +677,6 @@
             </a>
             <a href="#" id="btn-download-csv" class="btn-csv">
               <span>📄 Download Results (CSV)</span>
-            </a>
-            <a href="/api/admin/demo/excel" id="btn-download-demo-excel" class="btn-excel" style="background:#7c3aed; color:#fff;" title="Download Demo Practice Analytics and Candidate Attempt Logs">
-              <span>🎯 Download Demo Practice (Excel)</span>
-            </a>
             <button type="button" class="btn-ctrl" id="btn-return-portal" style="border-color:#cbd5e1;" onclick="navigateToExam()">
               <span>🏠 Portal Home</span>
             </button>
@@ -762,10 +722,6 @@
             <div class="kpi-val" id="kpi-pass" style="color: #10b981;">0 Passed</div>
             <div class="kpi-lbl">Qualified Candidates</div>
           </div>
-          <div class="kpi-card" style="border-left: 4px solid #7c3aed; background: #f5f3ff;">
-            <div class="kpi-val" id="kpi-demo-sessions" style="color: #6d28d9;">0</div>
-            <div class="kpi-lbl" id="kpi-demo-lbl" style="color: #7c3aed; font-weight:700;">Demo Practice (0 Unique)</div>
-          </div>
         </div>
 
         <!-- Admin Scratch Card Token Management Bar -->
@@ -795,16 +751,13 @@
           </div>
         </div>
 
-        <!-- Table View Switcher Tabs: Submissions vs Photocard Registrations vs Demo Practice -->
+        <!-- Table View Switcher Tabs: Submissions vs Photocard Registrations -->
         <div style="display:flex; gap:10px; margin-bottom:16px; border-bottom:2px solid #e2e8f0; padding-bottom:12px; flex-wrap:wrap;">
           <button type="button" class="btn-ctrl" id="tab-btn-submissions" style="padding:10px 20px; font-weight:700; border-color:#004d40; color:#004d40; background:#e6f4ea; cursor:pointer;" onclick="switchAdminTableView('submissions')">
             <span>📝 Exam Submissions (<span id="count-tab-submissions">0</span>)</span>
           </button>
           <button type="button" class="btn-ctrl" id="tab-btn-photocards" style="padding:10px 20px; font-weight:700; border-color:#cbd5e1; color:#475569; background:#fff; cursor:pointer;" onclick="switchAdminTableView('photocards')">
             <span>🪪 Verified Photocard Registrations (<span id="count-tab-photocards">0</span>)</span>
-          </button>
-          <button type="button" class="btn-ctrl" id="tab-btn-demo" style="padding:10px 20px; font-weight:700; border-color:#cbd5e1; color:#475569; background:#fff; cursor:pointer;" onclick="switchAdminTableView('demo')">
-            <span>🎯 Demo Practice Logs (<span id="count-tab-demo">0</span>)</span>
           </button>
         </div>
 
@@ -867,34 +820,6 @@
             </tbody>
           </table>
         </div>
-
-        <!-- Demo Practice Logs Table -->
-        <div class="table-responsive" id="wrap-demo-table" style="display: none;">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>S/N</th>
-                <th>Practice Date &amp; Time</th>
-                <th>PSN</th>
-                <th>Candidate Name</th>
-                <th>MDA</th>
-                <th>Proposed GL</th>
-                <th style="text-align:center;">Questions Attempted</th>
-                <th style="text-align:center;">Score (40)</th>
-                <th style="text-align:center;">Score (%)</th>
-                <th style="text-align:center;">Time Spent</th>
-                <th style="text-align:center;">Security Strikes</th>
-                <th>Device</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="admin-demo-table-body">
-              <tr>
-                <td colspan="13" style="text-align:center; padding: 24px; color:#64748b;">Loading demo practice logs...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
     </section>
 
@@ -909,8 +834,8 @@
           </h3>
         </div>
         <div class="modal-body" style="padding: 24px;">
-          <p style="font-size: 0.875rem; color: #475569; margin-bottom: 18px;">
-            Enter administrator credentials to access evaluation results and portal controls.
+          <p style="font-size: 0.85rem; color: #475569; margin-bottom: 18px; line-height: 1.5;">
+            Enter administrator credentials to sign in. Both Full Administrator (<code>admin</code>) and PSN Reset Officer (<code>reset_admin</code>) logins are supported.
           </p>
 
           <form id="form-admin-login">
@@ -1241,45 +1166,22 @@
     <!-- ======================================================== -->
     <!-- VIEW 12: Instant Screen Shield & Anti-Capture Curtain    -->
     <!-- ======================================================== -->
-    <div id="security-curtain" class="security-curtain" style="display:none;">
+    <div id="security-curtain" class="security-curtain" style="display:none !important;">
       <div class="security-curtain-card">
-        <div class="security-curtain-icon">🛡️ ⛔</div>
-        <h2>EXAMINATION SCREEN BLURRED & PROTECTED</h2>
-        <p>Application switch, screen capture, or window blur detected.</p>
-        <p class="security-curtain-sub">Return focus to this examination window immediately to continue your test.</p>
+        <div class="security-curtain-icon">🛡️</div>
+        <h2>EXAMINATION SCREEN</h2>
+        <p>Examination in progress.</p>
       </div>
     </div>
 
     <!-- ======================================================== -->
     <!-- VIEW 13: Anti-Cheating Security Violation Modal          -->
     <!-- ======================================================== -->
-    <div class="modal-overlay" id="security-violation-modal" style="z-index: 100000; backdrop-filter: blur(8px);">
-      <div class="modal-card" style="max-width: 520px; text-align: center; padding: 32px 24px; border: 2px solid #ef4444; box-shadow: 0 20px 45px rgba(239, 68, 68, 0.3);">
-        <div id="sec-violation-icon" style="width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 16px auto; background: #fee2e2; color: #dc2626;">
-          🚨
-        </div>
-        <h3 id="sec-violation-title" style="font-size: 1.35rem; font-weight: 800; color: #991b1b; margin-bottom: 10px;">
-          SECURITY VIOLATION DETECTED
-        </h3>
-        <div id="sec-violation-badge" style="display: inline-block; padding: 4px 14px; border-radius: 999px; background: #fee2e2; color: #b91c1c; font-weight: 700; font-size: 0.85rem; margin-bottom: 16px;">
-          Warning <span id="sec-violation-count">1</span> of 3
-        </div>
-        <div id="sec-violation-msg" style="font-size: 0.95rem; color: #334155; line-height: 1.6; margin-bottom: 24px;">
-          You navigated away from the examination window or exited secure fullscreen. Switching to other applications, tabs, or attempting screen capture is strictly forbidden.
-        </div>
-        <div id="sec-violation-actions" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-          <button type="button" class="btn-primary-large" id="sec-resume-btn" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="proctorEngine.resumeExam()">
-            <span>🛡️ Re-enter Secure Fullscreen & Resume Exam</span>
-          </button>
-        </div>
-        <p style="font-size: 0.78rem; color: #94a3b8; margin-top: 14px; margin-bottom: 0;">
-          All security infractions are recorded with your candidate session (PSN: <span id="sec-candidate-psn">-</span>).
-        </p>
-      </div>
+    <div class="modal-overlay" id="security-violation-modal" style="display:none !important; z-index: 100000;">
     </div>
 
     </main>
 
-  <script src="/static/js/cbt.js?v=20260924_40q"></script>
+  <script src="/static/js/cbt.js?v=20260929_admin_v2"></script>
 </body>
 </html>

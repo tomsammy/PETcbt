@@ -24,9 +24,22 @@ const state = {
       return null;
     }
   })(),
+  adminRole: (() => {
+    try {
+      return sessionStorage.getItem('kws_admin_role') || 'superadmin';
+    } catch (e) {
+      return 'superadmin';
+    }
+  })(),
+  adminUser: (() => {
+    try {
+      return sessionStorage.getItem('kws_admin_user') || 'admin';
+    } catch (e) {
+      return 'admin';
+    }
+  })(),
   adminSubmissions: [],
   adminRegistrations: [],
-  adminDemoLogs: [],
   adminTableView: 'submissions',
   adminTokensSummary: null,
   examStatus: 'open'
@@ -40,6 +53,56 @@ function syncAdminSessionCookie() {
   }
 }
 
+function applyAdminRolePermissions() {
+  const role = state.adminRole || sessionStorage.getItem('kws_admin_role') || 'superadmin';
+  const isResetOnly = (role === 'reset_psn');
+
+  // Role Badge in Admin Header
+  let badge = document.getElementById('admin-role-badge');
+  if (!badge) {
+    const headerTitle = document.querySelector('.admin-header h2');
+    if (headerTitle) {
+      badge = document.createElement('span');
+      badge.id = 'admin-role-badge';
+      headerTitle.appendChild(badge);
+    }
+  }
+  if (badge) {
+    if (isResetOnly) {
+      badge.innerHTML = `<span style="display:inline-block; font-size:0.75rem; background:#fee2e2; color:#991b1b; padding:4px 12px; border-radius:999px; margin-left:12px; font-weight:800; border:1px solid #f87171; letter-spacing:0.03em;">🔑 PSN RESET OFFICER ONLY</span>`;
+    } else {
+      badge.innerHTML = `<span style="display:inline-block; font-size:0.75rem; background:#e0f2fe; color:#0369a1; padding:4px 12px; border-radius:999px; margin-left:12px; font-weight:800; border:1px solid #7dd3fc; letter-spacing:0.03em;">⭐ FULL ADMINISTRATOR</span>`;
+    }
+  }
+
+  // Toggle Exam Status Bar
+  const controlBar = document.querySelector('.admin-control-bar');
+  if (controlBar) {
+    controlBar.style.display = isResetOnly ? 'none' : 'flex';
+  }
+
+  // Hide export / download links for reset-only admin
+  const exportIds = [
+    'btn-download-photocards',
+    'btn-download-roster',
+    'btn-view-slips',
+    'btn-view-tokens',
+    'btn-download-excel',
+    'btn-download-csv',
+    'btn-download-tokens'
+  ];
+  exportIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isResetOnly ? 'none' : 'inline-flex';
+  });
+
+  // Hide Reset All PINs button
+  const resetAllBtn = document.querySelector('button[onclick="confirmResetAllTokens()"]');
+  if (resetAllBtn) {
+    resetAllBtn.style.display = isResetOnly ? 'none' : 'inline-flex';
+  }
+}
+
 function updateAdminDownloadLinks() {
   if (!state.adminToken) return;
   syncAdminSessionCookie();
@@ -49,13 +112,11 @@ function updateAdminDownloadLinks() {
   const btnRoster = document.getElementById('btn-download-roster');
   const btnPhotocards = document.getElementById('btn-download-photocards');
   const btnTokens = document.getElementById('btn-download-tokens');
-  const btnDemo = document.getElementById('btn-download-demo-excel');
   if (btnExcel) btnExcel.href = `/api/results/excel${tokenParam}`;
   if (btnCsv) btnCsv.href = `/api/results/csv${tokenParam}`;
   if (btnRoster) btnRoster.href = `/api/admin/roster/excel${tokenParam}`;
   if (btnPhotocards) btnPhotocards.href = `/api/admin/registrations/excel${tokenParam}`;
   if (btnTokens) btnTokens.href = `/api/admin/tokens/excel${tokenParam}`;
-  if (btnDemo) btnDemo.href = `/api/admin/demo/excel${tokenParam}`;
 }
 
 syncAdminSessionCookie();
@@ -465,12 +526,6 @@ function applyExamStatusToUI(status) {
       proceedPhotocardBtn.style.display = 'none';
     }
 
-    // 4. Show Dedicated Demo CBT Practice Banner
-    const demoBanner = document.getElementById('closed-demo-banner');
-    if (demoBanner) {
-      demoBanner.style.display = 'block';
-    }
-
     if (startBtn) {
       startBtn.disabled = true;
       startBtn.style.opacity = '0.6';
@@ -488,12 +543,6 @@ function applyExamStatusToUI(status) {
     // 2. Restore Proceed to Exam button on photocard view
     if (proceedPhotocardBtn) {
       proceedPhotocardBtn.style.display = '';
-    }
-
-    // 3. Hide closed demo banner when portal is open
-    const demoBanner = document.getElementById('closed-demo-banner');
-    if (demoBanner) {
-      demoBanner.style.display = 'none';
     }
 
 
@@ -516,6 +565,7 @@ function checkRoute() {
   if (path === '/admin' || hash === '#admin') {
     if (state.adminToken) {
       showView('admin');
+      applyAdminRolePermissions();
       updateAdminDownloadLinks();
       loadAdminSubmissions();
     } else {
@@ -1312,7 +1362,7 @@ if (tokenExamForm) {
 const proctorEngine = {
   active: false,
   violations: 0,
-  maxViolations: 3,
+  maxViolations: 999,
   violationLogs: [],
   hasLeftWindow: false,
   isFullscreenActive: false,
@@ -1322,202 +1372,30 @@ const proctorEngine = {
   blurCheckTimer: null,
 
   init() {
-    // 1. Mobile & Desktop App-switching & tab-switching listeners
-    window.addEventListener('blur', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      // Immediate blackout protects against Snipping Tool, Alt+Tab, and background capture
-      this.showCurtain();
-      
-      // 180ms verification to prevent transient scroll-edge touch glitches on mobile
-      if (this.blurCheckTimer) clearTimeout(this.blurCheckTimer);
-      this.blurCheckTimer = setTimeout(() => {
-        if (document.visibilityState === 'hidden' || !document.hasFocus()) {
-          this.hasLeftWindow = true;
-        } else {
-          // Transient blur (e.g. rapid touch near edge) - restore screen smoothly
-          if (!this.hasLeftWindow && (!document.getElementById('security-violation-modal') || !document.getElementById('security-violation-modal').classList.contains('active'))) {
-            this.hideCurtain();
-          }
-        }
-      }, 180);
-    });
-
-    window.addEventListener('focus', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (this.hasLeftWindow) {
-        this.recordViolation('Switched to another application or window');
-      }
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      if (!this.active || state.isSubmitted) return;
-      if (document.visibilityState === 'hidden') {
-        this.showCurtain();
-        this.hasLeftWindow = true;
-      } else if (document.visibilityState === 'visible') {
-        if (this.hasLeftWindow) {
-          this.recordViolation('Switched browser tab or minimized examination window');
-        }
-      }
-    });
-
-    // Mobile OS lifecycle (Crucial for iOS Safari & Android when Home gesture is swiped)
-    window.addEventListener('pagehide', () => {
-      if (!this.active || state.isSubmitted) return;
-      this.showCurtain();
-      this.hasLeftWindow = true;
-    });
-
-    window.addEventListener('pageshow', () => {
-      if (!this.active || state.isSubmitted) return;
-      if (this.hasLeftWindow) {
-        this.recordViolation('Returned from home screen or background');
-      }
-    });
-
-    // 2. Fullscreen change listener (guards against false alarms on devices without HTML fullscreen like iPhone)
-    const handleFs = () => {
-      if (!this.active || state.isSubmitted) return;
-      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
-      if (isFs) {
-        this.isFullscreenActive = true;
-      } else if (this.isFullscreenActive) {
-        // Fullscreen was previously active and was exited
-        this.isFullscreenActive = false;
-        this.showCurtain();
-        this.recordViolation('Exited secure fullscreen examination mode');
-      }
-    };
-    document.addEventListener('fullscreenchange', handleFs);
-    document.addEventListener('webkitfullscreenchange', handleFs);
-
-    // 3. Multi-touch screenshot gesture blocking on mobile (e.g. 3-finger swipe on Xiaomi/Samsung/Oppo)
-    window.addEventListener('touchstart', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (e.touches && e.touches.length >= 3) {
-        e.preventDefault();
-        this.showCurtain();
-        this.showToast('⚠️ Multi-finger gesture screenshot blocked.');
-      }
-    }, { passive: false });
-
-    window.addEventListener('touchmove', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (e.touches && e.touches.length >= 3) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    // 4. Desktop & External Keyboard Screenshot & Hotkey Blocking
-    window.addEventListener('keydown', (e) => {
-      if (!this.active || state.isSubmitted) return;
-
-      // PrintScreen key
-      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.wipeClipboard();
-        this.flashBlackout();
-        this.showToast('⚠️ SCREENSHOT BLOCKED: Taking screenshots is strictly prohibited.');
-        this.logIncident('PrintScreen key pressed');
-        return false;
-      }
-
-      // Windows Snipping Tool (Win + Shift + S) or Mac (Cmd + Shift + 3/4/5)
-      if ((e.shiftKey && (e.metaKey || e.ctrlKey || e.altKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) ||
-          (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key))) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.wipeClipboard();
-        this.flashBlackout();
-        this.showToast('⚠️ SCREEN CAPTURE BLOCKED: Snipping tool is disabled.');
-        this.logIncident('Snipping shortcut triggered');
-        return false;
-      }
-
-      // Print Dialog (Ctrl + P / Cmd + P)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P' || e.keyCode === 80)) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showToast('⚠️ PRINTING BLOCKED: Examination pages cannot be printed.');
-        this.logIncident('Print shortcut attempted');
-        return false;
-      }
-
-      // Save Page (Ctrl + S / Cmd + S)
-      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S' || e.keyCode === 83)) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showToast('⚠️ SAVE BLOCKED: Saving exam content is prohibited.');
-        return false;
-      }
-
-      // Developer Tools & View Source (F12, Ctrl+Shift+I/J/C, Ctrl+U)
-      if (e.key === 'F12' || e.keyCode === 123 ||
-          ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) ||
-          ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U'))) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.showToast('⚠️ ACTION BLOCKED: Developer tools are disabled.');
-        this.logIncident('Dev tools shortcut attempted');
-        return false;
-      }
-    }, true);
-
-    window.addEventListener('keyup', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
-        e.preventDefault();
-        e.stopPropagation();
-        this.wipeClipboard();
-      }
-    }, true);
-
-    // 5. Long-press and Context Menu (Disables text selection / image download on mobile)
-    document.addEventListener('contextmenu', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      this.showToast('⚠️ Context menu and text selection are disabled.');
-      return false;
-    }, true);
-
-    document.addEventListener('copy', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      this.showToast('⚠️ Copy and paste functions are disabled.');
-      return false;
-    }, true);
-
-    document.addEventListener('cut', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      return false;
-    }, true);
-
-    document.addEventListener('dragstart', (e) => {
-      if (!this.active || state.isSubmitted) return;
-      e.preventDefault();
-      return false;
-    }, true);
+    // Proctoring & application-switching restrictions completely disabled per Commission directive.
+    // Candidates are permitted to navigate away, switch apps, answer incoming calls, and return freely.
+    this.hideCurtain();
+    this.closeViolationModal();
   },
 
   async start(candidate) {
-    this.active = true;
+    this.active = false;
     this.violations = 0;
     this.violationLogs = [];
     this.hasLeftWindow = false;
     this.isFullscreenActive = false;
 
-    // Apply proctor classes
-    document.body.classList.add('exam-proctored');
+    // Remove any restrictive classes
+    document.body.classList.remove('exam-proctored');
     const examView = document.getElementById('view-exam');
-    if (examView) examView.classList.add('exam-proctored');
+    if (examView) examView.classList.remove('exam-proctored');
 
     this.updateWatermark(candidate);
     this.updateSecurityBadge();
-    this.enterFullscreen();
+    this.hideCurtain();
+    this.closeViolationModal();
 
-    // Keep phone screen awake during examination
+    // Keep phone screen awake during examination if supported
     await this.requestWakeLock();
   },
 
@@ -1531,22 +1409,14 @@ const proctorEngine = {
     this.releaseWakeLock();
     this.hideCurtain();
     this.closeViolationModal();
-
-    if (document.fullscreenElement || document.webkitFullscreenElement) {
-      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
-      else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(() => {});
-    }
   },
 
   async requestWakeLock() {
     try {
       if ('wakeLock' in navigator && navigator.wakeLock.request) {
         this.wakeLock = await navigator.wakeLock.request('screen');
-        console.log('Mobile Screen Wake Lock active - screen will not dim or sleep.');
       }
-    } catch (err) {
-      console.warn('Wake Lock request skipped:', err);
-    }
+    } catch (err) {}
   },
 
   releaseWakeLock() {
@@ -1558,23 +1428,12 @@ const proctorEngine = {
   },
 
   enterFullscreen() {
-    const docEl = document.documentElement;
-    const rfs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
-    if (rfs) {
-      rfs.call(docEl).then(() => {
-        this.isFullscreenActive = true;
-      }).catch(err => {
-        console.warn('Fullscreen entry deferred/declined:', err);
-      });
-    }
+    // Non-mandatory; no restrictions or warnings
   },
 
   showCurtain() {
-    const curtain = document.getElementById('security-curtain');
-    if (curtain) {
-      curtain.style.display = 'flex';
-      curtain.classList.add('active');
-    }
+    // Completely disabled
+    this.hideCurtain();
   },
 
   hideCurtain() {
@@ -1585,151 +1444,39 @@ const proctorEngine = {
     }
   },
 
-  flashBlackout() {
-    this.showCurtain();
-    setTimeout(() => {
-      if (!this.hasLeftWindow && (!document.getElementById('security-violation-modal') || !document.getElementById('security-violation-modal').classList.contains('active'))) {
-        this.hideCurtain();
-      }
-    }, 1200);
-  },
-
-  wipeClipboard() {
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText('⚠️ Screenshots and screen capture are strictly prohibited by Kwara State Civil Service Commission.').catch(() => {});
-      }
-    } catch (e) {}
-  },
+  flashBlackout() {},
+  wipeClipboard() {},
 
   recordViolation(reason) {
-    this.hasLeftWindow = false;
-    this.violations++;
-    const timestamp = new Date().toLocaleTimeString();
-    const logEntry = `${timestamp} - ${reason}`;
-    this.violationLogs.push(logEntry);
-    console.warn(`[SECURITY VIOLATION ${this.violations}/${this.maxViolations}]:`, logEntry);
-
-    this.sendTelemetry(reason);
-    this.updateSecurityBadge();
-    this.showViolationModal(reason);
+    // Disabled: candidates can switch apps and navigate freely without strikes
   },
 
-  sendTelemetry(reason) {
-    try {
-      if (state.candidate && state.candidate.psn) {
-        fetch('/api/exam/log-security-incident', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            psn: state.candidate.psn,
-            incident_type: 'app_switch',
-            details: reason,
-            warning_level: this.violations
-          })
-        }).catch(() => {});
-      }
-    } catch(e) {}
-  },
-
-  logIncident(incident) {
-    const timestamp = new Date().toLocaleTimeString();
-    this.violationLogs.push(`${timestamp} - ${incident}`);
-    this.sendTelemetry(incident);
-  },
+  sendTelemetry(reason) {},
+  logIncident(incident) {},
 
   showViolationModal(reason) {
-    const modal = document.getElementById('security-violation-modal');
-    if (!modal) return;
-
-    const countEl = document.getElementById('sec-violation-count');
-    const titleEl = document.getElementById('sec-violation-title');
-    const badgeEl = document.getElementById('sec-violation-badge');
-    const msgEl = document.getElementById('sec-violation-msg');
-    const actionsEl = document.getElementById('sec-violation-actions');
-    const psnEl = document.getElementById('sec-candidate-psn');
-
-    if (psnEl && state.candidate) {
-      psnEl.textContent = state.candidate.amended_psn || state.candidate.psn || '-';
-    }
-
-    if (countEl) countEl.textContent = this.violations;
-
-    if (this.violations === 1) {
-      titleEl.textContent = 'SECURITY WARNING (STRIKE 1)';
-      titleEl.style.color = '#b45309';
-      badgeEl.style.background = '#fef3c7';
-      badgeEl.style.color = '#92400e';
-      badgeEl.innerHTML = `⚠️ Warning 1 of ${this.maxViolations}`;
-      msgEl.innerHTML = `You navigated away from the examination window (<em>${reason}</em>).<br><br>Switching to another application, opening new browser tabs, or attempting screen capture is <strong>strictly prohibited</strong>. This incident has been logged with your candidate record.<br><br>Please return to the examination immediately.`;
-      actionsEl.innerHTML = `
-        <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #004d40;" onclick="proctorEngine.resumeExam()">
-          <span>🛡️ Return to Examination</span>
-        </button>
-      `;
-    } else if (this.violations === 2) {
-      titleEl.textContent = 'FINAL WARNING (STRIKE 2)';
-      titleEl.style.color = '#dc2626';
-      badgeEl.style.background = '#fee2e2';
-      badgeEl.style.color = '#b91c1c';
-      badgeEl.innerHTML = `🚨 Warning 2 of ${this.maxViolations} (FINAL WARNING)`;
-      msgEl.innerHTML = `Another unauthorized window switch was detected (<em>${reason}</em>).<br><br><strong style="color: #b91c1c;">You have only ONE warning remaining!</strong><br><br>Any further attempt to exit, switch applications, or minimize this window will result in <strong>IMMEDIATE EXAM TERMINATION and automatic submission</strong> to the Civil Service Commission.`;
-      actionsEl.innerHTML = `
-        <button type="button" class="btn-primary-large" style="padding: 14px; font-size: 1rem; width: 100%; background: #b91c1c;" onclick="proctorEngine.resumeExam()">
-          <span>⚠️ I Understand - Resume Exam (Final Chance)</span>
-        </button>
-      `;
-    } else {
-      // Strike 3: Disqualification & Auto-Submission
-      titleEl.textContent = 'EXAMINATION TERMINATED (STRIKE 3)';
-      titleEl.style.color = '#7f1d1d';
-      badgeEl.style.background = '#7f1d1d';
-      badgeEl.style.color = '#ffffff';
-      badgeEl.innerHTML = `🛑 Maximum Violations Exceeded (3 of ${this.maxViolations})`;
-      msgEl.innerHTML = `You have exceeded the maximum allowable application-switching violations.<br><br>In compliance with Kwara State Civil Service Commission anti-cheating regulations, <strong>your examination has been locked and automatically submitted</strong> with a security infraction report.`;
-      actionsEl.innerHTML = `
-        <div style="font-weight: 700; color: #dc2626; padding: 12px; font-size: 0.95rem;">
-          ⏳ Locking examination and saving final evaluation...
-        </div>
-      `;
-
-      // Auto submit after 2.5 seconds
-      setTimeout(() => {
-        this.closeViolationModal();
-        this.hideCurtain();
-        submitExam(true);
-      }, 2500);
-    }
-
-    modal.classList.add('active');
+    this.closeViolationModal();
   },
 
   resumeExam() {
     this.closeViolationModal();
     this.hideCurtain();
-    this.enterFullscreen();
   },
 
   closeViolationModal() {
     const modal = document.getElementById('security-violation-modal');
-    if (modal) modal.classList.remove('active');
+    if (modal) {
+      modal.classList.remove('active');
+      modal.style.display = 'none';
+    }
   },
 
   updateSecurityBadge() {
     const badge = document.getElementById('exam-security-badge');
     const text = document.getElementById('security-status-text');
     if (!badge || !text) return;
-
-    if (this.violations === 0) {
-      badge.className = 'security-status-badge secure';
-      text.textContent = '🛡️ Shield: Active (0/3)';
-    } else if (this.violations === 1) {
-      badge.className = 'security-status-badge warning';
-      text.textContent = '⚠️ Warning (1/3)';
-    } else if (this.violations >= 2) {
-      badge.className = 'security-status-badge danger';
-      text.textContent = `🚨 Warning (${this.violations}/3)`;
-    }
+    badge.className = 'security-status-badge secure';
+    text.textContent = '🟢 Exam In Progress';
   },
 
   updateWatermark(candidate) {
@@ -1749,20 +1496,7 @@ const proctorEngine = {
   },
 
   showToast(msg) {
-    let toast = document.getElementById('cbt-security-toast');
-    if (!toast) {
-      toast = document.createElement('div');
-      toast.id = 'cbt-security-toast';
-      toast.className = 'security-toast';
-      document.body.appendChild(toast);
-    }
-    toast.innerHTML = `<span style="font-size:1.2rem;">🛡️</span> <span>${msg}</span>`;
-    toast.style.display = 'flex';
-
-    if (this.toastTimer) clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => {
-      toast.style.display = 'none';
-    }, 3500);
+    // Quietly ignore or minimal non-intrusive notification
   }
 };
 
@@ -2112,8 +1846,8 @@ async function submitExam(isAuto = false) {
     token_code: (state.tokenCode || (state.candidate && state.candidate.token_code) || null),
     answers: state.answers,
     time_taken_seconds: timeTaken,
-    violations_count: (typeof proctorEngine !== 'undefined' ? proctorEngine.violations : 0),
-    security_flags: (typeof proctorEngine !== 'undefined' ? proctorEngine.violationLogs.join('; ') : '')
+    violations_count: 0,
+    security_flags: ''
   };
 
   pendingSubmissionPayload = payload;
@@ -2241,8 +1975,13 @@ if (adminLoginForm) {
       }
 
       state.adminToken = data.token;
+      state.adminRole = data.role || 'superadmin';
+      state.adminUser = data.username || 'admin';
       sessionStorage.setItem('kws_admin_token', data.token);
+      sessionStorage.setItem('kws_admin_role', state.adminRole);
+      sessionStorage.setItem('kws_admin_user', state.adminUser);
       syncAdminSessionCookie();
+      applyAdminRolePermissions();
       updateAdminDownloadLinks();
 
       closeAdminLoginModal();
@@ -2386,7 +2125,6 @@ async function loadAdminSubmissions() {
     renderAdminTable();
     loadAdminTokens();
     loadAdminRegistrations();
-    loadAdminDemoAnalytics();
   } catch (err) {
     console.error('Failed to load admin submissions:', err);
   }
@@ -2418,51 +2156,20 @@ async function loadAdminRegistrations() {
   }
 }
 
-async function loadAdminDemoAnalytics() {
-  if (!state.adminToken) return;
-  try {
-    const res = await fetch('/api/admin/demo-analytics', {
-      headers: { 'Authorization': `Bearer ${state.adminToken}` }
-    });
-    if (!res.ok) return;
-    const data = await res.json();
-    state.adminDemoLogs = data.logs || [];
-    state.adminDemoAnalytics = data;
-
-    const countTabDemo = document.getElementById('count-tab-demo');
-    if (countTabDemo) countTabDemo.textContent = data.total_sessions || 0;
-
-    const kpiDemo = document.getElementById('kpi-demo-sessions');
-    const kpiDemoLbl = document.getElementById('kpi-demo-lbl');
-    if (kpiDemo) kpiDemo.textContent = `${data.total_sessions || 0} (${data.unique_candidates || 0} Unique)`;
-    if (kpiDemoLbl) kpiDemoLbl.textContent = `Demo Practice (${data.completed_sessions || 0} Completed • Avg ${data.average_score || 0}%)`;
-
-    if (state.adminTableView === 'demo') {
-      renderAdminDemoTable();
-    }
-  } catch (err) {
-    console.warn('Could not load admin demo analytics:', err);
-  }
-}
-
 function switchAdminTableView(targetView) {
   state.adminTableView = targetView;
   const tabSub = document.getElementById('tab-btn-submissions');
   const tabPhoto = document.getElementById('tab-btn-photocards');
-  const tabDemo = document.getElementById('tab-btn-demo');
   const wrapSub = document.getElementById('wrap-submissions-table');
   const wrapPhoto = document.getElementById('wrap-photocards-table');
-  const wrapDemo = document.getElementById('wrap-demo-table');
 
-  // Reset all tabs
+  // Reset tabs
   if (tabSub) { tabSub.style.borderColor = '#cbd5e1'; tabSub.style.color = '#475569'; tabSub.style.background = '#fff'; }
   if (tabPhoto) { tabPhoto.style.borderColor = '#cbd5e1'; tabPhoto.style.color = '#475569'; tabPhoto.style.background = '#fff'; }
-  if (tabDemo) { tabDemo.style.borderColor = '#cbd5e1'; tabDemo.style.color = '#475569'; tabDemo.style.background = '#fff'; }
 
-  // Hide all table wrappers
+  // Hide table wrappers
   if (wrapSub) wrapSub.style.display = 'none';
   if (wrapPhoto) wrapPhoto.style.display = 'none';
-  if (wrapDemo) wrapDemo.style.display = 'none';
 
   if (targetView === 'submissions') {
     if (tabSub) { tabSub.style.borderColor = '#004d40'; tabSub.style.color = '#004d40'; tabSub.style.background = '#e6f4ea'; }
@@ -2475,21 +2182,12 @@ function switchAdminTableView(targetView) {
     if (!state.adminRegistrations || state.adminRegistrations.length === 0) {
       loadAdminRegistrations();
     }
-  } else if (targetView === 'demo') {
-    if (tabDemo) { tabDemo.style.borderColor = '#6366f1'; tabDemo.style.color = '#4338ca'; tabDemo.style.background = '#eef2ff'; }
-    if (wrapDemo) wrapDemo.style.display = 'block';
-    renderAdminDemoTable();
-    if (!state.adminDemoLogs || state.adminDemoLogs.length === 0) {
-      loadAdminDemoAnalytics();
-    }
   }
 }
 
 function onAdminFilterChange() {
   if (state.adminTableView === 'photocards') {
     renderAdminPhotocardsTable();
-  } else if (state.adminTableView === 'demo') {
-    renderAdminDemoTable();
   } else {
     renderAdminTable();
   }
@@ -2594,67 +2292,6 @@ function renderAdminPhotocardsTable() {
   }).join('');
 }
 
-function renderAdminDemoTable() {
-  const tbody = document.getElementById('admin-demo-table-body');
-  if (!tbody) return;
-  const search = (document.getElementById('admin-search').value || '').toLowerCase();
-  const gradeFilter = document.getElementById('admin-grade-filter').value;
-
-  const filtered = (state.adminDemoLogs || []).filter(s => {
-    const matchSearch = (s.candidate_name || '').toLowerCase().includes(search) ||
-                        (s.psn || '').toLowerCase().includes(search) ||
-                        (s.mda || '').toLowerCase().includes(search) ||
-                        (s.device_type || '').toLowerCase().includes(search);
-    const matchGrade = (gradeFilter === 'ALL' || (s.grade_level && s.grade_level.includes(gradeFilter.replace('GL ', ''))));
-    return matchSearch && matchGrade;
-  });
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding: 24px; color:#64748b;">No demo practice sessions found matching search.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = filtered.map((s, idx) => {
-    const vCount = parseInt(s.violations_count || 0);
-    let integrityTag = '';
-    if (vCount === 0) {
-      integrityTag = '<span style="display:inline-block; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#ecfdf5; color:#047857;">🛡️ Clean (0)</span>';
-    } else if (vCount < 3) {
-      integrityTag = `<span style="display:inline-block; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#fffbeb; color:#b45309;">⚠️ ${vCount} Strike${vCount>1?'s':''}</span>`;
-    } else {
-      integrityTag = `<span style="display:inline-block; padding:2px 7px; border-radius:10px; font-size:0.72rem; font-weight:700; background:#fee2e2; color:#b91c1c;">🛑 Terminated (${vCount}/3)</span>`;
-    }
-
-    const timeSpent = s.time_taken_seconds ? `${Math.floor(s.time_taken_seconds / 60)}m ${s.time_taken_seconds % 60}s` : '-';
-    const scoreVal = s.status === 'in_progress' ? 
-      '<span style="color:#d97706; font-weight:600;">⏳ In Progress</span>' : 
-      `<strong>${s.correct_count || 0} / 40</strong>`;
-    const scorePct = s.status === 'in_progress' ? 
-      '<span style="color:#94a3b8;">-</span>' : 
-      `<strong style="font-size:1.05rem; color:#4338ca;">${s.score_percentage || 0}%</strong>`;
-
-    const candidateDisplayName = (s.candidate_name && s.candidate_name !== 'Demo Candidate') ?
-      `<strong>${s.candidate_name}</strong>` :
-      `<span style="color:#64748b; font-style:italic;">Guest Candidate</span>`;
-
-    return `
-      <tr>
-        <td style="font-weight:700; text-align:center;">${idx + 1}</td>
-        <td style="font-size:0.82rem; color:#475569;">${s.started_at_str || s.started_at || '-'}</td>
-        <td><code>${s.psn || 'N/A'}</code></td>
-        <td>${candidateDisplayName}</td>
-        <td>${s.mda || '-'}</td>
-        <td><span class="grade-tag">${s.grade_level || '-'}</span></td>
-        <td style="text-align:center; font-weight:700;">${s.answered_count || 0} / 40</td>
-        <td style="text-align:center;">${scoreVal}</td>
-        <td style="text-align:center;">${scorePct}</td>
-        <td style="text-align:center; font-size:0.82rem; color:#334155;">${timeSpent}</td>
-        <td style="text-align:center;">${integrityTag}</td>
-        <td style="font-size:0.78rem; color:#64748b;">${s.device_type || 'Desktop'}</td>
-      </tr>
-    `;
-  }).join('');
-}
 
 // -------------------------------------------------------------
 // Admin Scratch Card Tokens & Candidate Reset Tools
@@ -2909,7 +2546,11 @@ if (adminLogoutBtn) {
       } catch (e) {}
     }
     state.adminToken = null;
+    state.adminRole = 'superadmin';
+    state.adminUser = 'admin';
     sessionStorage.removeItem('kws_admin_token');
+    sessionStorage.removeItem('kws_admin_role');
+    sessionStorage.removeItem('kws_admin_user');
     try {
       document.cookie = 'admin_token=; path=/; max-age=0; SameSite=Lax';
     } catch (e) {}
