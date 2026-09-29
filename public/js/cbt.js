@@ -457,9 +457,8 @@ function closeExamSession() {
 function returnToPortalHome() {
   window.history.pushState({}, '', '/');
   showView('entry');
-  switchEntryTab(state.examStatus === 'closed' ? 'register' : 'start');
+  switchEntryTab('start');
   initPortalStatus();
-
 }
 
 // Switch Views
@@ -505,55 +504,52 @@ async function initPortalStatus() {
 function applyExamStatusToUI(status) {
   const tabBtnStart = document.getElementById('tab-btn-start');
   const contentStart = document.getElementById('tab-content-start');
-  const startBtn = document.getElementById('btn-start-exam');
-  const startBtnText = document.getElementById('btn-start-exam-text');
+  const startBtn = document.getElementById('btn-start-token-exam') || document.getElementById('btn-start-exam');
+  const startBtnText = document.getElementById('btn-start-token-text') || document.getElementById('btn-start-exam-text');
   const proceedPhotocardBtn = document.getElementById('btn-proceed-exam-from-photocard');
+  const closedNotice = document.getElementById('closed-exam-notice');
 
   if (status === 'closed') {
-    // 1. Remove CBT Exam Tab from the frontend navigation
-    if (tabBtnStart) {
-      tabBtnStart.style.display = 'none';
+    // 1. Show closed banner on the primary CBT login page
+    if (closedNotice) {
+      closedNotice.style.display = 'block';
     }
 
-    // 2. Hide Exam Taking Content and switch to Verification & Photocard tab
-    if (contentStart) {
-      contentStart.style.display = 'none';
+    // 2. Disable login button with prominent closed state text and styling
+    if (startBtn) {
+      startBtn.disabled = true;
+      startBtn.classList.add('disabled');
+      startBtn.style.opacity = '0.7';
+      startBtn.style.cursor = 'not-allowed';
     }
-    switchEntryTab('register');
+    if (startBtnText) {
+      startBtnText.textContent = '🔒 Examination Portal is Currently Closed';
+    }
 
     // 3. Hide Proceed to Exam button on photocard view
     if (proceedPhotocardBtn) {
       proceedPhotocardBtn.style.display = 'none';
     }
-
-    if (startBtn) {
-      startBtn.disabled = true;
-      startBtn.style.opacity = '0.6';
-      startBtn.style.cursor = 'not-allowed';
-    }
-    if (startBtnText) {
-      startBtnText.textContent = '🔒 Examination is Currently Closed';
-    }
   } else {
-    // 1. Restore CBT Exam Tab in the frontend navigation
-    if (tabBtnStart) {
-      tabBtnStart.style.display = '';
+    // 1. Hide closed notice
+    if (closedNotice) {
+      closedNotice.style.display = 'none';
     }
 
-    // 2. Restore Proceed to Exam button on photocard view
-    if (proceedPhotocardBtn) {
-      proceedPhotocardBtn.style.display = '';
-    }
-
-
-
+    // 2. Enable login button with prominent start text and styling
     if (startBtn) {
       startBtn.disabled = false;
+      startBtn.classList.remove('disabled');
       startBtn.style.opacity = '1';
       startBtn.style.cursor = 'pointer';
     }
     if (startBtnText) {
-      startBtnText.textContent = '🚀 Login & Commence CBT Examination (20 Mins)';
+      startBtnText.textContent = '🚀 LOGIN & COMMENCE CBT EXAMINATION (20 MINS)';
+    }
+
+    // 3. Restore Proceed to Exam button on photocard view
+    if (proceedPhotocardBtn) {
+      proceedPhotocardBtn.style.display = '';
     }
   }
 }
@@ -592,12 +588,8 @@ function navigateToExam() {
 // 1. Candidate Entry Navigation: Registration vs Exam
 // -------------------------------------------------------------
 function switchEntryTab(tab) {
-  let targetTab = (tab === 'start') ? 'start' : 'register';
+  let targetTab = (tab === 'register') ? 'register' : 'start';
 
-  // Guard: if portal is closed at backend, do not permit switching to exam tab
-  if (targetTab === 'start' && state.examStatus === 'closed') {
-    targetTab = 'register';
-  }
   const btnRegister = document.getElementById('tab-btn-register');
   const btnStart = document.getElementById('tab-btn-start');
 
@@ -607,7 +599,7 @@ function switchEntryTab(tab) {
   const title = document.getElementById('entry-card-title');
   const subtitle = document.getElementById('entry-card-subtitle');
 
-  // Reset active classes on tabs
+  // Reset active classes on tabs (if present)
   if (btnRegister) btnRegister.classList.toggle('active', targetTab === 'register');
   if (btnStart) btnStart.classList.toggle('active', targetTab === 'start');
 
@@ -621,8 +613,8 @@ function switchEntryTab(tab) {
     const inputRegPsn = document.getElementById('reg-input-psn');
     if (inputRegPsn) inputRegPsn.focus();
   } else {
-    if (title) title.textContent = 'Take CBT Examination';
-    if (subtitle) subtitle.textContent = 'Enter your PSN and 5-digit Login PIN issued in the examination hall';
+    if (title) title.textContent = 'CBT Examination Login';
+    if (subtitle) subtitle.textContent = 'Enter your Public Service Number (PSN) and 5-Digit Login PIN to commence your evaluation';
     const inputTokenPsn = document.getElementById('token-exam-psn');
     if (inputTokenPsn) inputTokenPsn.focus();
   }
@@ -1188,11 +1180,6 @@ function renderPhotocard(c) {
 }
 
 function proceedToExamFromPhotocard() {
-  if (state.examStatus === 'closed') {
-    showView('entry');
-    switchEntryTab('register');
-    return;
-  }
   showView('entry');
   switchEntryTab('start');
   if (state.registeredCandidate) {
@@ -1349,8 +1336,12 @@ if (tokenExamForm) {
       );
     } finally {
       if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
+        if (state.examStatus === 'closed') {
+          applyExamStatusToUI('closed');
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
       }
     }
   });
