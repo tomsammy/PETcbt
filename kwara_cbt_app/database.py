@@ -538,12 +538,12 @@ def _sync_state_audit_psn_swap(conn, cursor):
         y_psn = cands.get("B-75007")
         m_psn = cands.get("B-75556")
         
-        if y_psn != "128619" or m_psn != "128618":
-            cursor.execute("UPDATE candidate_roster SET psn = 'TEMP_SWAP_128618' WHERE code_1 = 'B-75556'")
-            cursor.execute("UPDATE candidate_roster SET psn = '128619', amended_psn = NULL WHERE code_1 = 'B-75007'")
-            cursor.execute("UPDATE candidate_roster SET psn = '128618', amended_psn = '128619' WHERE code_1 = 'B-75556'")
+        if m_psn != "128619" or y_psn != "128618":
+            cursor.execute("UPDATE candidate_roster SET psn = 'TEMP_SWAP_128619' WHERE code_1 = 'B-75556'")
+            cursor.execute("UPDATE candidate_roster SET psn = '128618', amended_psn = NULL WHERE code_1 = 'B-75007'")
+            cursor.execute("UPDATE candidate_roster SET psn = '128619', amended_psn = NULL WHERE code_1 = 'B-75556'")
             conn.commit()
-            logger.info("Successfully synchronized State Audit PSN: Yinusa (128619), Martins (128618)")
+            logger.info("Successfully synchronized State Audit PSN: Martins (128619), Yinusa (128618)")
     except Exception as e:
         logger.warning(f"Could not auto-sync State Audit PSN swap: {e}")
 
